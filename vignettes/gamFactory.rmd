@@ -75,7 +75,7 @@ so that $\sum_{j}\alpha_{j}(z_{i})=1$. To create such an effect we do
 ```{r a1, message = F}
 library(gamFactory)
 
-K <- 4
+K <- 5
 alpha0 <- rnorm(K - 1) 
 obj <- createStackEffect( )$initialize(d = K)
 ```
@@ -100,5 +100,5 @@ der <- derivCheck(np = 100,
 Different way of plotting:
 ```{r a4, message = F}
 par(mfrow = c(2, 2))
-for(ii in 1:(K-1)) { plot(der[[ii]][ , 1] - der[[ii]][ , 2]) }
+for(ii in 1:3) { plot(der[[ii]][ , 1] - der[[ii]][ , 2]) }
 ```

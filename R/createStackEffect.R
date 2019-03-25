@@ -39,8 +39,8 @@ createStackEffect <- function(x = NULL){
             for(kk in jj:d){
               for(ll in kk:d){
                 l3[[coun]] <- l2[jj,ll] * (as.numeric(kk==jj) - am[kk]) - 
-                              l1[jj] * (as.numeric(kk==ll)*am[kk] - am[kk]*am[ll]) - 
-                              l1[kk] * (as.numeric(jj==ll)*am[jj] - am[jj]*am[ll]) - am[jj] * l2[kk,ll]
+                              l1[jj] * am[kk] * (as.numeric(kk==ll) - am[ll]) - 
+                              l1[kk] * am[jj] * (as.numeric(jj==ll) - am[ll]) - am[jj] * l2[kk,ll]
                 coun <- coun + 1
               }
             }
