@@ -98,6 +98,34 @@ convertDerivStack <- function(param, theta, X, Z, le, lee, leee = 0,
     d1H <- lapply(d1H, function (x) do.call(rbind, x))
     d1H <- matrix(do.call(cbind, d1H), nrow = P)
     d1H <- as.numeric(d1H)
+    
+    # The following calculates the third derivatives wrt regression coefficients
+    # We do not implement it because it should not be required by gam.fit5
+    # lbbb <- lapply(1:(K - 1), function(x) {
+    #   lapply(1:(K - 1), function(y) vector("list", K -1))
+    # })
+    # for (rr in 1:(K - 1)) for (ss in 1:(K - 1)) for (tt in 1:(K - 1)) {
+    #   lbbb[[rr]][[ss]][[tt]] <- array(0, dim = c(p, p, p))
+    #   for (jj in 1:p) for (kk in 1:p) for (ll in 1:p) {
+    #     lbbb[[rr]][[ss]][[tt]][jj, kk, ll] <- 
+    #       sum(lnnn[, i3[rr, ss, tt]] * Z[, jj] * Z[, kk] * Z[, ll])
+    #   }
+    # }
+    # for (rr in 1:(K - 1)) for (ss in 1:(K - 1)) {
+    #   lbbb[[rr]][[ss]] <- do.call(abind, list(lbbb[[rr]][[ss]], along = 3))
+    # }
+    # for (rr in 1:(K - 1)) {
+    #   lbbb[[rr]] <- do.call(abind, list(lbbb[[rr]], along = 2))
+    # }
+    # lbbb <- do.call(abind, list(lbbb, along = 1))
+    # 
+    # lbbbMat <- list()
+    # coun <- 1
+    # for (jj in 1:P) for (kk in jj:P) for (ll in kk:P) {
+    #   lbbbMat[[coun]] <- lbbb[jj, kk, ll]
+    #   coun <- coun + 1
+    # }
+    # l3 <- do.call(c, lbbbMat)
   }
   
   list(lb=lb,lbb=lbb,d1H=d1H)

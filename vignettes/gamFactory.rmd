@@ -102,3 +102,213 @@ Different way of plotting:
 par(mfrow = c(2, 2))
 for(ii in 1:3) { plot(der[[ii]][ , 1] - der[[ii]][ , 2]) }
 ```
+
+# Testing derivatives of the stack effect (Christian)
+
+This Section testes the function convertDerivStack.
+Unfortunately I have not wrapped the derivatives conveniently, therefore the code is messy with lot of repetitions.
+
+* It creates parameters and model matrix for stack effects. 
+* Then, given the parameters, it generates data from the SHASH distribution. 
+* Then, it calculate derivatives of the log-likelihood with respect to the regression coefficients
+* Then, it finds beta-hat and calculate the derivative of the Hessian with respect to the smoothing parameter
+
+```{r a5, message = F}
+library(gamFactory)
+library(qgam)
+
+set.seed(0)
+
+n <- 1e3
+p <- 3
+K <- 3
+P <- p * (K - 1)
+beta <- rnorm(P)
+Z <- cbind(1, matrix(runif(n * p), nrow = n))
+Z <- scale(Z, scale = FALSE)
+Z <- Z[, - 1, drop = FALSE]
+X <- matrix(runif(n * K), nrow = n)
+nu <- Z %*% matrix(beta, nrow = p, ncol = K - 1)
+a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
+eta <- rowSums(a * X)
+mu <- eta
+tau <- 1
+eps <- 1
+phi <- 1
+sig <- exp(tau)
+del <- exp(phi)
+y <- mu + (del * sig) * sinh((1/del) * asinh(qnorm(runif(n))) + (eps/del))
+theta <- c(tau, eps, phi)
+pars <- cbind(mu, theta[1], theta[2], theta[3])
+objSH <- createSH(y = y)$derObj(param = pars, deriv = 3)
+l <- objSH$d0(SUM = T)
+le <- objSH$d1(SUM = F)[[1]]
+lee <- objSH$d2(SUM = F)[[1]]
+leee <- objSH$d3(SUM = F)[[1]]
+
+S <- diag(rep(1, P))
+r <- 1
+lam <- exp(r)
+
+ret <- createSHwithStack2(beta, theta, X, Z, le, lee, leee, d1b = 0, deriv = 1)
+
+
+#### FUNCTIONS FOR TESTING DERIVATIVES
+
+# log-likelihood function
+l <- function(param) {
+  nu <- Z %*% matrix(param, nrow = p, ncol = K - 1)
+  a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
+  eta <- rowSums(a * X)
+  mu <- eta
+  theta <- c(tau, eps, phi)
+  pars <- cbind(mu, theta[1], theta[2], theta[3])
+  objSH <- createSH(y = y)$derObj(param = pars, deriv = 3)
+  l <- objSH$d0(SUM = T)
+  l
+}
+
+# gradient function
+gr <- function(param) {
+  nu <- Z %*% matrix(param, nrow = p, ncol = K - 1)
+  a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
+  eta <- rowSums(a * X)
+  mu <- eta
+  theta <- c(tau, eps, phi)
+  pars <- cbind(mu, theta[1], theta[2], theta[3])
+  objSH <- createSH(y = y)$derObj(param = pars, deriv = 3)
+  le <- objSH$d1(SUM = F)[[1]]
+  lee <- objSH$d2(SUM = F)[[1]]
+  ret <- convertDerivStack(param, theta, X, Z, le, lee)
+  ret$lb
+}
+
+# hessian function
+hes <- function(param) {
+  nu <- Z %*% matrix(param, nrow = p, ncol = K - 1)
+  a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
+  eta <- rowSums(a * X)
+  mu <- eta
+  theta <- c(tau, eps, phi)
+  pars <- cbind(mu, theta[1], theta[2], theta[3])
+  objSH <- createSH(y = y)$derObj(param = pars, deriv = 3)
+  le <- objSH$d1(SUM = F)[[1]]
+  lee <- objSH$d2(SUM = F)[[1]]
+  ret <- convertDerivStack(param, theta, X, Z, le, lee)
+  ret$lbb
+}
+
+# function optimizing beta given the smoothing parameter
+d3r <- function(r) {
+  # penalty matrix with smoothing parameter lam
+  S <- diag(rep(1, P))
+  lam <- exp(r)
+  # Inner step: optimize pen l wrt beta
+  beta0 <- rep(0, P)
+  optimization <- optim(rep(0, P), function(x) {
+    - l(x) + .5 * lam * t(x) %*% S %*% x
+  }, gr = function(x) - gr(x) + lam * S %*% x, 
+  method = "BFGS", hessian = TRUE)
+  betaHat <- optimization$par
+  invNegH <- solve(optimization$hessian)
+  list(betaHat = betaHat, invNegH = invNegH)
+}
+
+# beta hat as function of rho
+bhr <- function(r) d3r(r)$betaHat
+# derivative of beta hat wrt who
+d1br <- function(r) {
+  out <- d3r(r)
+  - lam * out$invNegH %*% S %*% out$betaHat
+}
+# derivative of the hessian wrt rho
+d1h <- function(r) {
+  
+  set.seed(0)
+  d1b <- rnorm()
+  nu <- Z %*% matrix(param, nrow = p, ncol = K - 1)
+  a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
+  eta <- rowSums(a * X)
+  mu <- eta
+  theta <- c(tau, eps, phi)
+  pars <- cbind(mu, theta[1], theta[2], theta[3])
+  objSH <- createSH(y = y)$derObj(param = pars, deriv = 3)
+  le <- objSH$d1(SUM = F)[[1]]
+  lee <- objSH$d2(SUM = F)[[1]]
+  leee <- objSH$d3(SUM = F)[[1]]
+  ret <- convertDerivStack(param, theta, X, Z, le, lee, leee, d1b, deriv = 1)
+  ret
+}
+
+
+#### TEST OF DERIVATIVES
+
+# gradient
+GR <- cbind(gr(param), 
+            as.numeric(jacobian(func = l, x = as.vector(param))))
+plot(GR)
+abline(0, 1)
+cbind(GR, apply(GR, 1, function(x) round(diff(x), 7)))
+
+# hessian
+HEX <- cbind(as.numeric(hes(param)), 
+             as.numeric(jacobian(func = gr, x = as.vector(param))))
+plot(HEX)
+abline(0, 1)
+cbind(HEX, apply(HEX, 1, function(x) round(diff(x), 7)))
+
+# hessian wrt rho
+D1H <- cbind(d1br(1), jacobian(bhr, 1))
+plot(D1H)
+abline(0, 1)
+cbind(HEX, apply(D1H, 1, function(x) round(diff(x), 2))) # less precise because of optim
+```
+
+# PIRLS and shape constrained effects with linear approximation? 
+
+Simple example to show that using the linear approximation 
+of the unconstrained parameter beta tilde around the constrained parameter beta might allow using PIRLS to maximize directly the likelihood wrt beta when there are shape constrained effects.
+
+In the simple example, the response variable is normal, with identity link and one smoothing parameter.
+
+Maybe it is not useful, since we are focusing on the approach for general families.
+
+response: normal
+link: identity
+penalty: one smoothing parameter
+
+```{r a2, message = F}
+set.seed(0)
+r <- 0                              # rho = log(lambda)
+l <- exp(r)                         # lambda the smoothing parameter
+S <- diag(rep(1, p))                # penalty matrix
+p <- 3                              # n. of parameters
+n <- 1e4                            # n. of obs
+b <- rnorm(p)                       # true beta (constrained)
+bt <- c(b[1], exp(b[- 1]))          # beta tilde (unconstrained parameters)
+btb <- c(1, bt[- 1])                # derivative of bt wrt b
+X <- matrix(runif(n * p), nrow = n) # model matrix
+mu <- X %*% bt
+sig <- 1
+y <- rnorm(n, mean = mu, sd = sig)  # response
+b0 <- rep(- 1e4, p)                 # starting value
+
+bh <- b0
+G <- 10
+niter <- 0
+while(sum(G^2) > 1e-10) {
+  bth <- c(bh[1], exp(bh[- 1]))
+  muh <- X %*% bth
+  btb <- c(1, exp(bh [- 1]))
+  Xt <- t(t(X) * btb)
+  G <- t(Xt) %*% (y - muh) - S %*% bh
+  H <- - t(Xt) %*% Xt - S
+  bh <- bh - solve(H) %*% G
+  sum(G^2)
+  bh
+  niter <- niter + 1
+}
+bh
+niter
+```
+
