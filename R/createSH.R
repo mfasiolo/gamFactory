@@ -31,7 +31,7 @@ createSH <- function(y = NULL){
     CC <- cosh( dTasMe )
     SS <- sinh( dTasMe )
     
-    l <- sum( -tau - 0.5*log(2*pi) + log(CC) - 0.5*log1pexp(2*log(abs(z))) - 0.5*SS^2 )
+    l <- -tau - 0.5*log(2*pi) + log(CC) - 0.5*log1pexp(2*log(abs(z))) - 0.5*SS^2
     
     # Compute sqrt(x^2 + m) when |x| >> 0 and m is reasonably small (e.g. + 1 or - 1)
     sqrtX2pm <- function(x, m){ 
