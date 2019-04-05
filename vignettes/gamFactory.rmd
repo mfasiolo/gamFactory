@@ -114,19 +114,16 @@ Unfortunately I have not wrapped the derivatives conveniently, therefore the cod
 * Then, it finds beta-hat and calculate the derivative of the Hessian with respect to the smoothing parameter
 
 ```{r a5, message = F}
-library(gamFactory)
-library(qgam)
-
 set.seed(0)
-
 n <- 1e3
 p <- 3
 K <- 3
 P <- p * (K - 1)
 beta <- rnorm(P)
-Z <- cbind(1, matrix(runif(n * p), nrow = n))
-Z <- scale(Z, scale = FALSE)
-Z <- Z[, - 1, drop = FALSE]
+Z <- cbind(1, matrix(runif(n * (p - 1)), nrow = n))
+# Z <- cbind(1, matrix(runif(n * p), nrow = n))
+# Z <- scale(Z, scale = FALSE)
+# Z <- Z[, - 1, drop = FALSE]
 X <- matrix(runif(n * K), nrow = n)
 nu <- Z %*% matrix(beta, nrow = p, ncol = K - 1)
 a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
@@ -150,7 +147,7 @@ S <- diag(rep(1, P))
 r <- 1
 lam <- exp(r)
 
-ret <- createSHwithStack2(beta, theta, X, Z, le, lee, leee, d1b = 0, deriv = 1)
+ret <- convertDerivStack(beta, theta, X, Z, le, lee, leee, d1b = 0, deriv = 1)
 
 
 #### FUNCTIONS FOR TESTING DERIVATIVES
@@ -244,15 +241,15 @@ d1h <- function(r) {
 #### TEST OF DERIVATIVES
 
 # gradient
-GR <- cbind(gr(param), 
-            as.numeric(jacobian(func = l, x = as.vector(param))))
+GR <- cbind(gr(beta), 
+            as.numeric(jacobian(func = l, x = as.vector(beta))))
 plot(GR)
 abline(0, 1)
 cbind(GR, apply(GR, 1, function(x) round(diff(x), 7)))
 
 # hessian
-HEX <- cbind(as.numeric(hes(param)), 
-             as.numeric(jacobian(func = gr, x = as.vector(param))))
+HEX <- cbind(as.numeric(hes(beta)), 
+             as.numeric(jacobian(func = gr, x = as.vector(beta))))
 plot(HEX)
 abline(0, 1)
 cbind(HEX, apply(HEX, 1, function(x) round(diff(x), 7)))
