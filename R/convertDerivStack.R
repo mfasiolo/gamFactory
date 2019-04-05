@@ -33,8 +33,8 @@ convertDerivStack <- function(param, theta, X, Z, le, lee, leee = 0,
   eta <- rowSums(a * X)
   
   ## the gradient...
-  am <- a[, - 1]
-  xm <- X[, - 1]
+  am <- a[, - 1, drop = FALSE]
+  xm <- X[, - 1, drop = FALSE]
   en <- am * (xm - eta)
   ln <- le * en
   lb <- as.vector(t(Z) %*% ln)
@@ -42,7 +42,7 @@ convertDerivStack <- function(param, theta, X, Z, le, lee, leee = 0,
   ## the Hessian...
   enn <- list()
   coun <- 1
-  for(jj in 1:(K - 1)) for(kk in jj:(K - 1)) {
+  for (jj in 1:(K - 1)) for (kk in jj:(K - 1)) {
     enn[[coun]] <- en[, jj] * (as.numeric(jj==kk) - am[, kk]) - 
       am[, jj] * en[, kk]
     coun <- coun + 1
