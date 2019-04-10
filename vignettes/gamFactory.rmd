@@ -467,6 +467,158 @@ abline(0,1, col = "red")
 mod <- estimateStackSHASH(y, X, Z)
 cbind(mod$coefficients, beta)
 summary(mod)
-
 ```
+
+
+
+## Test of derivatives with new stack effects (only non-negative constraints)
+
+```{r}
+set.seed(0)
+n <- 1e3
+p <- 3
+K <- 3
+P <- p * K
+
+tau <- 1
+eps <- 1
+phi <- 1
+sig <- exp(tau)
+del <- exp(phi)
+theta <- c(tau, eps, phi)
+
+betaToPars <- function(beta) { # Transform beta to SHASH parameters
+  p <- ncol(Z)
+  K <- ncol(X)
+  nu <- Z %*% matrix(beta, nrow = p, ncol = K)
+  a <- exp(nu)
+  eta <- rowSums(a * X)
+  mu <- eta
+  pars <- cbind(mu, theta[1], theta[2], theta[3])
+  pars
+}
+
+# Derivatives of log-likelihood wrt eta as functions of beta
+lEta <- function(beta, deriv = 0) { 
+  pars <- betaToPars(beta)
+  objSH <- createSH(y = y)$derObj(param = pars, deriv = deriv)
+  
+  l <- objSH$d0(SUM = T)
+  le <- lee <- leee <- NULL # default values
+  if (deriv > 0) {
+    le <- objSH$d1(SUM = F)[[1]]
+    
+    if (deriv > 1) {
+      lee <- objSH$d2(SUM = F)[[1]]
+      
+      if (deriv > 2) {
+        leee <- objSH$d3(SUM = F)[[1]]
+      }
+    }
+  }
+  
+  return(list(l = l, le = le, lee = lee, leee = leee))
+}
+
+beta <- rnorm(P)
+Z <- cbind(1, matrix(runif(n * (p - 1)), nrow = n))
+X <- matrix(runif(n * K), nrow = n)
+pars <- betaToPars(beta)
+y <- pars[, 1] + (del * sig) * sinh((1/del) * asinh(qnorm(runif(n))) + (eps/del))
+
+objSH <- createSH(y = y)$derObj(param = pars, deriv = 3)
+
+l <- objSH$d0()
+le <- objSH$d1(SUM = FALSE)[[1]]
+lee <- objSH$d2(SUM = FALSE)[[1]]
+leee <- objSH$d3(SUM = FALSE)[[1]]
+
+#### FUNCTIONS FOR TESTING DERIVATIVES
+
+# log-likelihood function
+ll <- function(param) lEta(param, deriv = 0)$l
+# gradient function
+gr <- function(param) {
+  lEtaList <- lEta(param, deriv = 1)
+  le <- lEtaList$le
+  convertDerivStackNonNegative(param, theta, X, Z, le, lee, leee)$lb
+}
+# hessian function
+hes <- function(param) {
+  lEtaList <- lEta(param, deriv = 2)
+  le <- lEtaList$le
+  lee <- lEtaList$lee
+  convertDerivStackNonNegative(param, theta, X, Z, le, lee, leee)$lbb
+}
+# function optimizing beta given the smoothing parameter
+d3r <- function(r) {
+  # penalty matrix with smoothing parameter lam
+  S <- diag(rep(1, P))
+  lam <- exp(r)
+  # Inner step: optimize pen l wrt beta
+  beta0 <- rep(0, P)
+  
+  optimization <- optim(rep(0, P), function(x) {
+    - ll(x) + .5 * lam * t(x) %*% S %*% x
+  }, gr = function(x) - gr(x) + lam * S %*% x,
+  method = "BFGS", hessian = TRUE)
+  
+  betaHat <- optimization$par # beta hat as function of rho
+  negHessian <- optimization$hessian
+  invNegH <- solve(optimization$hessian)
+  d1br <- - lam * invNegH %*% S %*% betaHat # derivative of beta hat wrt who
+  list(betaHat = betaHat, d1br = d1br, negHessian = negHessian)
+}
+# derivative of the negative hessian wrt rho
+d1h <- function(r) {
+  
+  d3rObj <- d3r(r)
+  param <- d3rObj$betaHat
+  d1b <- d3rObj$d1br
+  lEtaList <- lEta(param, deriv = 3)
+  le <- lEtaList$le
+  lee <- lEtaList$lee
+  leee <- lEtaList$leee
+  d1H <- - convertDerivStackNonNegative(param, theta, X, Z, le, lee, leee, d1b, deriv = 1)$d1H
+  d1H + exp(r) * S # Valid only because of single smoothing parameter implemented
+}
+
+#### TEST OF DERIVATIVES
+
+# gradient
+GR <- data.frame(EX = gr(beta), 
+                 FD = as.numeric(jacobian(func = ll, x = as.vector(beta))))
+GR$DIFF <- apply(GR, 1, function(x) round(diff(x), 7))
+with(GR, plot(EX, FD))
+abline(0, 1, col = "red")
+GR
+
+# hessian
+HEX <- data.frame(EX = as.numeric(hes(beta)),
+                  FD = as.numeric(jacobian(func = gr, x = as.vector(beta))))
+HEX$DIFF <- apply(HEX, 1, function(x) round(diff(x), 7))
+with(HEX, plot(EX, FD))
+abline(0, 1, col = "red")
+HEX
+
+# d beta / d rho
+r <- 0
+D1B <- data.frame(EX = d3r(r)$d1br, 
+                  FD = jacobian(function(x) d3r(x)$betaHat, r))
+D1B$DIFF <- apply(D1B, 1, function(x) round(diff(x), 2)) # less precise because of optim
+with(D1B, plot(EX, FD))
+abline(0, 1, col = "red")
+D1B
+
+# hessian wrt rho
+# THERE ARE SOME PROBLEMS I THINK DUE TO IDENTIFIABILITY ISSUES
+# TRUST ONLY IF NEGATIVE HESSIAN IS POSITIVE DEFINITE
+D1H <- data.frame(EX = as.numeric(d1h(r)), 
+                  FD = jacobian(function(x) d3r(x)$negHessian, r))
+D1H$DIFF <- apply(D1H, 1, function(x) round(diff(x), 2))
+with(D1H, plot(EX, FD))
+abline(0, 1, col = "red")
+D1H
+```
+
 
