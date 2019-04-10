@@ -156,7 +156,7 @@ convertDerivStack2 <- function(X, Z, lEtaList) {
     n <- length(le)
     if (is.null(X)) X <- matrix(rnorm(n * K), nrow = n, ncol = K)
     if (is.null(Z)) Z <- matrix(rnorm(n * p), nrow = n, ncol = p)
-    return(convertDerivStack(X = X, Z = Z, lEtaList = lEtaList))
+    return(convertDerivStack2(X = X, Z = Z, lEtaList = lEtaList))
   }
   
   return(list("derObj" = derObj, "initialize" = initialize))
