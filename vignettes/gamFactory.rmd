@@ -397,3 +397,76 @@ bh
 niter
 ```
 
+# First family implemented that uses mgcv
+
+The function stackFamilySHASH creates a new family that can be used in mgcv. The family allows using a model with stacking effect and a response variable with SHASH distribution.
+
+The function estimateStackSHASH uses mgcv to estimate a model with the stackFamilySHASH.
+
+Both functions are in the file stackFamilySHASH.R.
+
+CURRENT PROBLEMS:
+
+* Should pass X as family argument rather than attribute of y
+* Identifiability!!! Even with increasing n and small p, estimates do not necessarily converge to true beta (see previous sections)
+* Moreover, with the identifiability problem, as the estimates diverge, exp(nu) gives infinity and I the code creates problems.
+
+```{r}
+set.seed(0)
+n <- 1e2
+p <- 3
+K <- 3
+P <- p * (K - 1)
+beta <- rnorm(P)
+Z <- cbind(1, matrix(runif(n * (p - 1)), nrow = n))
+# Z <- cbind(1, matrix(runif(n * p), nrow = n))
+# Z <- scale(Z, scale = FALSE)
+# Z <- Z[, - 1, drop = FALSE]
+
+# X <- matrix(1, nrow = n, ncol = K)
+
+X <- matrix(runif(n * K), nrow = n)
+
+nu <- Z %*% matrix(beta, nrow = p, ncol = K - 1)
+a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
+eta <- rowSums(a * X)
+mu <- eta
+tau <- 1
+eps <- 1
+phi <- 1
+sig <- exp(tau)
+del <- exp(phi)
+y <- mu + (del * sig) * sinh((1/del) * asinh(qnorm(runif(n))) + (eps/del))
+
+Z <- matrix(Z, nrow = n, ncol = p * (K - 1))
+x <- Z
+attr(y, "X") <- X
+llf <- stackFamilySHASH()$ll
+beta0 <- rep(1, P)
+S <- diag(rep(1, P))
+lam <- 0
+optimization <- optim(beta0, function(b) {
+  - llf(y, x, b)$l 
+    # .5 * lam * b %*% S %*% b
+}, gr = function(b) - llf(y, x, b)$lb, 
+  # lam * S %*% b,
+method = "BFGS", hessian = TRUE)
+plot(optimization$par, beta, xlim = c(- 3, 3), ylim = c(- 3, 3))
+abline(0,1, col = "red")
+eigen(optimization$hessian)$values %>% barplot
+
+nuHat <- matrix(Z, nrow = n, ncol = p) %*% matrix(optimization$par, nrow = p, ncol = K - 1)
+aHat <- cbind(1, exp(nuHat)) / (1 + rowSums(exp(nuHat)))
+etaHat <- rowSums(aHat * X)
+muHat <- etaHat
+plot(cbind(mu, muHat)[sample(1:n, 10^4), ], cex = 0.1)
+# plot(cbind(mu, muHat), cex = 0.1)
+abline(0,1, col = "red")
+
+# debugonce(estimateStackSHASH)
+mod <- estimateStackSHASH(y, X, Z)
+cbind(mod$coefficients, beta)
+summary(mod)
+
+```
+
