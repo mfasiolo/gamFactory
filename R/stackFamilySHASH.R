@@ -1,37 +1,27 @@
-estimateStackSHASH <- function(y, X, Z) {
+#' Title
+#'
+#' @param X 
+#' @param link 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+stackFamilySHASH <- function(X, link="identity") {
   
-  n <- nrow(Z)
-  p <- ncol(Z)
   K <- ncol(X)
-  P <- p * (K - 1)
-  Z <- matrix(Z, nrow = n, ncol = p * (K - 1))
-  x <- Z
-  attr(y, "X") <- X
-  
-  family <- stackFamilySHASH()
-  llf <- family$ll
-  
-  mod <- gam(y ~ x - 1, family = family)
-} # estimateStackSHASH
-
-stackFamilySHASH <- function(link="identity") {
-  
-  ## first deal with links and their derivatives...
-  if (length(link)!=1) stop("stackFamilySHASH 1 link specified as character strings")
-  
-  okLinks <- "identity" # At the moment only identity link available
-  
+  link <- lapply(1:K, function(x) "identity")
   stats <- list()
-  if (link %in% okLinks) stats <- make.link(link) else 
-    stop(link," link not available for mu parameter of SHASH")
-  fam <- structure(list(link=link,canonical="none",linkfun=stats$linkfun,
-                        mu.eta=stats$mu.eta),
-                   class="family")
-  fam <- fix.family.link(fam)
-  stats$d2link <- fam$d2link
-  stats$d3link <- fam$d3link
-  stats$d4link <- fam$d4link
-
+  for (ii in 1:K) {
+    stats[[ii]] <- make.link(link[[ii]])
+    fam <- structure(list(link=link[[ii]],canonical="none",linkfun=stats[[ii]]$linkfun,
+                          mu.eta=stats[[ii]]$mu.eta), class="family")
+    fam <- fix.family.link(fam)
+    stats[[ii]]$d2link <- fam$d2link
+    stats[[ii]]$d3link <- fam$d3link
+    stats[[ii]]$d4link <- fam$d4link
+  }
+  
   residuals <- function(object, type) {
     return(y)
   }  
@@ -54,13 +44,16 @@ stackFamilySHASH <- function(link="identity") {
   
   ll <- function(y,x,coef,wt,family,offset=NULL,deriv=0,d1b=0,d2b=0,Hp=NULL,rank=0,fh=NULL,D=NULL) {
     
-    Z <- x
-    X <- attr(y, "X")
+    y <- y[, 1] # Using multiple linear predictors, y is repeated, here we do not want this.
+    jj <- attr(x,"lpi") ## extract linear predictor index
     K <- ncol(X)
-    p <- ncol(Z) / (K - 1)
-    Z <- Z[ , 1:p, drop = FALSE]
-    nu <- Z %*% matrix(coef, nrow = p, ncol = K - 1)
-    a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
+    nu <- list()
+    for (kk in 1:K) {
+      Z <- x[ , jj[[kk]], drop = FALSE]
+      nu[[kk]] <- Z %*% coef[jj[[kk]]]
+    }
+    nu <- do.call("cbind", nu)
+    a <- exp(nu)
     eta <- rowSums(a * X)
     mu <- eta
     tau <- 1
@@ -75,28 +68,24 @@ stackFamilySHASH <- function(link="identity") {
     le <- objSH$d1(SUM = F)[[1]]
     lee <- objSH$d2(SUM = F)[[1]]
     leee <- objSH$d3(SUM = F)[[1]]
-    ret <- convertDerivStack(coef, theta, X, Z, le, lee, leee, d1b, 1)
+    ret <- convertDerivStackPositive(coef, theta, X, Z, le, lee, leee, d1b, 1)
     ret$l <- l
     ret
   }
   
   initialize <- expression({
     if (is.null(start)) {
-      Z <- x
-      X <- attr(y, "X")
-      K <- ncol(X)
-      p <- ncol(Z) / (K - 1)
-      start <- rep(0, p * (K - 1))
+      start <- rep(0, ncol(x))
     }
   }) ## initialize
   
   rd <- function(mu,wt,scale) {
-
+    
   } ## rd
   
   dev.resids <- function(a, b, c, d) y # MAYBE IT'S NEEDED IN gam.fit5
   
-  structure(list(family="stackSHASH",ll=ll,
+  structure(list(family="stackSHASH",ll=ll,nlp=K,
                  link="identity",
                  initialize=initialize,
                  # postproc=postproc,residuals=residuals,
