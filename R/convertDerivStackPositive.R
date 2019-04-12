@@ -16,11 +16,11 @@
 #' @param d1b (p(K-1))xm matrix of derivatives of the Hessian with respect to the smoothing parameters (at the moment only one smoothing parameter)
 #' @param deriv 0: just grad and Hess, 1: first deriv of Hess
 #'
-#' @name convertDerivStackNonNegative
-#' @rdname convertDerivStackNonNegative
+#' @name convertDerivStackPositive
+#' @rdname convertDerivStackPositive
 #' @export
 #' 
-convertDerivStackNonNegative <- function(param, theta, X, Z, le, lee, leee = 0, 
+convertDerivStackPositive <- function(param, theta, X, Z, le, lee, leee = 0, 
                               d1b = 0, deriv = 0) {
   
   d1H <- NULL ## default
@@ -66,7 +66,7 @@ convertDerivStackNonNegative <- function(param, theta, X, Z, le, lee, leee = 0,
   if (deriv == 1) {
     ennn <- list()
     coun <- 1
-    for (jj in 1:K) for (kk in 1:K) for (ll in 1:K) {
+    for (jj in 1:K) for (kk in jj:K) for (ll in kk:K) {
       if(jj == kk & kk == ll) {
         ennn[[coun]] <- exp(nu[, jj]) * X[, jj] 
       } else ennn[[coun]] <- rep(0, n)
@@ -100,7 +100,7 @@ convertDerivStackNonNegative <- function(param, theta, X, Z, le, lee, leee = 0,
     # The following calculates the third derivatives wrt regression coefficients
     # We do not implement it because it should not be required by gam.fit5
     # lbbb <- lapply(1:K, function(x) {
-    #   lapply(1:K, function(y) vector("list", K -1))
+    #   lapply(1:K, function(y) vector("list", K))
     # })
     # for (rr in 1:K) for (ss in 1:K) for (tt in 1:K) {
     #   lbbb[[rr]][[ss]][[tt]] <- array(0, dim = c(p, p, p))
