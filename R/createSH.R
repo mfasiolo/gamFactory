@@ -141,7 +141,8 @@ createSH <- function(y = NULL){
     }
     d2 <- function(SUM = TRUE){
       if(deriv < 2) { stop("deriv < 2") }
-      out <- list(Dmm, Dmt, Dme, Dmp, Dtt, Dte ,Dtp ,Dee ,Dep ,Dpp)
+      out <- list(l_mm = Dmm, l_mt = Dmt, l_me = Dme, l_mp = Dmp, l_tt = Dtt, 
+                  l_te = Dte, l_tp = Dtp, l_ee = Dee, l_ep = Dep, l_pp = Dpp)
       if( SUM ){
         out <- sapply(out, sum)
       } 
@@ -149,8 +150,11 @@ createSH <- function(y = NULL){
     }
     d3 <- function(SUM = TRUE){
       if(deriv < 3) { stop("deriv < 3") }
-      out <- list(Dmmm,Dmmt,Dmme,Dmmp,Dmtt,Dmte,Dmtp,Dmee,Dmep,Dmpp,
-                  Dttt,Dtte,Dttp,Dtee,Dtep,Dtpp,Deee,Deep,Depp,Dppp)
+      out <- list(l_mmm = Dmmm, l_mmt = Dmmt, l_mme = Dmme, l_mmp = Dmmp,
+                  l_mtt = Dmtt, l_mte = Dmte, l_mtp = Dmtp, l_mee = Dmee,
+                  l_mep = Dmep, l_mpp = Dmpp, l_ttt = Dttt, l_tte = Dtte,
+                  l_ttp = Dttp, l_tee = Dtee, l_tep = Dtep, l_tpp = Dtpp,
+                  l_eee = Deee, l_eep = Deep, l_epp = Depp, l_ppp = Dppp)
       if( SUM ){
         out <- sapply(out, sum)
       } 
