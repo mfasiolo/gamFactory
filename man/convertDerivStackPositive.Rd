@@ -4,13 +4,11 @@
 \alias{convertDerivStackPositive}
 \title{Calculating derivatives of log-likelihood wrt regression coefficients}
 \usage{
-convertDerivStackPositive(param, theta, X, Z, le, lee, leee = 0,
-  d1b = 0, deriv = 0)
+convertDerivStackPositive(beta, X, Z, le, lt, lee, let, ltt, leee = 0,
+  leet = 0, lett = 0, lttt = 0, d1b = 0, deriv = 0)
 }
 \arguments{
-\item{param}{regression coefficients}
-
-\item{theta}{vector of other parameters of the response variable distribution (to be included in beta to be estimated by ML)}
+\item{beta}{regression coefficients}
 
 \item{X}{nxK model matrix of the convex combination}
 
@@ -22,9 +20,11 @@ convertDerivStackPositive(param, theta, X, Z, le, lee, leee = 0,
 
 \item{leee}{nx1 vector of 3rd derivatives of the log-likelihood with respect to eta}
 
-\item{d1b}{(p(K-1))xm matrix of derivatives of the Hessian with respect to the smoothing parameters (at the moment only one smoothing parameter)}
+\item{d1b}{(pK)xm matrix of derivatives of the Hessian with respect to the smoothing parameters}
 
 \item{deriv}{0: just grad and Hess, 1: first deriv of Hess}
+
+\item{theta}{vector of other parameters of the response variable distribution (to be included in beta to be estimated by ML)}
 }
 \description{
 Intended for use with stack effects.
