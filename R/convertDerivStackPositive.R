@@ -122,7 +122,7 @@ convertDerivStackPositive <- function(beta, X, Z,
       lbbt <- lapply(1:nth, function(x) lbbr)
       for (rr in 1:K) for (ss in rr:K) {
         
-        A <- matrix(leet * en[, rr] * en[, ss])
+        A <- matrix(leet * en[, rr] * en[, ss], nrow = n)
         if (rr == ss) A <- A + let * en[, rr] 
         
         V1 <- rowSums((Z %*% d1brl) * lnnn[, i3[rr, ss, ]])
