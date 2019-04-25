@@ -104,146 +104,7 @@ for(ii in 1:3) { plot(der[[ii]][ , 1] - der[[ii]][ , 2]) }
 ```
 
 
-# Example to show identifiabilty problems with the convex combination parametrization 
-
-Consider the simplest possible case, where there is only one $\nu$, i.e. $K=2$, there are two alphas and therefore $K-1 = 1$. Moreover, $Z = 1$ so that $\beta = \nu$. We consider data $y$ from a Gaussian distribution, with $\sigma=1$ and identity link. Then, we have
-$$\alpha_1 = \frac{1}{1 + \exp \nu}, \quad \alpha_2 = \frac{\exp \nu}{1 + \exp \nu}.$$
-The problem is that using directly $\alpha$ we would not have the $(0,1)$ constraint. Then the log-likelihood can at zero and one does not go to minus infinity as, for example, happens for the parameters of a multinomial. Therefore, using the reparametrization that allows to treat the parameter $\nu$ as unconstrained, what happens is that the log-likelihood tends to a finite value as $\nu$ goes to minus or plus infinity. This creates problems in terms of convexity of the log-likelihood and convergence.
-
-```{r}
-library(ggplot2)
-set.seed(0)
-n <- 1e2
-p <- 1
-K <- 2
-P <- p * (K - 1)
-beta <- rnorm(P)
-beta <- rep(0, P)
-Z <- cbind(1, matrix(runif(n * (p - 1)), nrow = n))
-X <- matrix(rnorm(n * K), nrow = n, ncol = K, byrow = TRUE)
-X <- cbind(rnorm(n, mean = 1), rnorm(n, mean = 1))
-x1 <- rnorm(n, mean = 0)
-x2 <- x1 + rnorm(n, mean = 0.1)
-X <- cbind(x1, x2)
-nu <- Z %*% matrix(beta, nrow = p, ncol = K - 1)
-a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
-eta <- rowSums(a * X)
-mu <- eta
-y <- rnorm(n, mu)
-le <- y - mu
-lee <- rep(- n, n)
-leee <- rep(0, n)
-
-ret <- convertDerivStack(beta, theta, X, Z, le, lee, leee, d1b = 0, deriv = 1)
-
-xx <- seq(from = - 10, to = 10, l = 200)
-yy <- sapply(xx, function(b) {
-  nu <- Z %*% matrix(b, nrow = p, ncol = K - 1)
-  a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
-  eta <- rowSums(a * X)
-  mu <- eta
-  - .5 * sum((y - mu) ^ 2)
-})
-
-ggplot() +
-  geom_line(aes(x = 1:n, y = x1), col = "blue") +
-  geom_line(aes(x = 1:n, y = x2), col = "black") +
-  geom_point(aes(x = 1:n, y = y), shape = "-", size = 6, col = "red")
-plot(xx, yy, type = "l")
-betaHatAnalytical <- log(- sum((y - X[, 1]) * (X[, 1] - X[, 2])) / sum((y - X[, 2]) * (X[, 1] - X[, 2])) )
-abline(v = betaHatAnalytical)
-
-## In the following, some code to see that estimates are not stable
-
-beta0 <- rep(0, P)
-# optimization <- optim(beta0, function(x) - l(x), gr = function(x) - gr(x),
-# method = "BFGS", hessian = TRUE)
-# betaHat <- optimization$par
-
-l <- function(param) {
-  nu <- Z %*% matrix(param, nrow = p, ncol = K - 1)
-  a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
-  eta <- rowSums(a * X)
-  mu <- eta
-  - .5 * sum((y - mu) ^ 2)
-}
-
-optimization <- nlm(function(x) - l(x), beta0, hessian = TRUE, gradtol = 1e-10)
-betaHat <- optimization$estimate
-
-
-nuHat <- Z %*% matrix(betaHat, nrow = p, ncol = K - 1)
-aHat <- cbind(1, exp(nuHat)) / (1 + rowSums(exp(nuHat)))
-
-invNegH <- solve(optimization$hessian)
-optimization$iterations
-eigen(- hes(betaHat))$values %>% barplot
-eigen(- hes(betaHat))$values
-optimization$gradient
-beta
-betaHat
-betaHatAnalytical
-se <- diag(invNegH)
-se
-
-ret <- convertDerivStack(betaHatAnalytical, theta, X, Z, le, lee, leee, d1b = 0, deriv = 1)
-ret$lb
-
-ggplot() + 
-  geom_errorbar((aes(1:P, ymin = betaHat - 1.96 * se, ymax = betaHat + 1.96 * se))) +
-  geom_point(aes(1:P, beta), col = "red")
-
-```
-
-# PIRLS and shape constrained effects with linear approximation? 
-
-Simple example to show that using the linear approximation of the unconstrained parameter beta tilde around the constrained parameter beta might allow using PIRLS to maximize directly the likelihood wrt beta when there are shape constrained effects.
-
-In the simple example, the response variable is normal, with identity link and one smoothing parameter.
-
-Maybe it is not useful, since we are focusing on the approach for general families.
-
-response: normal
-link: identity
-penalty: one smoothing parameter
-
-```{r a2, message = F}
-set.seed(0)
-r <- 0                              # rho = log(lambda)
-l <- exp(r)                         # lambda the smoothing parameter
-S <- diag(rep(1, p))                # penalty matrix
-p <- 3                              # n. of parameters
-n <- 1e4                            # n. of obs
-b <- rnorm(p)                       # true beta (constrained)
-bt <- c(b[1], exp(b[- 1]))          # beta tilde (unconstrained parameters)
-btb <- c(1, bt[- 1])                # derivative of bt wrt b
-X <- matrix(runif(n * p), nrow = n) # model matrix
-mu <- X %*% bt
-sig <- 1
-y <- rnorm(n, mean = mu, sd = sig)  # response
-b0 <- rep(- 1e4, p)                 # starting value
-
-bh <- b0
-G <- 10
-niter <- 0
-while(sum(G^2) > 1e-10) {
-  bth <- c(bh[1], exp(bh[- 1]))
-  muh <- X %*% bth
-  btb <- c(1, exp(bh [- 1]))
-  Xt <- t(t(X) * btb)
-  G <- t(Xt) %*% (y - muh) - S %*% bh
-  H <- - t(Xt) %*% Xt - S
-  bh <- bh - solve(H) %*% G
-  sum(G^2)
-  bh
-  niter <- niter + 1
-}
-bh
-niter
-```
-
-
-## Test of derivatives with positive stack effects (SHASH)
+# Test of derivatives with positive stack effects (SHASH)
 
 A code standardizing this derivative testing procedure is required!
 
@@ -251,12 +112,12 @@ A code standardizing this derivative testing procedure is required!
 set.seed(0)
 n <- 1e2
 p <- 3
-K <- 3
+K <- 2
 P <- p * K
 
-tau <- 1
-eps <- 1
-phi <- 1
+tau <- rnorm(1)
+eps <- rnorm(1)
+phi <- rnorm(1)
 sig <- exp(tau)
 del <- exp(phi)
 theta <- c(tau, eps, phi)
@@ -338,6 +199,7 @@ objSH <- createSH(y = y)$derObj(param = pars, deriv = 3)
 ll <- function(param) {
   lEta(param, deriv = 0)$l
 }
+
 # gradient function
 gr <- function(param) {
   lEtaList <- lEta(param, deriv = 2)
@@ -347,9 +209,10 @@ gr <- function(param) {
   let <- lEtaList$let
   ltt <- lEtaList$ltt
   convertDerivStackPositive(param[1:nbeta], X, Z,
-                                      le, lt, 
-                                      lee, let, ltt)$lb
-}
+                            le, lt, 
+                            lee, let, ltt)$lb
+} 
+
 # hessian function
 hes <- function(param) {
   lEtaList <- lEta(param, deriv = 2)
@@ -359,17 +222,11 @@ hes <- function(param) {
   let <- lEtaList$let
   ltt <- lEtaList$ltt
   convertDerivStackPositive(param[1:nbeta], X, Z,
-                                      le, lt, 
-                                      lee, let, ltt)$lbb
+                            le, lt, 
+                            lee, let, ltt)$lbb
 }
+
 # function optimizing beta given the smoothing parameter
-
-
-## gam seems to work! Therefore:
-## - Verify derivatives dbhat / dr and d1H
-## - Do it with more than one smoothing parameter
-
-
 d3r <- function(r) {
   ## We suppose to have 2 smoothing parameters
   ## Note that theta parameters are unpenalized
@@ -379,18 +236,19 @@ d3r <- function(r) {
   diag(S2)[(nn + 1):nbeta] <- 1
   lam <- exp(r)
   # Inner step: optimize pen l wrt beta
-  beta0 <- rep(0, P + nth)
+  beta0 <- trueParam
   optimization <- nlm(function(x) {
-    out <- - ll(x) + .5 * lam[1] * t(x) %*% S1 %*% x + .5 * lam[2] * t(x) %*% S2 %*% x
+    out <- - ll(x) +
+      .5 * lam[1] * t(x) %*% S1 %*% x + .5 * lam[2] * t(x) %*% S2 %*% x
     attr(out, "gradient") <- - gr(x) + lam[1] * S1 %*% x + lam[2] * S2 %*% x
     attr(out, "hessian") <- - hes(x) + lam[1] * S1 + lam[2] * S2
     out
-  }, beta0, hessian = TRUE, gradtol = 1e-10)
+  }, beta0, hessian = T, gradtol = 1e-10)
   betaHat <- optimization$estimate # beta hat as function of rho
   negHessian <- optimization$hessian
   invNegH <- solve(optimization$hessian)
-  d1br1 <- - lam[1] * invNegH %*% S1 %*% betaHat # derivative of beta hat wrt who
-  d1br2 <- - lam[2] * invNegH %*% S2 %*% betaHat # derivative of beta hat wrt who
+  d1br1 <- - lam[1] * invNegH %*% S1 %*% betaHat # derivative of beta hat wrt rho
+  d1br2 <- - lam[2] * invNegH %*% S2 %*% betaHat # derivative of beta hat wrt rho
   d1br <- cbind(d1br1, d1br2)
   list(betaHat = betaHat, d1br = d1br, negHessian = negHessian)
 }
@@ -411,25 +269,27 @@ d1h <- function(r) {
   lett <- lEtaList$lett
   lttt <- lEtaList$lttt
   d1H <- convertDerivStackPositive(param[1:nbeta], X, Z,
-                                      le, lt, 
-                                      lee, let, ltt, 
-                                      leee, leet, lett, lttt, 
-                                      d1b, deriv = 2)$d1H
+                                   le, lt, 
+                                   lee, let, ltt, 
+                                   leee, leet, lett, lttt, 
+                                   d1b, deriv = 2)$d1H
   do.call(cbind, lapply(d1H, as.numeric))
 }
 
 
 #### TEST OF DERIVATIVES
 
+relDiff <- function(x) round(abs(diff(x)) / max(abs(x)), 2)
+
 # gradient
-param <- rnorm(P + nth, sd = 1e-10)
+param <- rnorm(P + nth, sd = 1e0)
 # param <- rep(0, P + nth)
-r <- 0
+r <- c(0, 0)
 lam <- exp(r)
 S <- diag(c(rep(1, P), rep(0, nth)))
 GR <- data.frame(EX = gr(param), 
                  FD = as.numeric(jacobian(func = ll, x = as.vector(param))))
-GR$DIFF <- apply(GR, 1, function(x) round(diff(x), 7))
+GR$DIFF <- apply(GR, 1, relDiff)
 with(GR, plot(EX, FD))
 abline(0, 1, col = "red")
 GR
@@ -437,7 +297,7 @@ GR
 # hessian
 HEX <- data.frame(EX = as.numeric(hes(param)),
                   FD = as.numeric(jacobian(func = gr, x = as.vector(param))))
-HEX$DIFF <- apply(HEX, 1, function(x) round(diff(x), 7))
+HEX$DIFF <- apply(HEX, 1, relDiff)
 with(HEX, plot(EX, FD))
 abline(0, 1, col = "red")
 HEX
@@ -446,260 +306,42 @@ HEX
 r <- c(0, 0)
 D1B <- data.frame(EX = as.numeric(d3r(r)$d1br), 
                   FD = as.numeric(jacobian(function(x) d3r(x)$betaHat, r)))
-D1B$DIFF <- apply(D1B, 1, function(x) diff(x))
+D1B$DIFF <- apply(D1B, 1, relDiff)
 with(D1B, plot(EX, FD))
 abline(0, 1, col = "red")
 D1B
 
 # hessian wrt rho
 r <- c(0, 0)
-D1H <- data.frame(EX = as.numeric(d1h(r)), 
+D1H <- data.frame(EX = as.numeric(d1h(r)),
                   FD = as.numeric(jacobian(function(x) as.numeric(hes(d3r(x)$betaHat)), r)))
-D1H$DIFF <- apply(D1H, 1, function(x) diff(x))
+D1H$DIFF <- apply(D1H, 1, relDiff)
 with(D1H, plot(EX, FD))
 abline(0, 1, col = "red")
 D1H
 ```
 
 
-## Test of derivatives with positive stack effects (NORMAL)
+# Positive stack effects using mgcv
 
-A code standardizing this derivative testing procedure is required! A Lot of repetition here!!!
-
-```{r}
-set.seed(0)
-n <- 1e2
-p <- 3
-K <- 3
-P <- p * K
-
-tau <- 1
-eps <- 1
-phi <- 1
-sig <- exp(tau)
-del <- exp(phi)
-theta <- c(tau, eps, phi)
-
-betaToPars <- function(beta, theta) { # Transform beta to SHASH parameters
-  p <- ncol(Z)
-  K <- ncol(X)
-  nu <- Z %*% matrix(beta, nrow = p, ncol = K)
-  a <- exp(nu)
-  eta <- rowSums(a * X)
-  mu <- eta
-  pars <- cbind(mu, theta[1], theta[2], theta[3])
-  pars
-}
-
-# Derivatives of log-likelihood wrt eta as functions of beta
-lEta <- function(param, deriv = 0) { 
-  beta <- param[1:nbeta]
-  theta <- param[- (1:nbeta)]
-  pars <- betaToPars(beta, theta)
-  objSH <- createSH(y = y)$derObj(param = pars, deriv = deriv)
-  
-  l <- objSH$d0(SUM = T)
-  le <- lt <- let <- ltt <- lee <- leee <- leet <- lett <- lttt <- NULL # default values
-  if (deriv > 0) {
-    le <- objSH$d1(SUM = F)[[1]]
-    lt <- objSH$d1(SUM = T)[][- 1] # 3x1 1st deriv wrt theta
-    
-    if (deriv > 1) {
-      lee <- objSH$d2(SUM = F)[[1]]
-      let <- do.call(cbind, objSH$d2(SUM = F)[2:4]) # nx3 2nd mixed deriv wrt eta theta
-      ltt <- matrix(NA, 3, 3)          # 3x3 2nd deriv wrt theta
-      ltt[lower.tri(ltt, diag=TRUE)] <- objSH$d2(SUM = T)[- (1:4)]
-      ltt <- pmax(ltt, t(ltt), na.rm=TRUE)
-      if (deriv > 2) {
-        leee <- objSH$d3(SUM = F)[[1]]
-        #3rd derivatives
-        leee <- objSH$d3(SUM = F)[[1]] 
-        leet <- do.call(cbind, objSH$d3(SUM = F)[2:4]) 
-        lett <- do.call(cbind, objSH$d3(SUM = F)[5:10]) 
-        lttt <- objSH$d3(SUM = T)[11:20] # array of 3rd deriv wrt theta
-        
-        i3 <- trind.generator(3)$i3
-        ltttVec <- objSH$d3(SUM = T)[11:20] # 3x3x3 array of 3rd deriv wrt theta
-        lttt <- array(NA, dim = c(3, 3, 3))
-        for (uu in 1:3) for (vv in 1:3) for (ww in 1:3) {
-          lttt[uu, vv, ww] <- ltttVec[i3[uu, vv, ww]]
-          ww <- ww + 1
-        }
-      }
-    }
-  }
-  
-  return(list(l = l, le = le, lee = lee, leee = leee,
-              lt = lt, let = let, ltt = ltt,
-              leet = leet, lett = lett, lttt = lttt))
-}
-
-beta <- rnorm(P)
-theta <- rep(1, 3)
-trueParam <- c(beta, theta)
-nbeta <- length(beta)
-nth <- 3
-Z <- cbind(1, matrix(runif(n * (p - 1)), nrow = n))
-X <- matrix(runif(n * K), nrow = n)
-pars <- betaToPars(beta, theta)
-tau <- theta[1]
-eps <- theta[2]
-phi <- theta[3]
-sig <- exp(tau)
-del <- exp(phi)
-y <- pars[, 1] + (del * sig) * sinh((1/del) * asinh(qnorm(runif(n))) + (eps/del))
-
-objSH <- createSH(y = y)$derObj(param = pars, deriv = 3)
-
-#### FUNCTIONS FOR TESTING DERIVATIVES
-
-# log-likelihood function
-ll <- function(param) {
-  lEta(param, deriv = 0)$l
-}
-# gradient function
-gr <- function(param) {
-  lEtaList <- lEta(param, deriv = 2)
-  le <- lEtaList$le
-  lt <- lEtaList$lt
-  lee <- lEtaList$lee
-  let <- lEtaList$let
-  ltt <- lEtaList$ltt
-  convertDerivStackPositive(param[1:nbeta], X, Z,
-                                      le, lt, 
-                                      lee, let, ltt)$lb
-}
-# hessian function
-hes <- function(param) {
-  lEtaList <- lEta(param, deriv = 2)
-  le <- lEtaList$le
-  lt <- lEtaList$lt
-  lee <- lEtaList$lee
-  let <- lEtaList$let
-  ltt <- lEtaList$ltt
-  convertDerivStackPositive(param[1:nbeta], X, Z,
-                                      le, lt, 
-                                      lee, let, ltt)$lbb
-}
-# function optimizing beta given the smoothing parameter
-
-
-## gam seems to work! Therefore:
-## - Verify derivatives dbhat / dr and d1H
-## - Do it with more than one smoothing parameter
-
-
-d3r <- function(r) {
-  ## We suppose to have 2 smoothing parameters
-  ## Note that theta parameters are unpenalized
-  nn <- as.integer(nbeta / 2)
-  S1 <- S2 <- matrix(0, nrow = length(param), ncol = length(param))
-  diag(S1)[1:nn] <- 1
-  diag(S2)[(nn + 1):nbeta] <- 1
-  lam <- exp(r)
-  # Inner step: optimize pen l wrt beta
-  beta0 <- rep(0, P + nth)
-  optimization <- nlm(function(x) {
-    out <- - ll(x) + .5 * lam[1] * t(x) %*% S1 %*% x + .5 * lam[2] * t(x) %*% S2 %*% x
-    attr(out, "gradient") <- - gr(x) + lam[1] * S1 %*% x + lam[2] * S2 %*% x
-    attr(out, "hessian") <- - hes(x) + lam[1] * S1 + lam[2] * S2
-    out
-  }, beta0, hessian = TRUE, gradtol = 1e-10)
-  betaHat <- optimization$estimate # beta hat as function of rho
-  negHessian <- optimization$hessian
-  invNegH <- solve(optimization$hessian)
-  d1br1 <- - lam[1] * invNegH %*% S1 %*% betaHat # derivative of beta hat wrt who
-  d1br2 <- - lam[2] * invNegH %*% S2 %*% betaHat # derivative of beta hat wrt who
-  d1br <- cbind(d1br1, d1br2)
-  list(betaHat = betaHat, d1br = d1br, negHessian = negHessian)
-}
-# derivative of the hessian of the log-likelihood wrt rho
-d1h <- function(r) {
-  
-  d3rObj <- d3r(r)
-  param <- d3rObj$betaHat
-  d1b <- d3rObj$d1br
-  lEtaList <- lEta(param, deriv = 3)
-  le <- lEtaList$le
-  lt <- lEtaList$lt
-  lee <- lEtaList$lee
-  let <- lEtaList$let
-  ltt <- lEtaList$ltt
-  leee <- lEtaList$leee
-  leet <- lEtaList$leet
-  lett <- lEtaList$lett
-  lttt <- lEtaList$lttt
-  d1H <- convertDerivStackPositive(param[1:nbeta], X, Z,
-                                      le, lt, 
-                                      lee, let, ltt, 
-                                      leee, leet, lett, lttt, 
-                                      d1b, deriv = 2)$d1H
-  do.call(cbind, lapply(d1H, as.numeric))
-}
-
-
-#### TEST OF DERIVATIVES
-
-# gradient
-param <- rnorm(P + nth, sd = 1e-10)
-# param <- rep(0, P + nth)
-r <- 0
-lam <- exp(r)
-S <- diag(c(rep(1, P), rep(0, nth)))
-GR <- data.frame(EX = gr(param), 
-                 FD = as.numeric(jacobian(func = ll, x = as.vector(param))))
-GR$DIFF <- apply(GR, 1, function(x) round(diff(x), 7))
-with(GR, plot(EX, FD))
-abline(0, 1, col = "red")
-GR
-
-# hessian
-HEX <- data.frame(EX = as.numeric(hes(param)),
-                  FD = as.numeric(jacobian(func = gr, x = as.vector(param))))
-HEX$DIFF <- apply(HEX, 1, function(x) round(diff(x), 7))
-with(HEX, plot(EX, FD))
-abline(0, 1, col = "red")
-HEX
-
-# d beta / d rho
-r <- c(0, 0)
-D1B <- data.frame(EX = as.numeric(d3r(r)$d1br), 
-                  FD = as.numeric(jacobian(function(x) d3r(x)$betaHat, r)))
-D1B$DIFF <- apply(D1B, 1, function(x) diff(x))
-with(D1B, plot(EX, FD))
-abline(0, 1, col = "red")
-D1B
-
-# hessian wrt rho
-r <- c(0, 0)
-D1H <- data.frame(EX = as.numeric(d1h(r)), 
-                  FD = as.numeric(jacobian(function(x) as.numeric(hes(d3r(x)$betaHat)), r)))
-D1H$DIFF <- apply(D1H, 1, function(x) diff(x))
-with(D1H, plot(EX, FD))
-abline(0, 1, col = "red")
-D1H
-```
-
-
-
-## Positive stack effects using mgcv
-
-One covariate z
+Single covariate.
 
 ```{r}
-set.seed(0)
+set.seed(33)
 n <- 1e3
 K <- 2
 z <- 1:n
 
-nu1 <- sin(z * 2 * pi / n)
-nu2 <- cos(z * 2 * pi / n)
-
-s1 <- scale(sin(z * 2 * pi / n), center = TRUE, scale = FALSE)
-s2 <- scale(cos(z * 2 * pi / n), center = TRUE, scale = FALSE)
-
 nu <- cbind(nu1, nu2)
 a <- exp(nu)
+
+a1 <- sin(z * 2 * pi / n) / 2.1 + .5
+a2 <- cos(z * 2 * pi / n) / 2.1 + .5
+a <- cbind(a1, a2)
+
+nu1 <- log(a1)
+nu2 <- log(a2)
+nu <- cbind(nu1, nu2)
 
 x1 <- rnorm(n)
 x2 <- x1 + rnorm(n, sd = 1)
@@ -707,26 +349,25 @@ x2 <- x1 + rnorm(n, sd = 1)
 X <- cbind(x1, x2)
 mu <- rowSums(X * a)
 
-## SHASH
-# tau <- 1
-# eps <- 1
-# phi <- 1
-# sig <- exp(tau)
-# del <- exp(phi)
-# y <- mu + (del * sig) * sinh((1/del) * asinh(qnorm(runif(n))) + (eps/del))
-
 ## NORMAL
 logSigma <- 1
 y <- rnorm(n, mean = mu, sd = exp(logSigma))
 
-form <- lapply(1:K, function(x) formula("y ~ s(z, k = 5)"))
-mod <- gam(form, family = stackFamilyGaussian(X))
+form <- lapply(1:K, function(x) formula("y ~ s(z)"))
+mod <- gam(form, family = stackFamily(X, createGaussian(y)))
 
-## plot(mod, select = 1)
-## lines(z, s1, col = "red")
+## Plot estimated aplhas vs true
+nu1Hat <- predict(mod, type = "terms")[, 1] + mod$coefficients[1]
+nu2Hat <- predict(mod, type = "terms")[, 2] + mod$coefficients[11]
 
-## plot(mod, select = 2)
-## lines(z, s2, col = "red")
+a1Hat <- exp(nu1Hat)
+a2Hat <- exp(nu2Hat)
+
+plot(a1Hat, type = "l", ylim = range(c(a1Hat, a1)))
+lines(a1, col = "red")
+
+plot(a2Hat, type = "l", ylim = range(c(a2Hat, a2)))
+lines(a2, col = "red")
 ```
 
 Two covariates z1 and z2
@@ -754,20 +395,12 @@ x2 <- x1 + rnorm(n, sd = 1)
 X <- cbind(x1, x2)
 mu <- rowSums(X * a)
 
-## SHASH
-# tau <- 1
-# eps <- 1
-# phi <- 1
-# sig <- exp(tau)
-# del <- exp(phi)
-# y <- mu + (del * sig) * sinh((1/del) * asinh(qnorm(runif(n))) + (eps/del))
-
 ## NORMAL
 logSigma <- 1
 y <- rnorm(n, mean = mu, sd = exp(logSigma))
 
 form <- lapply(1:K, function(x) formula("y ~ s(z1, k = 5) + s(z2, k = 5)"))
-mod <- gam(form, family = stackFamilyGaussian(X))
+mod <- gam(form, family = stackFamily(X, createGaussian(y)))
 
 rows1 <- sample(1:n, 1e3)
 rows1 <- rows1[order(z1[rows1])]
