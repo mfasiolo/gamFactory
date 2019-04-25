@@ -11,13 +11,14 @@ createGaussian <- function(y = NULL) {
   
   derObj <- function(param, deriv = 0) {
     
-    if(is.vector(param)) param <- matrix(param, nrow = 1)
+    if (is.vector(param)) param <- matrix(param, nrow = 1)
+    if (ncol(param) != 2) stop("Wrong number of parameters provided")
     
     mu <- param[ , 1, drop = TRUE]
     g <- param[ , 2, drop = TRUE] ## g is log(sigma)
     tau2 <- exp( - 2 * g )
     n <- length(y)
-    
+
     if (length(mu) == 1) {
       mu <- rep(mu, n)
       g <- rep(g, n)
@@ -85,18 +86,27 @@ createGaussian <- function(y = NULL) {
   
   rd <- function(n, param) 
   {
-    if( is.vector(param) ) param <- matrix(param, nrow = 1)
+    if (is.vector(param)) param <- matrix(param, nrow = 1)
+    if (ncol(param != 2)) stop("Wrong number of parameters provided")
     mu <-  param[ , 1, drop = TRUE]
     sig <- exp( param[ , 2, drop = TRUE] )
     
     return( rnorm(n, mean = mu, sd = sig) )
   }
   
-  initialize <- function(n, param, ...){
+  initialize <- function(n, param, ...) {
     return( createGaussian(y = rd(n = n, param = param)) )
   }
   
-  return( list("derObj" = derObj, "rd" = rd, "initialize" = initialize) )
+  ml <- function(y) {
+    n <- length(y)
+    muHat <- mean(y)
+    logSigmaHat <- log(sd(y) * (n - 1) / n)
+    return(c(muHat, logSigmaHat))
+  }
+  
+  return( list("derObj" = derObj, "rd" = rd, "initialize" = initialize,
+               ml = ml, npar = 2) )
   
 }
 

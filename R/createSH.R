@@ -14,6 +14,7 @@ createSH <- function(y = NULL){
   derObj <- function(param, deriv = 0) {
     
     if( is.vector(param) ) { param <- matrix(param, nrow = 1) }
+    if (ncol(param) != 4) stop("Wrong number of parameters provided")
     
     mu  <- param[ , 1, drop = TRUE]
     tau <- param[ , 2, drop = TRUE]
@@ -168,6 +169,8 @@ createSH <- function(y = NULL){
   rd <- function(n, param) 
   {
     if( is.vector(param) ) { param <- matrix(param, nrow = 1) }
+    if (ncol(param != 4)) stop("Wrong number of parameters provided")
+    
     mu <-  param[ , 1, drop = TRUE]
     sig <- exp( param[ , 2, drop = TRUE] )
     eps <-  param[ , 3, drop = TRUE]
@@ -180,7 +183,17 @@ createSH <- function(y = NULL){
     return( createSH(y = rd(n = n, param = param)) )
   }
   
-  return( list("derObj" = derObj, "rd" = rd, "initialize" = initialize) )
+  ml <- function(y) {
+    # For inizialization of theta parameters
+    muHat <- mean(y)
+    tauHat <- sd(y)
+    epsHat <- 0
+    phiHat <- 0
+    return(c(muHat, tauHat, epsHat, phiHat))
+  }
+  
+  return( list("derObj" = derObj, "rd" = rd, "initialize" = initialize,
+               ml = ml, npar = 4) )
   
 }
 
