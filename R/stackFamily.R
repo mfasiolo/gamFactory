@@ -1,17 +1,24 @@
-#' Creates stack effects for a SHASH family
+#' Creates a family for stack effects
 #'
-#' @description Creates a family to be used in mgcv::gam to estimate a generalized additive model
-#' with response variable having SHASH distribution and stack nonnegative effects. 
+#' @description Creates a family to be used in mgcv::gam to estimate 
+#' a generalized additive model with stack effects. 
 #' 
 #' @param X Model Matrix of the nonnegative linear combination
+#' @param familyDeriv Families of the distribution of the response variable
+#' with respect to its parameters. At the moment only Gaussian and SHASH families 
+#' are possible. Customed families have been written through createGaussian and createSHASH
 #' @param link At the moment only the identity link is possible
 #'
 #' @return A family to give as family argument to mgcv::gam
 #' @export
 #'
 #' @examples
-stackFamilySHASH <- function(X, link="identity") {
+stackFamily <- function(X, familyDeriv, link="identity") {
   
+  if (link != "identity") stop("Only identity link at the moment")
+  
+  npar <- familyDeriv$npar
+  ntheta <- npar - 1
   K <- ncol(X)
   link <- lapply(1:K, function(x) "identity")
   stats <- list()
@@ -56,40 +63,47 @@ stackFamilySHASH <- function(X, link="identity") {
     ## finds initial coefficients
     ydim <- ncol(G$y) ## dimension of response
     nbeta <- ncol(G$X)
-    ntheta <- 3 ## number of additional parameters of the SHASH distribution
+    ntheta <- npar - 1 ## number of additional parameters of the Gaussian distribution
     lpi <- attr(G$X,"lpi")
     #offs <- attr(G$X,"offset")
     XX <- crossprod(G$X)
     G$X <- cbind(G$X,matrix(0,nrow(G$X),ntheta)) ## add dummy columns to G$X
     #G$cmX <- c(G$cmX,rep(0,ntheta)) ## and corresponding column means
+    
+    if (!is.null(G$Sl)) attr(G$Sl,"E") <- cbind(attr(G$Sl,"E"),matrix(0,nbeta,ntheta))
+    
     G$term.names <- c(G$term.names,paste("R",1:ntheta,sep="."))
     attr(G$X,"lpi") <- lpi
-    
     
     #offs -> attr(G$X,"offset")
     attr(G$X,"XX") <- XX
     
     # ## pad out sqrt of balanced penalty matrix to account for extra params
     
-    ### !!!!!!!!!!!!!!! This is not returned by the function, maybe because before it was an expression???
-    # if (!is.null(G$Sl)) attr(G$Sl,"E") <- cbind(attr(G$Sl,"E"),matrix(0,nbeta,ntheta)) 
-    
-    G$family$data <- list(ydim = ydim,nbeta=nbeta) # !!!!!!!!!!!!!!!!!!!!!!!!! Do you need this???
+    G$family$data <- list(ydim = ydim,nbeta=nbeta)
     G$family$ibeta = rep(0,ncol(G$X))
-    # ## now get initial parameters and store in family...
-    # for (k in 1:ydim) {
-    #   sin <- G$off %in% lpi[[k]]
-    #   #Sk <- G$S[sin]
-    #   um <- magic(G$y[,k],G$X[,lpi[[k]]],rep(-1,sum(sin)),G$S[sin],
-    #               match(G$off[sin],lpi[[k]])) # , ## turn G$off global indices into indices for this predictor
-    #   #nt=control$nthreads)
-    #   G$family$ibeta[lpi[[k]]] <- um$b
-    #   G$family$ibeta[nbeta+1] <- -.5*log(um$scale) ## initial log root precision
-    #   nbeta <- nbeta + ydim - k + 1
-    # }
     
+    ## now get initial parameters and store in family...
+    nn <- length(G$y[, 1])
+    K <- length(G$formula)
+    a <- rep(1 / K, nn) ## initialize all alphas equal
+    nu <- log(a)
+    for (k in 1:K) {
+      sin <- G$off %in% lpi[[k]]
+      um <- magic(nu,G$X[,lpi[[k]]],rep(-1,sum(sin)),G$S[sin],
+                  match(G$off[sin],lpi[[k]])) # , ## turn G$off global indices into indices for this predictor
+      #nt=control$nthreads)
+      G$family$ibeta[lpi[[k]]] <- um$b
+    }
+    fit <- G$X %*% G$family$ibeta
+    res <- y - fit
     
-    list(X=G$X,term.names=G$term.names,family=G$family)
+    G$family$ibeta[nbeta + 1:ntheta] <- familyDeriv$ml(res)[- 1]
+    
+    # G$family$ibeta[nbeta+1] <- log(sd(res)) ## initial log-sigma parameter
+    # G$family$ibeta[nbeta+1] <- -.5*log(um$scale) ## initial log root precision
+    
+    list(X=G$X,term.names=G$term.names,family=G$family,Sl=G$Sl)
   } ## preinitialize
   
   
@@ -125,40 +139,56 @@ stackFamilySHASH <- function(X, link="identity") {
     a <- exp(nu)
     eta <- rowSums(a * X)
     mu <- eta
-    theta.index <- (length(coef) - 2):length(coef)
+    theta.index <- (length(coef) - ntheta + 1):length(coef)
     theta <- coef[theta.index]
     beta <- coef[- theta.index]
     pars <- cbind(mu, matrix(rep(theta, nn), nrow = nn, byrow = T))
-    objSH <- createSH(y = y)$derObj(param = pars, deriv = deriv + 1)
+    
+    derObj <- familyDeriv$derObj(param = pars, deriv = deriv + 1)
     
     # log-likelihood
-    l <- objSH$d0(SUM = T)
+    l <- derObj$d0(SUM = T)
     
     if (deriv > 0) {
       # 1st derivatives
-      le <- objSH$d1(SUM = F)[[1]]   # nx1 1st deriv wrt eta
-      lt <- objSH$d1(SUM = T)[][- 1] # 3x1 1st deriv wrt theta
+      le <- derObj$d1(SUM = F)[[1]]   # nx1 1st deriv wrt eta
+      lt <- derObj$d1(SUM = T)[][- 1] # 1xq 1st deriv wrt theta
       
       # 2nd derivatives
-      lee <- objSH$d2(SUM = F)[[1]]  # nx1 2nd deriv wrt eta
-      let <- do.call(cbind, objSH$d2(SUM = F)[2:4]) # nx3 2nd mixed deriv wrt eta theta
-      ltt <- matrix(NA, 3, 3)          # 3x3 2nd deriv wrt theta
-      ltt[lower.tri(ltt, diag=TRUE)] <- objSH$d2(SUM = T)[- (1:4)]
+      
+      # total number of 2nd derivatives
+      n2der <- length(derObj$d2())
+      
+      # number of 2rd derivatives wrt theta
+      ntt <- ntheta * (ntheta + 1) / 2
+      
+      lee <- derObj$d2(SUM = F)[[1]]  # nx1 2nd deriv wrt eta
+      let <- do.call(cbind, derObj$d2(SUM = F)[2:(n2der - ntt)])  # nxq 2nd mixed deriv wrt eta theta
+      ltt <- matrix(NA, ntheta, ntheta)          # qxq 2nd deriv wrt theta
+      ltt[lower.tri(ltt, diag=TRUE)] <- derObj$d2(SUM = T)[- (1:npar)]
       ltt <- pmax(ltt, t(ltt), na.rm=TRUE)
     }
     
     if (deriv > 1) {
       
+      # total number of 3rd derivatives
+      n3der <- length(derObj$d3())
+      
+      # number of 3rd derivatives wrt theta
+      nttt <- 0
+      for (uu in 1:ntheta) for (vv in uu:ntheta) for (ww in vv:ntheta) {
+        nttt <- nttt + 1
+      }
+      
       #3rd derivatives
-      leee <- objSH$d3(SUM = F)[[1]] # nx1 3rd deriv wrt eta
-      leet <- do.call(cbind, objSH$d3(SUM = F)[2:4]) # nx3 3rd deriv wrt eta eta theta
-      lett <- do.call(cbind, objSH$d3(SUM = F)[5:10]) # nx(3*(3+1)/2) 3rd deriv wrt eta theta theta
-      lttt <- objSH$d3(SUM = T)[11:20] # array of 3rd deriv wrt theta
+      leee <- derObj$d3(SUM = F)[[1]] # nx1 3rd deriv wrt eta
+      leet <- do.call(cbind, derObj$d3(SUM = F)[2:(2 + ntheta-1)]) # nxq 3rd deriv wrt eta eta theta
+      lett <- do.call(cbind, derObj$d3(SUM = F)[(2 + ntheta):(n3der - nttt)])  # nx(q*(q+1)/2) 3rd deriv wrt eta theta theta
       
       i3 <- trind.generator(3)$i3
-      ltttVec <- objSH$d3(SUM = T)[11:20] # 3x3x3 array of 3rd deriv wrt theta
-      lttt <- array(NA, dim = c(3, 3, 3))
-      for (uu in 1:3) for (vv in 1:3) for (ww in 1:3) {
+      ltttVec <- derObj$d3(SUM = T)[(n3der - nttt + 1):n3der] # qxqxq array of 3rd deriv wrt theta
+      lttt <- array(NA, dim = c(ntheta, ntheta, ntheta))
+      for (uu in 1:ntheta) for (vv in 1:ntheta) for (ww in 1:ntheta) {
         lttt[uu, vv, ww] <- ltttVec[i3[uu, vv, ww]]
         ww <- ww + 1
       }
@@ -177,10 +207,8 @@ stackFamilySHASH <- function(X, link="identity") {
     } else ret <- list()
     ret$l <- l
     ret
-  } # end ll stackFamilySHASH
+  } # end ll stackFamily
   
-  
-
   
   rd <- function(mu,wt,scale) {
     
@@ -188,7 +216,7 @@ stackFamilySHASH <- function(X, link="identity") {
   
   dev.resids <- function(a, b, c, d) y # MAYBE IT'S NEEDED IN gam.fit5
   
-  structure(list(family="stackSHASH",ll=ll,nlp=K,
+  structure(list(family="stackFamily",ll=ll,nlp=K,
                  link="identity",
                  preinitialize=preinitialize,
                  initialize=initialize,
@@ -199,7 +227,8 @@ stackFamilySHASH <- function(X, link="identity") {
                  linkinv = stats$linkinv, # MAYBE IT'S NEEDED IN gam.fit5
                  d2link=1,d3link=1,d4link=1, ## signals to fix.family.link that all done
                  ls=1, ## signals that ls not needed here
-                 available.derivs = 1 ## signal only first derivatives available...
+                 available.derivs = 1, ## signal only first derivatives available...
+                 familyDeriv=familyDeriv
   ), class = c("general.family","extended.family","family"))
-} # stackFamilySHASH
+} # stackFamily
 

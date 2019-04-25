@@ -74,16 +74,6 @@ convertDerivStackPositive <- function(beta, X, Z,
   
   if (deriv == 2) { ## store full d1H
     
-    # ennn <- list()
-    # coun <- 0
-    # for (jj in 1:K) for (kk in jj:K) for (ll in kk:K) {
-    #   coun <- coun + 1
-    #   if(jj == kk & kk == ll) {
-    #     ennn[[coun]] <- en[, jj]
-    #   } else ennn[[coun]] <- rep(0, n)
-    # }
-    # ennn <- do.call(cbind, ennn)
-    
     lnnn <- list()
     coun <- 0
     for (rr in 1:K) for (ss in rr:K) for (tt in ss:K) {
@@ -96,14 +86,6 @@ convertDerivStackPositive <- function(beta, X, Z,
       term2 <- lee * term2
       if (rr == ss & ss == tt) term3 <- le * en[, rr] # note ennn = enn = en
       lnnn[[coun]] <- term1 + term2 + term3
-        
-    # i3 <- mgcv::trind.generator(K)$i3
-    #   lnnn[[coun]] <- leee * en[, rr] * en[, ss] * en[, tt] +
-    #     lee * (enn[, i2[rr, tt]] * en[, ss] + 
-    #              enn[, i2[ss, tt]] * en[, rr] + 
-    #              enn[, i2[rr, ss]] * en[, tt]) +
-    #     le * ennn[, i3[rr, ss, tt]]
-      
     }
     lnnn <- do.call(cbind, lnnn)
     
