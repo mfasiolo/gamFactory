@@ -1,7 +1,10 @@
 #'
 #' Calculating derivatives of log-likelihood wrt regression coefficients
 #'
-#' @description Intended for use with stack effects. 
+#' @description Old, it implements stack effects with convex combination, 
+#' it only provides derivatives with respect to the regression coefficients and 
+#' not with respect to the other parameters of the response distribution. 
+#' Intended for use with stack effects. 
 #' Converts derivatives of the log-likelihood with respect to
 #' the non linear predictor eta into derivatives with respect to the
 #' regression coefficients and smoothing parameters
