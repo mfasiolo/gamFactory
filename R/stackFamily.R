@@ -96,7 +96,7 @@ stackFamily <- function(X, familyDeriv, link="identity") {
       G$family$ibeta[lpi[[k]]] <- um$b
     }
     fit <- G$X %*% G$family$ibeta
-    res <- y - fit
+    res <- G$y - fit
     
     G$family$ibeta[nbeta + 1:ntheta] <- familyDeriv$ml(res)[- 1]
     
