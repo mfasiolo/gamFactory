@@ -357,16 +357,13 @@ form <- lapply(1:K, function(x) formula("y ~ s(z)"))
 mod <- gam(form, family = stackFamily(X, createGaussian(y)))
 
 ## Plot estimated aplhas vs true
-nu1Hat <- predict(mod, type = "terms")[, 1] + mod$coefficients[1]
-nu2Hat <- predict(mod, type = "terms")[, 2] + mod$coefficients[11]
+nuHat <- mod$fitted.values
+aHat <- exp(nuHat)
 
-a1Hat <- exp(nu1Hat)
-a2Hat <- exp(nu2Hat)
-
-plot(a1Hat, type = "l", ylim = range(c(a1Hat, a1)))
+plot(aHat[, 1], type = "l", ylim = range(c(aHat[, 1], a1)))
 lines(a1, col = "red")
 
-plot(a2Hat, type = "l", ylim = range(c(a2Hat, a2)))
+plot(aHat[, 2], type = "l", ylim = range(c(aHat[, 2], a2)))
 lines(a2, col = "red")
 ```
 

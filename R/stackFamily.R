@@ -32,8 +32,10 @@ stackFamily <- function(X, familyDeriv, link="identity") {
     stats[[ii]]$d4link <- fam$d4link
   }
   
-  residuals <- function(object, type) {
-    return(y)
+  residuals <- function(object, type=c("deviance","pearson","response")) {
+    type <- match.arg(type)
+    if (type %in% c("deviance", "pearson")) return(NULL)
+    else object$y[, 1] - rowSums(exp(object$fitted) * X)
   }  
   # residuals <- function(object,type=c("deviance","pearson","response")) {
   #   type <- match.arg(type)
@@ -220,7 +222,8 @@ stackFamily <- function(X, familyDeriv, link="identity") {
                  link="identity",
                  preinitialize=preinitialize,
                  initialize=initialize,
-                 # postproc=postproc,residuals=residuals,
+                 # postproc=postproc,
+                 residuals=residuals,
                  linfo = stats,
                  rd=rd,
                  dev.resids = dev.resids,
