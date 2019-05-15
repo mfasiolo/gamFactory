@@ -90,14 +90,19 @@ stackFamily <- function(X, familyDeriv, link="identity") {
     K <- length(G$formula)
     a <- rep(1 / K, nn) ## initialize all alphas equal
     nu <- log(a)
+    # for (k in 1:K) {
+    #   sin <- G$off %in% lpi[[k]]
+    #   um <- magic(nu,G$X[,lpi[[k]]],rep(-1,sum(sin)),G$S[sin],
+    #               match(G$off[sin],lpi[[k]])) # , ## turn G$off global indices into indices for this predictor
+    #   #nt=control$nthreads)
+    #   G$family$ibeta[lpi[[k]]] <- um$b
+    # }
+    
     for (k in 1:K) {
-      sin <- G$off %in% lpi[[k]]
-      um <- magic(nu,G$X[,lpi[[k]]],rep(-1,sum(sin)),G$S[sin],
-                  match(G$off[sin],lpi[[k]])) # , ## turn G$off global indices into indices for this predictor
-      #nt=control$nthreads)
-      G$family$ibeta[lpi[[k]]] <- um$b
+      G$family$ibeta[nbeta / K * (k - 1) + 1] <- 1 / K
     }
-    fit <- G$X %*% G$family$ibeta
+    
+    fit <- rowSums(X * 1 / K)
     res <- G$y[, 1] - fit
     
     G$family$ibeta[nbeta + 1:ntheta] <- familyDeriv$ml(res)[- 1]
