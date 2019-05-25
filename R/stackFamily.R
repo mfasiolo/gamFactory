@@ -11,8 +11,10 @@
 #'
 #' @return A family to give as family argument to mgcv::gam
 #' @export
+#' 
+#' @name stackFamily
+#' @rdname stackFamily
 #'
-#' @examples
 stackFamily <- function(X, familyDeriv, link="identity") {
   
   if (link != "identity") stop("Only identity link at the moment")

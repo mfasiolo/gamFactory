@@ -2,7 +2,7 @@
 % Please edit documentation in R/convertDerivStackPositiveOld.R
 \name{convertDerivStackPositiveOld}
 \alias{convertDerivStackPositiveOld}
-\title{Calculating derivatives of log-likelihood wrt regression coefficients}
+\title{Calculating derivatives of log-likelihood wrt regression coefficients.}
 \usage{
 convertDerivStackPositiveOld(param, theta, X, Z, le, lee, leee = 0,
   d1b = 0, deriv = 0)
@@ -27,6 +27,9 @@ convertDerivStackPositiveOld(param, theta, X, Z, le, lee, leee = 0,
 \item{deriv}{0: just grad and Hess, 1: first deriv of Hess}
 }
 \description{
+It is old because it only calculates derivatives with respect to
+the regression coefficients, but not the derivatives with respect to the
+additional parameter of the respone distribution.
 Intended for use with stack effects.
 Converts derivatives of the log-likelihood with respect to
 the non linear predictor eta into derivatives with respect to the

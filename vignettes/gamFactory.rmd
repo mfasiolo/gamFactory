@@ -106,7 +106,7 @@ for(ii in 1:3) { plot(der[[ii]][ , 1] - der[[ii]][ , 2]) }
 
 # Test of derivatives with positive stack effects (SHASH)
 
-A code standardizing this derivative testing procedure is required!
+NOTE! For testing derivatives of any general family I have written a function. However, some fixes are still required before we can use only that and delete the next part.
 
 ```{r}
 set.seed(0)
