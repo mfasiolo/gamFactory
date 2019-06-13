@@ -16,8 +16,9 @@
 testGeneralFamilyDeriv <- function(fam,
                             nsim = 30,
                             ndata = 1e2,
-                            p = 3,
+                            p = 2,
                             seed = 0,
+                            nlp = 3,
  ## add code to manage additional parameters theta depending on the family.
  ## The problem is that theta parameters are added to the regression coefficients
  ## then this function is not able to manage the correct number of 
@@ -25,18 +26,31 @@ testGeneralFamilyDeriv <- function(fam,
                             ntheta = NULL 
                             ) {
   
-  if (class(fam)[1] == "function") fam <- fam()
-  if (!("general.family" %in% class(fam))) 
-    stop("Only general families can be tested with this function")
-  
-  nlp <- fam$nlp
-  
+  ## simulate data
   set.seed(seed)
-  
   y <- matrix(rnorm(ndata * nlp), nrow = ndata, ncol = nlp)
   x <- matrix(rnorm(ndata * p), nrow = ndata, ncol = p * nlp)
   attr(x, "lpi") <- lapply(1:nlp, function(ii) ((ii - 1) * p + 1):(ii * p))
   npars <- p * nlp
+  
+  ## specific for stackPredictiveFamily
+  if (identical(fam, stackPredictiveFamily)) {
+    K <- nlp + 1
+    X <- matrix(rnorm(ndata * K), nrow = ndata, ncol = K)
+    fam <- stackPredictiveFamily(X)
+  }
+    
+  ## specific for stackFamily
+  if (identical(fam, stackFamily)) {
+    K <- nlp
+    X <- matrix(rnorm(ndata * K), nrow = ndata, ncol = K)
+    fam <- stackFamily(X, familyDeriv = createGaussian(y[, 1]))
+    npars <- npars + 1 ## gaussian family has one additional parameter
+  }
+    
+  if (class(fam)[1] == "function") fam <- fam()
+  if (!("general.family" %in% class(fam))) 
+    stop("Only general families can be tested with this function")
   
   ## first and second derivatives wrt regression coefficients
   dl <- function(coef) {
@@ -190,12 +204,4 @@ testGeneralFamilyDeriv <- function(fam,
   list(lb = lb, lbb = lbb, d1H = d1H)
   
 }
-
-# logP <- matrix(dnorm(rnorm(1e2 * 3), log = TRUE), nrow = 1e2, ncol = 3) 
-# # testDerivFamily(stackPredictiveFamily(logP))
-# 
-# ## Check why it is not working on stackFamily
-# X <- matrix(rnorm(1e2 * 3), nrow = 1e2, ncol = 3)
-# testDerivFamily(stackFamily(X, createGaussian(rnorm(1e2))))
-
 
