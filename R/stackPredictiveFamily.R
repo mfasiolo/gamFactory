@@ -119,13 +119,13 @@ stackPredictiveFamily <- function(logP) {
     Xm <- X[, - 1, drop = FALSE]
     w <- exp(nu + Xm - log(exp(X[, 1]) + rowSums(exp(nu + Xm))))
     
-    ll <- log(rowSums(a * exp(logP)))
+    logLik <- sum(log(rowSums(a * exp(logP))))
     
     if (deriv > 0) { ## grad and Hess
       ## the gradient...
       ln <- w - am
-      lb <- sapply(1:(K - 1), function(ii) t(Z[[ii]]) %*% ln[, ii])
-      lb <- as.vector(lb)
+      lb <- lapply(1:(K - 1), function(ii) as.numeric(t(Z[[ii]]) %*% ln[, ii]))
+      lb <- do.call("c", lb)
       
       ## the Hessian...
       lnn <- list()
@@ -141,23 +141,23 @@ stackPredictiveFamily <- function(logP) {
       lbb <- lapply(1:(K - 1), function(x) vector("list", K - 1))
       for (rr in 1:(K - 1)) for (ss in rr:(K - 1)) {
         lbb[[rr]][[ss]] <- t(Z[[rr]] * lnn[, i2[rr, ss]]) %*% Z[[ss]]
-        if (ss > rr) lbb[[ss]][[rr]] <- lbb[[rr]][[ss]]
+        if (ss > rr) lbb[[ss]][[rr]] <- t(lbb[[rr]][[ss]])
       }
-      lbb <- lapply(lbb, function (x) do.call(rbind, x))
-      lbb <- do.call(cbind, lbb)
+      lbb <- lapply(lbb, function (x) do.call(cbind, x))
+      lbb <- do.call(rbind, lbb)
     } ## grad and Hess
     
     if (deriv == 3) { ## store full d1H
       
       lnnn <- list()
       coun <- 0
-      for (jj in 1:(K - 1)) for (kk in jj:(K - 1)) for (ll in kk:(K - 1)) {
+      for (jj in 1:(K - 1)) for (kk in jj:(K - 1)) for (tt in kk:(K - 1)) {
         coun <- coun + 1
         lnnn[[coun]] <-
-          lnn[, i2[jj, ll]] * (as.numeric(jj == kk) - w[, kk]) -
-          w[, kk] * (as.numeric(kk == ll) - w[, ll]) * ln[, jj] -
-          am[, jj] * (as.numeric(jj == ll) - am[, ll]) * ln[, kk] -
-          am[, jj] * lnn[, i2[kk, ll]]
+          lnn[, i2[jj, tt]] * (as.numeric(jj == kk) - w[, kk]) -
+          w[, kk] * (as.numeric(kk == tt) - w[, tt]) * ln[, jj] -
+          am[, jj] * (as.numeric(jj == tt) - am[, tt]) * ln[, kk] -
+          am[, jj] * lnn[, i2[kk, tt]]
       }
       lnnn <- do.call("cbind", lnnn)
       
@@ -171,14 +171,14 @@ stackPredictiveFamily <- function(logP) {
           Zd1b <- sapply(1:(K - 1), function(tt) Z[[tt]] %*% d1b[lpi[[tt]], l])
           V <- rowSums(Zd1b * lnnn[, i3[rr, ss, ]])
           lbbr[[rr]][[ss]] <- t(Z[[rr]]) %*% (Z[[ss]] * V)
-          if (ss > rr) lbbr[[ss]][[rr]] <- lbbr[[rr]][[ss]]
+          if (ss > rr) lbbr[[ss]][[rr]] <- t(lbbr[[rr]][[ss]])
         }
-        lbbr <- lapply(lbbr, function (x) do.call(rbind, x))
-        d1H[[l]] <- do.call(cbind, lbbr)
+        lbbr <- lapply(lbbr, function (x) do.call(cbind, x))
+        d1H[[l]] <- do.call(rbind, lbbr)
       } ## for (l in 1:m)
     } ## store full d1H
     
-    list(l = sum(ll), lb = lb, lbb = lbb, d1H = d1H)
+    list(l = logLik, lb = lb, lbb = lbb, d1H = d1H)
   } # end ll stackPredictiveFamily
   
   

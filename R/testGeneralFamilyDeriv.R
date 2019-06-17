@@ -23,6 +23,10 @@ testGeneralFamilyDeriv <- function(fam,
  ## The problem is that theta parameters are added to the regression coefficients
  ## then this function is not able to manage the correct number of 
  ## regression coefficients, linear predictors, response variables etc.
+ 
+ ## this tests the same formula for each linear predictor both for
+ ## stacking of means and stacking of predictive distributions.
+ ## different formulas per predictor not yet implemented
                             ntheta = NULL 
                             ) {
   
