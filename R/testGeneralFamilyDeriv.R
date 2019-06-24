@@ -138,7 +138,9 @@ testGeneralFamilyDeriv <- function(fam,
     lam <- exp(r)
     # Inner step: optimize pen l wrt beta
     
-    optimization <- nlm(pen_ll, beta0, lam = lam, hessian = T, gradtol = 1e-10)
+    optimization <- nlm(pen_ll, beta0, lam = lam, hessian = T 
+                        # gradtol = 1e-10
+                        )
     
     betaHat <- optimization$estimate # beta hat as function of rho
     negHessian <- optimization$hessian
@@ -149,39 +151,63 @@ testGeneralFamilyDeriv <- function(fam,
     list(betaHat = betaHat, d1br = d1br, negHessian = negHessian)
   }
   
-  d1h <- function(r) {
+  d1h <- function(sp) {
     
-    d3rObj <- d3r(r)
+    d3rObj <- d3r(sp)
     betaHat <- d3rObj$betaHat
     d1b <- d3rObj$d1br
 
     fam$ll(y, x, betaHat, family = fam, d1b = d1b, deriv = 3)$d1H %>% 
-      do.call("cbind", .) %>% as.numeric
+      setNames(paste0("sp", 1:nsp))
   }
   
   dd1HNum <- function(sp) {
-    jacobian(function(x) as.numeric(dlbb(d3r(x)$betaHat)), sp)
+    jacobian(function(x) dlbb(d3r(x)$betaHat), sp) %>% 
+      as.data.frame %>% 
+      lapply(function(x) matrix(x, nrow = nlp * p, ncol = nlp * p)) %>% 
+      setNames(paste0("sp", 1:nsp))
   }
   
   nsp <- nlp
+  
+  organizeD1H <- function(d1H) {
+    lapply(1:nsim, function(ii) {
+      lapply(1:nsp, function(jj) {
+        data.frame(d1H = as.numeric(d1H[[ii]][[jj]]),
+                   isDiag = as.logical(diag(p * nsp)),
+                   nsim = ii,
+                   nsp = jj
+        )
+      }) %>% 
+        bind_rows
+    }) %>% 
+      bind_rows %>% 
+      mutate(nsim = factor(nsim),
+             nsp = factor(nsp))
+  }
+  
   r <- matrix(rnorm(nsim * nsp), nrow = nsim, ncol = nsp)
-  d1HEx <- apply(r, 1, d1h)
-  d1HNum <- apply(r, 1, dd1HNum)
+  d1HEx <- apply(r, 1, d1h) %>% 
+    setNames(paste0("sim", 1:nsim)) %>% 
+    organizeD1H
   
-  funsSp <- c("dd1H", "dd1HNum")
-  derivListSp <- list(d1HEx = d1HEx, d1HNum = d1HNum)
-  names(derivListSp) <- funsSp
+  d1HNum <- apply(r, 1, dd1HNum) %>% 
+    setNames(paste0("sim", 1:nsim)) %>% 
+    organizeD1H
   
-  derivList <- c(derivListBeta, derivListSp)
+  derivSp <- data.frame(d1HEx, Numeric = d1HNum$d1H) %>% 
+    rename(Exact = d1H) %>% 
+    mutate(d1HDiff = Exact - Numeric,
+           relDiff = abs(Exact - Numeric) / 
+             apply(abs(data.frame(Exact, Numeric)), 1, max))
   
-  columns <- list(c("dlb", "dlbNum"), c("dlbb", "dlbbNum"), funsSp)
+  columns <- list(c("dlb", "dlbNum"), c("dlbb", "dlbbNum"))
   names(columns) <- 
     c("First derivatives wrt beta", 
-      "Second derivatives wrt beta", 
-      "First derivatives of Hessian wrt smoothing parameters")
+      "Second derivatives wrt beta")
   lapply(seq_along(columns), function(i, col) {
-    data.frame(Exact = derivList[[columns[[i]][1]]] %>% as.numeric, 
-               Numeric = derivList[[columns[[i]][2]]] %>% as.numeric) %>%
+    data.frame(Exact = derivListBeta[[columns[[i]][1]]] %>% as.numeric, 
+               Numeric = derivListBeta[[columns[[i]][2]]] %>% as.numeric) %>%
       ggplot() +
       geom_point(aes(Exact, Numeric), size = 0.1) +
       geom_abline(col = "red") +
@@ -191,18 +217,27 @@ testGeneralFamilyDeriv <- function(fam,
   ) %>% 
     do.call(grid.arrange, .)
   
+  lapply(c("isDiag", "nsim", "nsp"), function(colu) {
+    ggplot(derivSp) + 
+      geom_point(aes_string("Exact", "Numeric", col = colu), size = 0.5) +
+      geom_abline(col = "red") +
+      ggtitle("First derivatives of Hessian wrt smoothing parameters")
+  }) %>% 
+    do.call(grid.arrange, .)
+
+  
   relDiff <- function(x) abs(diff(x)) / max(abs(x))
   
-  lb <- data.frame(EX = derivList$dlb %>% as.numeric,
-                    NUM = derivList$dlbNum %>% as.numeric) %>% 
+  lb <- data.frame(EX = derivListBeta$dlb %>% as.numeric,
+                    NUM = derivListBeta$dlbNum %>% as.numeric) %>% 
     mutate(DIFF = apply(., 1, relDiff))
   
-  lbb <- data.frame(EX = derivList$dlbb %>% as.numeric,
-                    NUM = derivList$dlbbNum %>% as.numeric) %>% 
+  lbb <- data.frame(EX = derivListBeta$dlbb %>% as.numeric,
+                    NUM = derivListBeta$dlbbNum %>% as.numeric) %>% 
     mutate(DIFF = apply(., 1, relDiff))
   
-  d1H <- data.frame(EX = derivList$dd1H %>% as.numeric,
-             NUM = derivList$dd1HNum %>% as.numeric) %>% 
+  d1H <- data.frame(EX = derivSp$Exact %>% as.numeric,
+             NUM = derivSp$Numeric %>% as.numeric) %>%
     mutate(DIFF = apply(., 1, relDiff))
 
   list(lb = lb, lbb = lbb, d1H = d1H)

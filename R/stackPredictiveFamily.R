@@ -167,8 +167,8 @@ stackPredictiveFamily <- function(logP) {
       for (l in 1:m) {
         lbbr <- lapply(1:(K - 1), function(x) vector("list", K - 1))
         i3 <- trind.generator(K - 1)$i3
+        Zd1b <- sapply(1:(K - 1), function(tt) Z[[tt]] %*% d1b[lpi[[tt]], l])
         for (rr in 1:(K - 1)) for (ss in rr:(K - 1)) {
-          Zd1b <- sapply(1:(K - 1), function(tt) Z[[tt]] %*% d1b[lpi[[tt]], l])
           V <- rowSums(Zd1b * lnnn[, i3[rr, ss, ]])
           lbbr[[rr]][[ss]] <- t(Z[[rr]]) %*% (Z[[ss]] * V)
           if (ss > rr) lbbr[[ss]][[rr]] <- t(lbbr[[rr]][[ss]])
