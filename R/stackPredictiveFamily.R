@@ -11,7 +11,7 @@
 #' @name stackPredictiveFamily
 #' @rdname stackPredictiveFamily
 #'
-stackPredictiveFamily <- function(logP) {
+stackPredictiveFamily <- function(logP, rho = NULL) {
   
   link <- "identity"
   K <- ncol(logP)
@@ -98,49 +98,66 @@ stackPredictiveFamily <- function(logP) {
     ##        2 - diagonal of first deriv of Hess
     ##        3 - first deriv of Hess
     
-    y <- as.matrix(y)[, 1] # Using multiple linear predictors, y is repeated, here we do not want this.
-    nn <- length(y)
+    nn <- nrow(x)
     lpi <- attr(x,"lpi") ## extract linear predictor index, in gamlss.gH it's jj
     K <- ncol(logP)
-    Z <- lapply(1:(K - 1), function(ii) x[ , lpi[[ii]], drop = FALSE])
-    p <- lapply(Z, function(Zii) ncol(Zii))
+    p <- lapply(lpi, function(lpi_ii) length(lpi_ii))
     nu <- list()
-    for (kk in 1:(K - 1)) nu[[kk]] <- Z[[kk]] %*% coef[lpi[[kk]]]
+    for (kk in 1:(K - 1)) nu[[kk]] <- 
+      x[ , lpi[[kk]], drop = FALSE] %*% coef[lpi[[kk]]]
     nu <- do.call("cbind", nu)
     
     d1H <- lb <- lbb <- NULL ## default
     
     a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
-    am <- a[, - 1, drop = FALSE]
     
     ## adjust log-densities for numerical stability
-    c <- apply(logP, 1, max)
-    X <- logP - c
-    Xm <- X[, - 1, drop = FALSE]
-    w <- exp(nu + Xm - log(exp(X[, 1]) + rowSums(exp(nu + Xm))))
+    X <- logP - apply(logP, 1, max)
+    w <- exp(nu + X[, - 1, drop = FALSE] - 
+               log(exp(X[, 1]) + 
+                     rowSums(exp(nu + X[, - 1, drop = FALSE]))))
     
     logLik <- sum(log(rowSums(a * exp(logP))))
+    if (!is.null(rho)) {
+      logLik <- logLik + sum(t(t(log(a)) * (rho - 1)))
+    }
     
     if (deriv > 0) { ## grad and Hess
       ## the gradient...
-      ln <- w - am
-      lb <- lapply(1:(K - 1), function(ii) as.numeric(t(Z[[ii]]) %*% ln[, ii]))
+      ln <- ln_r <- w - a[, - 1, drop = FALSE]
+      if (!is.null(rho)) {
+        ln_r <- ln_r + t(t(- a[, - 1, drop = FALSE] * (sum(rho) - K)) + 
+                       rho[- 1] - 1)
+      }
+      lb <- lapply(1:(K - 1), function(ii) {
+        as.numeric(t(x[ , lpi[[ii]], drop = FALSE]) %*% ln_r[, ii])
+        })
       lb <- do.call("c", lb)
       
       ## the Hessian...
-      lnn <- list()
+      lnn <- lnn_rr <- list()
       coun <- 0
       for (jj in 1:(K - 1)) for (kk in jj:(K - 1)) {
         coun <- coun + 1
-        lnn[[coun]] <-
-          ln[, jj] * (as.numeric(jj == kk) - w[, kk]) - am[, jj] * ln[, kk]
+        lnn[[coun]] <- lnn_rr[[coun]] <- 
+          ln[, jj] * (as.numeric(jj == kk) - w[, kk]) - 
+          a[, jj + 1] * ln[, kk]
+        if (!is.null(rho)) {
+          lnn_rr[[coun]] <- 
+            lnn_rr[[coun]] - a[, jj + 1] *
+            (as.numeric(jj == kk) - a[, kk + 1]) *
+            (sum(rho) - K)
+        }
       }
       lnn <- do.call(cbind, lnn)
+      lnn_rr <- do.call(cbind, lnn_rr)
       i2 <- trind.generator(K - 1)$i2
       
       lbb <- lapply(1:(K - 1), function(x) vector("list", K - 1))
       for (rr in 1:(K - 1)) for (ss in rr:(K - 1)) {
-        lbb[[rr]][[ss]] <- t(Z[[rr]] * lnn[, i2[rr, ss]]) %*% Z[[ss]]
+        lbb[[rr]][[ss]] <- 
+          t(x[ , lpi[[rr]], drop = FALSE] * lnn_rr[, i2[rr, ss]]) %*% 
+          x[ , lpi[[ss]], drop = FALSE]
         if (ss > rr) lbb[[ss]][[rr]] <- t(lbb[[rr]][[ss]])
       }
       lbb <- lapply(lbb, function (x) do.call(cbind, x))
@@ -153,11 +170,20 @@ stackPredictiveFamily <- function(logP) {
       coun <- 0
       for (jj in 1:(K - 1)) for (kk in jj:(K - 1)) for (tt in kk:(K - 1)) {
         coun <- coun + 1
-        lnnn[[coun]] <-
+        lnnn[[coun]] <- 
           lnn[, i2[jj, tt]] * (as.numeric(jj == kk) - w[, kk]) -
           w[, kk] * (as.numeric(kk == tt) - w[, tt]) * ln[, jj] -
-          am[, jj] * (as.numeric(jj == tt) - am[, tt]) * ln[, kk] -
-          am[, jj] * lnn[, i2[kk, tt]]
+          a[, jj + 1] * (as.numeric(jj == tt) - a[, tt + 1]) * ln[, kk] -
+          a[, jj + 1] * lnn[, i2[kk, tt]]
+        if (!is.null(rho)) {
+          lnnn[[coun]] <- lnnn[[coun]] -
+            (
+              (as.numeric(jj == kk) - a[, kk + 1]) * 
+                (as.numeric(jj == tt) * a[, jj + 1] - a[, jj + 1] * a[, tt + 1]) - 
+                (as.numeric(kk == tt) * a[, kk + 1] - a[, kk + 1] * a[, tt + 1]) * 
+                a[, jj + 1]
+            ) * (sum(rho) - K)
+        }
       }
       lnnn <- do.call("cbind", lnnn)
       
@@ -167,10 +193,14 @@ stackPredictiveFamily <- function(logP) {
       for (l in 1:m) {
         lbbr <- lapply(1:(K - 1), function(x) vector("list", K - 1))
         i3 <- trind.generator(K - 1)$i3
-        Zd1b <- sapply(1:(K - 1), function(tt) Z[[tt]] %*% d1b[lpi[[tt]], l])
+        Zd1b <- sapply(1:(K - 1), function(tt) {
+          x[ , lpi[[tt]], drop = FALSE] %*% d1b[lpi[[tt]], l]
+          })
         for (rr in 1:(K - 1)) for (ss in rr:(K - 1)) {
           V <- rowSums(Zd1b * lnnn[, i3[rr, ss, ]])
-          lbbr[[rr]][[ss]] <- t(Z[[rr]]) %*% (Z[[ss]] * V)
+          lbbr[[rr]][[ss]] <- 
+            t(x[ , lpi[[rr]], drop = FALSE]) %*% 
+            (x[ , lpi[[ss]], drop = FALSE] * V)
           if (ss > rr) lbbr[[ss]][[rr]] <- t(lbbr[[rr]][[ss]])
         }
         lbbr <- lapply(lbbr, function (x) do.call(cbind, x))
