@@ -9,4 +9,5 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
 Suggests: testthat
+LinkingTo: Rcpp, RcppArmadillo
 Roxygen: list(markdown = TRUE)

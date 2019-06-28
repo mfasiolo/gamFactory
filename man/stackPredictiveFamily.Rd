@@ -4,7 +4,7 @@
 \alias{stackPredictiveFamily}
 \title{Creates a family for stacking predictive distributions}
 \usage{
-stackPredictiveFamily(logP)
+stackPredictiveFamily(logP, rho = NULL)
 }
 \arguments{
 \item{logP}{Matrix of the log-predictive distributions to be stacked}
