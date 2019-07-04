@@ -39,7 +39,7 @@
 #'
 logLikGPD <- function(y = NULL){
   
-  derObj<-function(param, deriv){
+  derObj <- function(param, deriv){
     
     if( is.vector(param) ) { param <- matrix(param, nrow = 1) }
     
@@ -136,7 +136,7 @@ logLikGPD <- function(y = NULL){
   }
   
   initialize<-function(n, param){
-    return( createGPDO(y = rd(n, param)) )
+    return( logLikGPD(y = rd(n, param)) )
   }
   
   return( list("derObj" = derObj, "rd" = rd, "initialize" = initialize) )
