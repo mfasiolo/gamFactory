@@ -38,19 +38,23 @@ buildGAMLSS <- function(o){
       jj <- attr(X, "lpi") ## extract linear predictor index
       np <- length(jj)
       n <- length(y)
+      
+      # If offset is NULL, put it to zero
+      if( is.null(offset) ) { offset <- lapply(1:np, function(.x) 0) }
+      for(ii in 1:np){ if( is.null(offset[[ii]]) ) offset[[ii]] <- 0 }
 
-      etas <- lapply(jj, function(.kk) X[ , .kk, drop=FALSE] %*% coef[ .kk ])
+      etas <- lapply(jj, function(.kk) drop(X[ , .kk, drop=FALSE] %*% coef[ .kk ]) + offset[[ii]])
       mus <- lapply(1:np, function(.kk) family$linfo[[.kk]]$linkinv( etas[[.kk]] ))
       
       llkDer <- llk(y = y, do.call("cbind", mus), 
                     deriv = switch(as.character(deriv), "0" = 0, "1" = 2, "2" = 3, "3" = 3, "4" = 4))  
       
-      l0  <- llkDer$d0()
+      l0  <- drop(crossprod(wt, llkDer$d0(SUM = FALSE)))
       
       if (deriv > 0) {
         
-        l1 <- do.call("cbind", llkDer$d1(SUM = FALSE))
-        l2 <- do.call("cbind", llkDer$d2(SUM = FALSE))
+        l1 <- wt  * do.call("cbind", llkDer$d1(SUM = FALSE))
+        l2 <- wt  * do.call("cbind", llkDer$d2(SUM = FALSE))
 
         ig1 <- do.call("cbind", lapply(1:np, function(.kk) family$linfo[[.kk]]$mu.eta( etas[[.kk]])))
         g2  <- do.call("cbind", lapply(1:np, function(.kk) family$linfo[[.kk]]$d2link( mus[[.kk]])))
@@ -62,7 +66,7 @@ buildGAMLSS <- function(o){
       if (deriv>1) {
         ## the third derivatives
         ## order mmm mmr mmx mrr mrx mxx rrr rrx rxx xxx
-        l3 <- do.call("cbind", llkDer$d3(SUM = FALSE)) 
+        l3 <- wt  * do.call("cbind", llkDer$d3(SUM = FALSE)) 
 
         g3  <- do.call("cbind", lapply(1:np, function(.kk) family$linfo[[.kk]]$d3link( mus[[.kk]])))
 
@@ -72,7 +76,7 @@ buildGAMLSS <- function(o){
         ## the fourth derivatives
         ## mmmm mmmr mmmx mmrr mmrx mmxx mrrr mrrx mrxx mxxx
         ## rrrr rrrx rrxx rxxx xxxx
-        l4 <- do.call("cbind", llkDer$d4()) 
+        l4 <- wt  * do.call("cbind", llkDer$d4()) 
         
         g3  <- do.call("cbind", lapply(1:np, function(.kk) family$linfo[[.kk]]$d4link( mus[[.kk]])))
         
