@@ -31,7 +31,8 @@
 #'       col = 3)
 #'
 bundleGPD <- list(np = 2,
-                  llk = function(y, param, deriv) logLikGPD(y)$derObj(param, deriv),
+                  availableDeriv = 3,
+                  llk = function(y, param, deriv, ...) logLikGPD(y)$derObj(param, deriv),
                   links = list(c("log", "sqrt"), "logitab(-0.5, 0.5)"), 
                   nam = "gpd", 
                   residuals = function(object, type = c("deviance", "pearson", "response")) {
@@ -73,44 +74,48 @@ bundleGPD <- list(np = 2,
                     
                     return( r )
                   }, 
-                  initialize = expression({
+                  initFun = function(y, nobs, E, x, family){
                     ## start out with xi close to zero. If xi==0 then
                     ## mean is sigma = phi. Idea is to regress g(y) on model matrix for mean.
                     ## Note that appropriate E scaling
                     ## for full calculation may be inappropriate for initialization 
                     ## which is basically penalizing something different here.
                     ## best we can do here is to use E only as a regularizer.
+                    
                     n <- rep(1, nobs)
+                    
                     ## should E be used unscaled or not?..
                     use.unscaled <- if (!is.null(attr(E, "use.unscaled"))){ TRUE } else { FALSE }
-                    if ( is.null(start) ) {
-                      jj <- attr(x,"lpi")
-                      start <- rep(0, ncol(x))
-                      
-                      #### Get scale phi = sigma = E(y) (if xi == 0)
-                      yt1 <- if (family$link[[1]]=="identity"){ 
-                        y 
-                      } else {
-                        family$linfo[[1]]$linkfun(abs(y) + max(y)*1e-7)
-                      }
-                      x1 <- x[ , jj[[1]], drop=FALSE]
-                      e1 <- E[ , jj[[1]], drop=FALSE] ## square root of total penalty
-                      
-                      if (use.unscaled) {
-                        qrx <- qr( rbind(x1, e1) )
-                        x1 <- rbind(x1, e1)
-                        startji <- qr.coef(qr(x1), c(yt1,rep(0,nrow(E))))
-                        startji[!is.finite(startji)] <- 0       
-                      } else {
-                        startji <- pen.reg(x1, e1, yt1)
-                      }
-                      start[jj[[1]]] <- startji
-                      
-                      #### Get shape xi to be the equivalent of nearly 0
-                      x1 <-  x[ , jj[[2]], drop=FALSE]
-                      startji <- qr.coef(qr(x1), c(rep(family$linfo[[2]]$linkfun(1e-3),nrow(x1))))   
-                      startji[!is.finite(startji)] <- 0
-                      start[jj[[2]]] <- startji
+                    
+                    jj <- attr(x,"lpi")
+                    start <- rep(0, ncol(x))
+                    
+                    #### Get scale phi = sigma = E(y) (if xi == 0)
+                    yt1 <- if (family$link[[1]]=="identity"){ 
+                      y 
+                    } else {
+                      family$linfo[[1]]$linkfun(abs(y) + max(y)*1e-7)
                     }
-                  }) 
+                    x1 <- x[ , jj[[1]], drop=FALSE]
+                    e1 <- E[ , jj[[1]], drop=FALSE] ## square root of total penalty
+                    
+                    if (use.unscaled) {
+                      qrx <- qr( rbind(x1, e1) )
+                      x1 <- rbind(x1, e1)
+                      startji <- qr.coef(qr(x1), c(yt1,rep(0,nrow(E))))
+                      startji[!is.finite(startji)] <- 0       
+                    } else {
+                      startji <- penReg(x1, e1, yt1)
+                    }
+                    start[jj[[1]]] <- startji
+                    
+                    #### Get shape xi to be the equivalent of nearly 0
+                    x1 <-  x[ , jj[[2]], drop=FALSE]
+                    startji <- qr.coef(qr(x1), c(rep(family$linfo[[2]]$linkfun(1e-3),nrow(x1))))   
+                    startji[!is.finite(startji)] <- 0
+                    start[jj[[2]]] <- startji
+                    
+                    return( start )
+                  }
 )
+

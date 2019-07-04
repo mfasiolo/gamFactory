@@ -9,27 +9,45 @@
 #'
 buildGAMLSS <- function(o){
   
+  availableDeriv <- o$availableDeriv
   cdf <- o$cdf
   rd <- o$rd
   qf <- o$qf
-  initialize <- o$initialize
   residuals <- o$residuals
   llk <- o$llk  
   nam <- o$nam
   np <- o$np
   postproc <- o$postproc
   okLinks <- o$links
+  
+  checkExtra <- o$checkExtra
+  if( is.null(checkExtra) ){ checkExtra <- function(.ex) NULL }
+  
+  initFun <- o$initFun
+  initialize <- expression({
+    if ( is.null(start) ) { start <- family$initFun(y = y, nobs = nobs, E = E, x = x, family = family) }
+  }) 
+  
   defLinks <- lapply(okLinks, "[[", 1)
 
   outFam <- function(link = defLinks, extra = o$extra){
     
+    # Saving extra parameters in .GlobalEnv environment
+    assign(".extra", extra, envir = environment())
+    
+    getExtra <- function( ) get(".extra")
+    putExtra <- function(extra) assign(".extra", extra, envir = environment(sys.function()))
+    
+    if( !is.null(checkExtra) ){ checkExtra( extra ) }
+    
+    # Preparing link function
     stats <- getStats(link = link, 
                       okLinks = okLinks, 
                       np = np, 
                       nam = nam)
     
     ll <- function(y, X, coef, wt, family, offset=NULL, deriv=0, d1b=0, d2b=0, Hp=NULL, rank=0, fh=NULL, D=NULL) {
-      ## function defining the gamlss GEV model log lik. 
+      ## function defining a gamlss model log lik. 
       ## deriv: 0 - eval
       ##        1 - grad and Hess
       ##        2 - diagonal of first deriv of Hess
@@ -39,15 +57,22 @@ buildGAMLSS <- function(o){
       np <- length(jj)
       n <- length(y)
       
-      # If offset is NULL, put it to zero
-      if( is.null(offset) ) { offset <- lapply(1:np, function(.x) 0) }
-      for(ii in 1:np){ if( is.null(offset[[ii]]) ) offset[[ii]] <- 0 }
+      extra <- get(".extra")
+      
+      # If offset for a linear predictor is absent or  NULL, put it to zero
+      for(jj in 1:np){
+        if( jj > length(offset) || is.null(offset[[jj]]) ){
+          offset[[jj]] <- 0
+        }
+      }
 
-      etas <- lapply(jj, function(.kk) drop(X[ , .kk, drop=FALSE] %*% coef[ .kk ]) + offset[[ii]])
+      etas <- lapply(1:np, function(.kk) drop(X[ , .kk, drop=FALSE] %*% coef[ .kk ]) + offset[[.kk]])
       mus <- lapply(1:np, function(.kk) family$linfo[[.kk]]$linkinv( etas[[.kk]] ))
       
-      llkDer <- llk(y = y, do.call("cbind", mus), 
-                    deriv = switch(as.character(deriv), "0" = 0, "1" = 2, "2" = 3, "3" = 3, "4" = 4))  
+      llkDer <- llk(y = y, 
+                    param = do.call("cbind", mus), 
+                    deriv = switch(as.character(deriv), "0" = 0, "1" = 2, "2" = 3, "3" = 3, "4" = 4), 
+                    extra = extra)  
       
       l0  <- drop(crossprod(wt, llkDer$d0(SUM = FALSE)))
       
@@ -107,17 +132,20 @@ buildGAMLSS <- function(o){
                    nlp = np,
                    tri = trind.generator( np ), ## symmetric indices for accessing derivative arrays
                    initialize = initialize, 
+                   initFun = initFun,
                    postproc = postproc, 
                    residuals = residuals,
                    qf = qf,
                    linfo = stats,
-                   rd = rd, ## link information list
+                   rd = rd, 
                    cdf = cdf,
                    d2link=1,  ## signals to fix.family.link that all done 
                    d3link=1,
-                   d4link=1,   
-                   ls=1, ## signals that ls not needed here
-                   available.derivs = 1, ## can use full Newton here
+                   d4link=1, 
+                   putExtra = putExtra, 
+                   getExtra = getExtra,
+                   ls = 1, ## signals that ls not needed here
+                   available.derivs = availableDeriv - 2,
                    discrete.ok = TRUE
     ), class = c("general.family","extended.family","family"))
   
