@@ -53,8 +53,8 @@ buildGAMLSS <- function(o){
       ##        2 - diagonal of first deriv of Hess
       ##        3 - first deriv of Hess
       ##        4 - everything.
-      jj <- attr(X, "lpi") ## extract linear predictor index
-      np <- length(jj)
+      lpi <- attr(X, "lpi") ## extract linear predictor index
+      np <- length(lpi)
       n <- length(y)
       
       extra <- get(".extra")
@@ -66,7 +66,7 @@ buildGAMLSS <- function(o){
         }
       }
 
-      etas <- lapply(1:np, function(.kk) drop(X[ , .kk, drop=FALSE] %*% coef[ .kk ]) + offset[[.kk]])
+      etas <- lapply(1:np, function(.kk) drop(X[ , lpi[[.kk]], drop=FALSE] %*% coef[ lpi[[.kk]] ]) + offset[[.kk]])
       mus <- lapply(1:np, function(.kk) family$linfo[[.kk]]$linkinv( etas[[.kk]] ))
       
       llkDer <- llk(y = y, 
@@ -115,7 +115,7 @@ buildGAMLSS <- function(o){
         de <- gamlss.etamu(l1,l2,l3,l4,ig1,g2,g3,g4,i2,i3,i4,deriv-1)
         
         ## get the gradient and Hessian...
-        ret <- gamlss.gH(X,jj,de$l1,de$l2,i2,l3=de$l3,i3=i3,l4=de$l4,i4=i4,
+        ret <- gamlss.gH(X,lpi,de$l1,de$l2,i2,l3=de$l3,i3=i3,l4=de$l4,i4=i4,
                          d1b=d1b,d2b=d2b,deriv=deriv-1,fh=fh,D=D) 
       } else { 
         ret <- list()

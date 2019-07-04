@@ -87,7 +87,7 @@ bundleGPD <- list(np = 2,
                     ## should E be used unscaled or not?..
                     use.unscaled <- if (!is.null(attr(E, "use.unscaled"))){ TRUE } else { FALSE }
                     
-                    jj <- attr(x,"lpi")
+                    lpi <- attr(x,"lpi")
                     start <- rep(0, ncol(x))
                     
                     #### Get scale phi = sigma = E(y) (if xi == 0)
@@ -96,8 +96,8 @@ bundleGPD <- list(np = 2,
                     } else {
                       family$linfo[[1]]$linkfun(abs(y) + max(y)*1e-7)
                     }
-                    x1 <- x[ , jj[[1]], drop=FALSE]
-                    e1 <- E[ , jj[[1]], drop=FALSE] ## square root of total penalty
+                    x1 <- x[ , lpi[[1]], drop=FALSE]
+                    e1 <- E[ , lpi[[1]], drop=FALSE] ## square root of total penalty
                     
                     if (use.unscaled) {
                       qrx <- qr( rbind(x1, e1) )
@@ -107,13 +107,13 @@ bundleGPD <- list(np = 2,
                     } else {
                       startji <- penReg(x1, e1, yt1)
                     }
-                    start[jj[[1]]] <- startji
+                    start[lpi[[1]]] <- startji
                     
                     #### Get shape xi to be the equivalent of nearly 0
-                    x1 <-  x[ , jj[[2]], drop=FALSE]
+                    x1 <-  x[ , lpi[[2]], drop=FALSE]
                     startji <- qr.coef(qr(x1), c(rep(family$linfo[[2]]$linkfun(1e-3),nrow(x1))))   
                     startji[!is.finite(startji)] <- 0
-                    start[jj[[2]]] <- startji
+                    start[lpi[[2]]] <- startji
                     
                     return( start )
                   }
