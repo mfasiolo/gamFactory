@@ -37,5 +37,7 @@ derivCheck <- function(np, parSim, obj, ord = 1, trans = identity, ..., derFunNa
     abline(0, 1, col = 2)
   }
   
+  out$param <- pars
+  
   return(out)
 }
