@@ -19,14 +19,6 @@ testGeneralFamilyDeriv <- function(fam,
                             p = 2,
                             seed = 0,
                             nlp = 3,
- ## add code to manage additional parameters theta depending on the family.
- ## The problem is that theta parameters are added to the regression coefficients
- ## then this function is not able to manage the correct number of 
- ## regression coefficients, linear predictors, response variables etc.
- 
- ## this tests the same formula for each linear predictor both for
- ## stacking of means and stacking of predictive distributions.
- ## different formulas per predictor not yet implemented
                             ntheta = NULL 
                             ) {
   
@@ -50,6 +42,9 @@ testGeneralFamilyDeriv <- function(fam,
     X <- matrix(rnorm(ndata * K), nrow = ndata, ncol = K)
     fam <- stackFamily(X, familyDeriv = createGaussian(y[, 1]))
     npars <- npars + 1 ## gaussian family has one additional parameter
+    attrib <- attr(x, "lpi")
+    x <- cbind(x, rnorm(ndata))
+    attr(x, "lpi") <- attrib
   }
     
   if (class(fam)[1] == "function") fam <- fam()
@@ -164,7 +159,7 @@ testGeneralFamilyDeriv <- function(fam,
   dd1HNum <- function(sp) {
     jacobian(function(x) dlbb(d3r(x)$betaHat), sp) %>% 
       as.data.frame %>% 
-      lapply(function(x) matrix(x, nrow = nlp * p, ncol = nlp * p)) %>% 
+      lapply(function(x) matrix(x, nrow = npars, ncol = npars)) %>% 
       setNames(paste0("sp", 1:nsp))
   }
   
@@ -174,7 +169,7 @@ testGeneralFamilyDeriv <- function(fam,
     lapply(1:nsim, function(ii) {
       lapply(1:nsp, function(jj) {
         data.frame(d1H = as.numeric(d1H[[ii]][[jj]]),
-                   isDiag = as.logical(diag(p * nsp)),
+                   isDiag = as.logical(diag(npars)),
                    nsim = ii,
                    nsp = jj
         )
