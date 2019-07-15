@@ -22,3 +22,50 @@ A family to give as family argument to mgcv::gam
 Creates a family to be used in mgcv::gam to estimate
 a generalized additive model with stack effects.
 }
+\examples{
+### Quantile regression example 
+# Simulate some data
+n <- 2e3
+x <- sort( runif(n, -pi/2, pi/2) )
+fn <- x + 2*x^2 + sin(2*x) + 6 * (x > 0.75) * (0.75 - x)
+y <- fn + rnorm(n, 0, 1.5)
+dat <- data.frame(x = x, y = y)
+plot(dat)
+
+# Expert 1 (2) is good for low (big) x
+w <- exp(10 * x) / (1 + exp(10 * x))
+fit1 <- gam(y ~ s(x), weights = 1-w, data = dat, method = "REML")
+fit2 <- gam(y ~ s(x), weights = w, data = dat, method = "REML")
+
+# Produce stacking data set
+qu <- 0.9
+datStack <- data.frame(x = x, y = fn + rnorm(n, 0, 1.5))
+datStack$pred1 <- qnorm(qu, predict(fit1, newdata = datStack), fit1$sig2)
+datStack$pred2 <- qnorm(qu, predict(fit2, newdata = datStack), fit1$sig2)
+
+# Perform stacking
+library(RhpcBLASctl); blas_set_num_threads(1)
+fitStack <- gam(list(y ~ x, y ~ x), 
+                family = stackFamily(X = cbind(datStack$pred1, datStack$pred2), 
+                                     familyDeriv = logLikELF(y = datStack$y, qu = qu, 
+                                                             h = 0.1), 
+                                     link = "identity"), 
+                data = datStack)
+
+# The weight of the first (second) expert must decrease (increase) with x
+par(mfrow = c(1, 2))
+pr <- predict(fitStack)
+plot(datStack$x, exp(pr[ , 1]))
+plot(datStack$x, exp(pr[ , 2]))
+
+# Stacking should do better than any of the two experts
+par(mfrow = c(1, 1))
+plot(dat, col = "grey")
+lines(x, datStack$pred1, col = 3)
+lines(x, datStack$pred2, col = 4)
+lines(x, exp(pr[ , 1]) * datStack$pred1 + exp(pr[ , 2]) * datStack$pred2, col = 2) 
+lines(x, qnorm(qu, fn, 1.5), lty = 2)
+legend(x = "top", lty = c(1, 1, 1, 2), col = c(3, 4, 2, 1), 
+       legend = c("Expert 1", "Expert 2", "Stack", "Truth")) 
+
+}
