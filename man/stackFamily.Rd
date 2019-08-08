@@ -65,7 +65,7 @@ lines(x, datStack$pred1, col = 3)
 lines(x, datStack$pred2, col = 4)
 lines(x, exp(pr[ , 1]) * datStack$pred1 + exp(pr[ , 2]) * datStack$pred2, col = 2) 
 lines(x, qnorm(qu, fn, 1.5), lty = 2)
-legend(x = "top", lty = c(1, 1, 1, 2), col = c(3, 4, 2, 1), 
+legend(x = "bottomright", lty = c(1, 1, 1, 2), col = c(3, 4, 2, 1), 
        legend = c("Expert 1", "Expert 2", "Stack", "Truth")) 
 
 }

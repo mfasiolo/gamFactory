@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 lbbMult <- function(x, lpstart, lpend, lnn, i2) {
-    .Call('_gamFactory_lbbMult', PACKAGE = 'gamFactory', x, lpstart, lpend, lnn, i2)
+    .Call('_gamFactory_lbbMult', x, lpstart, lpend, lnn, i2)
 }
 
