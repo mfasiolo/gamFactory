@@ -36,7 +36,6 @@
 #' datStack$pred2 <- qnorm(qu, predict(fit2, newdata = datStack), fit1$sig2)
 #' 
 #' # Perform stacking
-#' library(RhpcBLASctl); blas_set_num_threads(1)
 #' fitStack <- gam(list(y ~ x, y ~ x), 
 #'                 family = stackFamily(X = cbind(datStack$pred1, datStack$pred2), 
 #'                                      familyDeriv = logLikELF(y = datStack$y, qu = qu, 
@@ -47,9 +46,9 @@
 #' # The weight of the first (second) expert must decrease (increase) with x
 #' par(mfrow = c(1, 2))
 #' pr <- predict(fitStack)
-#' plot(datStack$x, exp(pr[ , 1]))
-#' plot(datStack$x, exp(pr[ , 2]))
-#' 
+#' plot(datStack$x, exp(pr[ , 1]) / (exp(pr[ , 1]) + exp(pr[ , 2])))
+#' plot(datStack$x, exp(pr[ , 2]) / (exp(pr[ , 1]) + exp(pr[ , 2])))
+#'
 #' # Stacking should do better than any of the two experts
 #' par(mfrow = c(1, 1))
 #' plot(dat, col = "grey")
