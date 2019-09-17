@@ -7,7 +7,8 @@
 stackPredictiveFamily(logP, rho = NULL)
 }
 \arguments{
-\item{logP}{Matrix of the log-predictive distributions to be stacked}
+\item{logP}{n x K matrix of the log-predictive distributions of the single experts.
+n is the total number of available observations, while K is the number of experts}
 }
 \value{
 A family to give as family argument to mgcv::gam

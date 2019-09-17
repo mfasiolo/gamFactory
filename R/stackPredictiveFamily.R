@@ -3,7 +3,8 @@
 #' @description Creates a family to be used in mgcv::gam 
 #' for stacking predictive distributions.
 #' 
-#' @param logP Matrix of the log-predictive distributions to be stacked
+#' @param logP n x K matrix of the log-predictive distributions of the single experts. 
+#' n is the total number of available observations, while K is the number of experts
 #'
 #' @return A family to give as family argument to mgcv::gam
 #' @export
@@ -18,7 +19,7 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
   ## adjust log-densities for numerical stability
   X <- logP - matrixStats::rowMaxs(logP)
   expX <- exp(X)
-  P <- exp(logP)
+  P <- exp(logP) ## predictive densities (not logs)
   link <- lapply(1:(K - 1), function(x) "identity")
   stats <- list()
   for (ii in 1:(K - 1)) {
@@ -102,12 +103,20 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
     ##        2 - diagonal of first deriv of Hess
     ##        3 - first deriv of Hess
     
-    nn <- nrow(x)
+    discrete <- is.list(x)
+    nn <- length(y)
     lpi <- attr(x,"lpi") ## extract linear predictor index, in gamlss.gH it's jj
     p <- lapply(lpi, function(lpi_ii) length(lpi_ii))
     nu <- sapply(1:(K - 1), 
-                 function(ii) 
-                   x[ , lpi[[ii]], drop = FALSE] %*% coef[lpi[[ii]]])
+                 function(ii) {
+                   if (discrete) {
+                     Xbd(x$Xd,coef,k=x$kd,ks=x$ks,ts=x$ts,dt=x$dt,v=x$v,qc=x$qc,
+                         drop=x$drop,lt=x$lpid[[ii]])
+                   } else {
+                     x[, lpi[[ii]], drop = FALSE] %*% coef[lpi[[ii]]]
+                   }
+                 })
+    
     
     d1H <- lb <- lbb <- NULL ## default
     
@@ -127,11 +136,8 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
       ln <- ln_r <- w - a[, - 1, drop = FALSE]
       if (!is.null(rho)) {
         ln_r <- ln_r + t(t(- a[, - 1, drop = FALSE] * (sum(rho) - K)) + 
-                       rho[- 1] - 1)
+                           rho[- 1] - 1)
       }
-      matProd <- crossprod(x, ln_r)
-      lb <- lapply(1:(K - 1), function(ii) matProd[lpi[[ii]], ii]) %>% 
-        do.call(cbind, .) %>% as.numeric
       
       ## the Hessian...
       lnn <- lnn_rr <- list()
@@ -150,38 +156,22 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
       }
       lnn <- do.call(cbind, lnn)
       lnn_rr <- do.call(cbind, lnn_rr)
-      i2 <- trind.generator(K - 1)$i2
-      
-      lpstart <- sapply(lpi, function (x) x[1] - 1)
-      lpend <- sapply(lpi, function (x) x[length(x)] - 1)
-      
-      ## Cpp (almost twice faster)
-      lbb <- lbbMult(x, lpstart, lpend, lnn_rr, i2)
-      
-      ## R
-      # lbb <- lapply(1:(K - 1), function(x) vector("list", K - 1))
-      # for (rr in 1:(K - 1)) for (ss in rr:(K - 1)) {
-      #   lbb[[rr]][[ss]] <- 
-      #     crossprod(x[ , lpi[[rr]], drop = FALSE] * lnn_rr[, i2[rr, ss]],
-      #     x[ , lpi[[ss]], drop = FALSE])
-      #   if (ss > rr) lbb[[ss]][[rr]] <- t(lbb[[rr]][[ss]])
-      # }
-      # lbb <- lapply(lbb, function (x) do.call(cbind, x))
-      # lbb <- do.call(rbind, lbb)
-      
     } ## grad and Hess
     
-    if (deriv == 3) { ## store full d1H
+    lnnn <- l4 <- 0 ## defaults
+    tri <- family$tri ## indices to facilitate access to earlier results
+    
+    if (deriv > 1) { ## store full d1H
       
       lnnn <- list()
       coun <- 0
       for (jj in 1:(K - 1)) for (kk in jj:(K - 1)) for (tt in kk:(K - 1)) {
         coun <- coun + 1
         lnnn[[coun]] <- 
-          lnn[, i2[jj, tt]] * (as.numeric(jj == kk) - w[, kk]) -
+          lnn[, tri$i2[jj, tt]] * (as.numeric(jj == kk) - w[, kk]) -
           w[, kk] * (as.numeric(kk == tt) - w[, tt]) * ln[, jj] -
           a[, jj + 1] * (as.numeric(jj == tt) - a[, tt + 1]) * ln[, kk] -
-          a[, jj + 1] * lnn[, i2[kk, tt]]
+          a[, jj + 1] * lnn[, tri$i2[kk, tt]]
         if (!is.null(rho)) {
           lnnn[[coun]] <- lnnn[[coun]] -
             (
@@ -193,29 +183,15 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
         }
       }
       lnnn <- do.call("cbind", lnnn)
-      
-      m <- ncol(d1b)
-      
-      d1H <- list()
-      for (l in 1:m) {
-        lbbr <- lapply(1:(K - 1), function(x) vector("list", K - 1))
-        i3 <- trind.generator(K - 1)$i3
-        Zd1b <- sapply(1:(K - 1), function(tt) {
-          x[ , lpi[[tt]], drop = FALSE] %*% d1b[lpi[[tt]], l]
-          })
-        for (rr in 1:(K - 1)) for (ss in rr:(K - 1)) {
-          V <- rowSums(Zd1b * lnnn[, i3[rr, ss, ]])
-          lbbr[[rr]][[ss]] <- 
-            crossprod(x[ , lpi[[rr]], drop = FALSE],
-            x[ , lpi[[ss]], drop = FALSE] * V)
-          if (ss > rr) lbbr[[ss]][[rr]] <- t(lbbr[[rr]][[ss]])
-        }
-        lbbr <- lapply(lbbr, function (x) do.call(cbind, x))
-        d1H[[l]] <- do.call(rbind, lbbr)
-      } ## for (l in 1:m)
-    } ## store full d1H
+    } 
     
-    list(l = logLik, lb = lb, lbb = lbb, d1H = d1H)
+    if (deriv) {
+      ## get the gradient and Hessian...
+      ret <- gamlss.gH(x,lpi,ln_r,lnn_rr,tri$i2,l3=lnnn,i3=tri$i3,l4=l4,i4=tri$i4,
+                       d1b=d1b,d2b=d2b,deriv=deriv-1,fh=fh,D=D) 
+    } else ret <- list()
+    ret$l <- logLik; ret
+    
   } # end ll stackPredictiveFamily
   
   
@@ -230,6 +206,7 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
                  preinitialize=preinitialize,
                  initialize=initialize,
                  # postproc=postproc,
+                 tri = trind.generator(K - 1), ## symmetric indices for accessing derivative arrays
                  residuals=residuals,
                  linfo = stats,
                  rd=rd,
@@ -237,7 +214,7 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
                  linkinv = stats$linkinv, # MAYBE IT'S NEEDED IN gam.fit5
                  d2link=1,d3link=1,d4link=1, ## signals to fix.family.link that all done
                  ls=1, ## signals that ls not needed here
-                 available.derivs = 1 ## signal only first derivatives available...
+                 available.derivs = 1, ## signal only first derivatives available...
+                 discrete.ok = TRUE
   ), class = c("general.family","extended.family","family"))
 } # stackFamily
-
