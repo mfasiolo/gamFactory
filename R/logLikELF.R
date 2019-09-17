@@ -53,7 +53,7 @@ logLikELF <- function(y, qu, h){
     zc <- (y - mu) / h
     lpxp <- log1pexp( zc ) 
     
-    ll0 <- (1-tau) * z - h*lpxp/sig - log( h*beta(h*(1-tau)/sig, h*tau/sig) )
+    ll0 <- (1-tau) * z - h*lpxp/sig - log(h) - lbeta(h*(1-tau)/sig, h*tau/sig)
     
     if( deriv > 0 )
     {
