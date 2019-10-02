@@ -1175,7 +1175,7 @@ inisp <- function(G,Sl,etastart=NULL,mustart=NULL,start=NULL,nt=1) {
     w[!is.finite(w)] <- 0
     lbb <- if (discrete) mgcv:::XWXd(G$Xd,w,G$kd,G$ks,G$ts,G$dt,G$v,G$qc,nt,G$drop) else crossprod(x,w*x)
   }  
-  lsp <- log(initial.sp(lbb,G$S,G$off,XX=TRUE))
+  lsp <- log(abs(initial.sp(lbb,G$S,G$off,XX=TRUE)))
   ## Deal with L, scale and theta ...
   if (!is.null(G$L)) lsp <- if (ncol(G$L)>0) as.numeric(coef(lm(lsp ~ G$L-1+offset(G$lsp0)))) else rep(0,0)
   if (inherits(family,"extended.family")) lsp <- c(theta,lsp)
