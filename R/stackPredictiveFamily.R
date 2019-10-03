@@ -104,7 +104,6 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
     ##        3 - first deriv of Hess
     
     discrete <- is.list(x)
-    nn <- length(y)
     lpi <- attr(x,"lpi") ## extract linear predictor index, in gamlss.gH it's jj
     p <- lapply(lpi, function(lpi_ii) length(lpi_ii))
     nu <- sapply(1:(K - 1), 
@@ -120,7 +119,9 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
     
     d1H <- lb <- lbb <- NULL ## default
     
-    a <- cbind(1, exp(nu)) / (1 + rowSums(exp(nu)))
+    nu1 <- cbind(0, nu)
+    nuCen <- nu1 - rowMaxs(nu1)
+    a <- exp(nuCen) / rowSums(exp(nuCen))
     
     w <- exp(nu + X[, - 1, drop = FALSE] - 
                log(expX[, 1] + 
