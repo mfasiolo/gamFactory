@@ -6,3 +6,4 @@
 *.so
 *.tmp
 gamFactory.Rproj
+inst/doc

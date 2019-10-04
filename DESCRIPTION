@@ -3,11 +3,15 @@ Title: Tools for building new GAM models in mgcv
 Version: 0.0.1
 Authors@R: c(person("Matteo", "Fasiolo", email = "matteo.fasiolo@gmail.com", role = c("aut", "cre")))
 Description: Tools for building new families and smooth effects in mgcv.
-Depends: mgcv, qgam, numDeriv
+Depends: mgcv, qgam, numDeriv, matrixStats
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
-Suggests: testthat
+Suggests: 
+    testthat,
+    knitr,
+    rmarkdown
 LinkingTo: Rcpp, RcppArmadillo
 Roxygen: list(markdown = TRUE)
+VignetteBuilder: knitr

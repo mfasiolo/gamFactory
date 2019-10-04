@@ -1,13 +1,12 @@
 ---
 title: "Stacking probabilistic forecasts of electricity load with smart meter data"
 author: "Matteo Fasiolo"
-date: "04/10/2019"
-output: html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{stacking}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 Let us fit two experts on the `UKload` dataset in the `qgam` package. 
 The `summer` expert is fitted using only summer data, the `winter` expert one is fitted using winter data.
@@ -60,7 +59,7 @@ modStacking <- gam(
   formula = formStacking,
   data = UKload,
   family = stackPredictiveFamily(logP)
-  )
+)
 ```
 
 After the stacking model has been fitted, we can calculate the weights of the stacking for each observation.
@@ -86,8 +85,8 @@ With more covariates, we need to use alternative ways such as accumulated local 
 
 Now let us compare the stacking model against the single experts.
 We can use:
-
-* log-score (the one used as loss function to estimate the stacking model)
+  
+  * log-score (the one used as loss function to estimate the stacking model)
 * pinball loss
 * continuous ranked probability score (CRPS)
 * square loss
@@ -137,17 +136,17 @@ muStacking <- do.call(c, muStacking)
 
 pinLossStacking <- sapply(1:length(quantiles), function (ii) {
   pinLoss(UKload$NetDemand, qStacking[, ii], quantiles[ii])
-  })
+})
 
 pinLossSummer <- sapply(quantiles, function (qq) {
   qSummer <- qnorm(qq, mean = muSummer, sd = sdSummer)
   pinLoss(UKload$NetDemand, qSummer, qq)
-  })
+})
 
 pinLossWinter <- sapply(quantiles, function (qq) {
   qWinter <- qnorm(qq, mean = muWinter, sd = sdWinter)
   pinLoss(UKload$NetDemand, qWinter, qq)
-  })
+})
 
 pinAll <- sapply(quantiles, function (qq) {
   qAll <- qnorm(qq, mean = muAll, sd = sdAll)
@@ -163,7 +162,7 @@ colMeans(
     winter = crps_norm(UKload$NetDemand, muWinter, sdWinter),
     stacking = crpsStacking,
     all = crps_norm(UKload$NetDemand, muAll, sdAll)
-    )
+  )
 )
 
 ## square loss
