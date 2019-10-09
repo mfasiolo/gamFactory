@@ -23,7 +23,9 @@ Creates a family to be used in mgcv::gam to estimate
 a generalized additive model with stack effects.
 }
 \examples{
-### Quantile regression example 
+########
+### Quantile regression stacking example
+######## 
 # Simulate some data
 n <- 2e3
 x <- sort( runif(n, -pi/2, pi/2) )
@@ -64,6 +66,37 @@ lines(x, datStack$pred1, col = 3)
 lines(x, datStack$pred2, col = 4)
 lines(x, exp(pr[ , 1]) * datStack$pred1 + exp(pr[ , 2]) * datStack$pred2, col = 2) 
 lines(x, qnorm(qu, fn, 1.5), lty = 2)
+legend(x = "bottomright", lty = c(1, 1, 1, 2), col = c(3, 4, 2, 1), 
+       legend = c("Expert 1", "Expert 2", "Stack", "Truth")) 
+       
+########
+### Gaussian regression stacking example
+########       
+       
+# Produce stacking data set
+datStack$pred1 <- predict(fit1, newdata = datStack)
+datStack$pred2 <- predict(fit2, newdata = datStack)
+
+# Perform stacking
+fitStack <- gam(list(y ~ x, y ~ x), 
+                family = stackFamily(X = cbind(datStack$pred1, datStack$pred2), 
+                                     familyDeriv = logLikGAU(y = datStack$y), 
+                                     link = "identity"), 
+                data = datStack)
+
+# The weight of the first (second) expert must decrease (increase) with x
+par(mfrow = c(1, 2))
+pr <- predict(fitStack)
+plot(datStack$x, exp(pr[ , 1]) / (exp(pr[ , 1]) + exp(pr[ , 2])))
+plot(datStack$x, exp(pr[ , 2]) / (exp(pr[ , 1]) + exp(pr[ , 2])))
+
+# Stacking should do better than any of the two experts
+par(mfrow = c(1, 1))
+plot(dat, col = "grey")
+lines(x, datStack$pred1, col = 3)
+lines(x, datStack$pred2, col = 4)
+lines(x, exp(pr[ , 1]) * datStack$pred1 + exp(pr[ , 2]) * datStack$pred2, col = 2) 
+lines(x, fn, lty = 2)
 legend(x = "bottomright", lty = c(1, 1, 1, 2), col = c(3, 4, 2, 1), 
        legend = c("Expert 1", "Expert 2", "Stack", "Truth")) 
 

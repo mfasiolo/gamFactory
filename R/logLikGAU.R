@@ -1,13 +1,41 @@
 #'
-#' Creating a Gaussian distribution
+#' Log-likelihood of the Gaussian distribution
+#' @description XXX.
+#' @param np XXX.
+#' @name logLikGAU
+#' @rdname logLikGAU
+#' @export logLikGAU
+#' @examples 
+#' library(gamFactory)
+#' n <- 1000
+#' pars <- c(1, 0.5)
+#' obj <- logLikGAU( )$initialize(n, pars)
 #' 
-#' @description This function creates an object representing a Gaussian distribution 
-#' @name createGaussian
-#' @param y a vector of observations.
-#' @rdname createGaussian
-#' @export createGaussian
+#' # Derivatives should match exactly
+#' fdDeriv(obj = derFunWrapper(obj$derObj), 
+#'         param = pars, 
+#'         ord = 1:3)
 #' 
-createGaussian <- function(y = NULL) {
+#' # Should look fine
+#' der <- derivCheck(np = 100, 
+#'                   parSim = function(n){ cbind(rnorm(n, 0, 1e3), 0.1 + rexp(n, 1)) }, 
+#'                   obj = obj,
+#'                   ord = 1:3, 
+#'                   trans = function(.x){
+#'                     si <- sign(.x)
+#'                     return( si * sqrt(abs(.x)) )
+#'                   }, 
+#'                   n = 1000)
+#' 
+#' par(mfrow = c(2, 2))
+#' for(ii in 1:3) { plot(der[[ii]][ , 1] - der[[ii]][ , 2]) }
+#' 
+#' par(mfrow = c(2, 2))
+#' for(ii in 1:3) { plot( (der[[ii]][ , 1] - der[[ii]][ , 2]) / 
+#'                          abs( der[[ii]][ , 2] )) }
+#' 
+#' 
+logLikGAU <- function(y = NULL) {
   
   derObj <- function(param, deriv = 0) {
     
@@ -18,7 +46,7 @@ createGaussian <- function(y = NULL) {
     g <- param[ , 2, drop = TRUE] ## g is log(sigma)
     tau2 <- exp( - 2 * g )
     n <- length(y)
-
+    
     if (length(mu) == 1) {
       mu <- rep(mu, n)
       g <- rep(g, n)
@@ -32,11 +60,11 @@ createGaussian <- function(y = NULL) {
     
     if( deriv > 0 )
     {
-
+      
       ## First derivatives 
       Dm <- tau2 * ymu
       Ds <- - 1 + tau2 * ymu2
-
+      
       if( deriv > 1 ){
         Dmm <- - tau2
         Dms <- - 2 * tau2 * ymu
@@ -87,7 +115,7 @@ createGaussian <- function(y = NULL) {
   rd <- function(n, param) 
   {
     if (is.vector(param)) param <- matrix(param, nrow = 1)
-    if (ncol(param != 2)) stop("Wrong number of parameters provided")
+    if (ncol(param) != 2) stop("Wrong number of parameters provided")
     mu <-  param[ , 1, drop = TRUE]
     sig <- exp( param[ , 2, drop = TRUE] )
     
@@ -95,7 +123,7 @@ createGaussian <- function(y = NULL) {
   }
   
   initialize <- function(n, param, ...) {
-    return( createGaussian(y = rd(n = n, param = param)) )
+    return( logLikGAU(y = rd(n = n, param = param)) )
   }
   
   ml <- function(y) {
