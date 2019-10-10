@@ -11,6 +11,71 @@
 #' 
 #' @name stackPredictiveFamily
 #' @rdname stackPredictiveFamily
+#' @examples 
+#' library(gamFactory)
+#' library(mgcViz)
+#' 
+#' # Generating training and stacking sets of increasing size
+#' sizes <- c(rep(100, 60), rep(125, 20), rep(150, 5), 
+#'            rep(175, 5), rep(200, 5), rep(300, 5),
+#'            rep(400, 5), rep(600, 5), rep(800, 5))
+#' 
+#' ns <- length(sizes)
+#' 
+#' datListTrain <- lapply(sizes, 
+#'                        function( .n ){
+#'                          gamSim(1, n = .n, dist = "binary", 
+#'                                 scale = 0.33, verbose = FALSE)
+#'                        })
+#' datTrain <- do.call("rbind", datListTrain)
+#' datTrain <- as.data.frame(datTrain)
+#' datTrain$sizes <- rep(sizes, sizes)
+#' 
+#' datListStack <- lapply(sizes, 
+#'                        function( .n ){
+#'                          gamSim(1, n = .n, dist = "binary", scale = 0.33, verbose = FALSE)
+#'                        })
+#' datStack <- do.call("rbind", datListStack)
+#' datStack <- as.data.frame(datStack)
+#' datStack$sizes <- rep(sizes, sizes)
+#' 
+#' # Estimate simple model and produce predictions on stacking set
+#' m1 <- lapply(1:ns, 
+#'              function(.kk){
+#'                .fit <- gam(y ~ s(x0, k = 3) + s(x1, k = 3) + 
+#'                                s(x2, k = 3) + s(x3, k = 3), 
+#'                            family=binomial, data = datListTrain[[.kk]], 
+#'                            method="REML")
+#'                .y <- datListStack[[.kk]]$y
+#'                .p <- predict(.fit, newdata = datListStack[[.kk]], type = "response")
+#'                .stack <- log(.p) * .y + log1p( - .p ) * ( !.y )
+#'                return( list("fit" = .fit, "stack" = .stack) )
+#'              })
+#' 
+#' ### Estimate simple model and produce predictions on stacking set
+#' m2 <- lapply(1:ns, 
+#'              function(.kk){
+#'                .fit <- gam(y ~ s(x0, k = 10) + s(x1, k = 10) +
+#'                                s(x2, k = 10) + s(x3, k = 10), 
+#'                            family=binomial, data = datListTrain[[.kk]], 
+#'                            method="REML")
+#'                .y <- datListStack[[.kk]]$y
+#'                .p <- predict(.fit, newdata = datListStack[[.kk]], type = "response")
+#'                .stack <- log(.p) * .y + log1p( - .p ) * ( !.y )
+#'                return( list("fit" = .fit, "stack" = .stack) )
+#'              })
+#' 
+#' # Perform the probabilistic stacking
+#' logPStack <- cbind(do.call("c", lapply(m1, "[[", "stack")), 
+#'                    do.call("c", lapply(m2, "[[", "stack")))
+#' 
+#' fitStack <- gamV(list(y ~ s(log(sizes), k = 7)), 
+#'                  family = stackPredictiveFamily(logP = logPStack), 
+#'                  data = datStack)
+#' 
+#' # The weight of the second model should increase with the size of the data set
+#' plot(fitStack) + l_fitLine() + l_ciLine() + l_rug()
+#' summary(fitStack)
 #'
 stackPredictiveFamily <- function(logP, rho = NULL) {
   
