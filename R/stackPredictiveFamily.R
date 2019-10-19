@@ -81,10 +81,13 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
   
   link <- "identity"
   K <- ncol(logP)
+  
   ## adjust log-densities for numerical stability
   X <- logP - matrixStats::rowMaxs(logP)
   expX <- exp(X)
   P <- exp(logP) ## predictive densities (not logs)
+  
+  # Preparing link functions
   link <- lapply(1:(K - 1), function(x) "identity")
   stats <- list()
   for (ii in 1:(K - 1)) {
@@ -96,6 +99,16 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
     stats[[ii]]$d3link <- fam$d3link
     stats[[ii]]$d4link <- fam$d4link
   }
+  
+  ### Saving extra parameters in .GlobalEnv environment
+  # logP
+  assign(".logP", logP, envir = environment())
+  getLogP <- function() get(".logP")
+  putLogP <- function(.x) assign(".logP", .x, envir = environment(sys.function()))
+  # rho
+  assign(".rho", rho, envir = environment())
+  getRho <- function() get(".rho")
+  putRho <- function(.x) assign(".rho", .x, envir = environment(sys.function()))
   
   residuals <- function(object, type=c("deviance","pearson","response")) {
     
@@ -171,6 +184,8 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
     discrete <- is.list(x)
     lpi <- attr(x,"lpi") ## extract linear predictor index, in gamlss.gH it's jj
     p <- lapply(lpi, function(lpi_ii) length(lpi_ii))
+    
+    # Produce matrix of linear predictors
     nu <- sapply(1:(K - 1), 
                  function(ii) {
                    if (discrete) {
@@ -180,7 +195,6 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
                      x[, lpi[[ii]], drop = FALSE] %*% coef[lpi[[ii]]]
                    }
                  })
-    
     
     d1H <- lb <- lbb <- NULL ## default
     
