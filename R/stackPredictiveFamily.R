@@ -269,6 +269,10 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
   
   structure(list(family="stackPredictiveFamily",ll=ll,nlp=K - 1,
                  link="identity",
+                 getRho = getRho,
+                 getLogP = getLogP,
+                 putRho = putRho,
+                 putLogP = putLogP,
                  preinitialize=preinitialize,
                  initialize=initialize,
                  # postproc=postproc,
