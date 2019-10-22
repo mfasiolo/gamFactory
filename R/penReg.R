@@ -27,18 +27,14 @@ penReg <- function(x,e,y) {
   k <- .01 * norm(R)/norm(e)
   qrr <- qr(rbind(R,e*k));
   edf <- sum(qr.Q(qrr)[1:r,]^2) 
-
-  rp <- Rrank(qr.R(qr(e))) ################## MATTEO Rank of penalty
-  rov <- rp - (Rrank(qr.R(qrr)) - rr) ####### MATTEO number of dimensions in X that are penalized
-  
-  ################# MATTEO I added "&& edf > rr - 0.5*rov" so we stop in the "middle" of the range
-  #################        of the penalty. Otherise, if 0.9*rr < rr - rov the while loop continue to 
-  #################        run until we k = infinity !! The second while loop should be fine.
-  while (edf > .9*rr && edf > rr - 0.5*rov) { ### increase penalization
+  re <- min(sum(colSums(abs(e))!=0),nrow(e)) ## NEW
+  re <- re - (Rrank(qr.R(qrr)) - rr) ## Matteo: subtract from rank(e) the number of directions 
+  ##         in e that are in null_space(X)
+  while (edf > rr-.1*re) { ## increase penalization ## NEW
     k <- k*10
     qrr <- qr(rbind(R,e*k));
     edf <- sum(qr.Q(qrr)[1:r,]^2)
-  } 
+  }
   while (edf<.7*rr) { ## reduce penalization
     k <- k/20
     qrr <- qr(rbind(R,e*k));
