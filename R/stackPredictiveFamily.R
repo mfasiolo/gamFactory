@@ -105,6 +105,10 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
   assign(".logP", logP, envir = environment())
   getLogP <- function() get(".logP")
   putLogP <- function(.x) assign(".logP", .x, envir = environment(sys.function()))
+  # P
+  assign(".P", P, envir = environment())
+  getP <- function() get(".P")
+  putP <- function(.x) assign(".P", .x, envir = environment(sys.function()))
   # rho
   assign(".rho", rho, envir = environment())
   getRho <- function() get(".rho")
@@ -162,20 +166,142 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
   } ## preinitialize
   
   
+  # initialize <- expression({
+  #   
+  #   # n <- rep(1, nobs)
+  #   if (is.null(start)) start <- family$ibeta
+  #   
+  #   ### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WHAT happens here???
+  #   # if (exists("rp", inherits = FALSE) && length(rp$rp) > 0) 
+  #   #   attr(x, "XX") <- Sl.repara(rp$rp, t(Sl.repara(rp$rp, 
+  #   #                                                 attr(x, "XX"))))
+  #   
+  # }) ## initialize
+  
   initialize <- expression({
     
-    # n <- rep(1, nobs)
-    if (is.null(start)) start <- family$ibeta
+    logP <- family$getLogP()
+    P <- family$getP()
     
-    ### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WHAT happens here???
-    # if (exists("rp", inherits = FALSE) && length(rp$rp) > 0) 
-    #   attr(x, "XX") <- Sl.repara(rp$rp, t(Sl.repara(rp$rp, 
-    #                                                 attr(x, "XX"))))
+    ## should E be used unscaled or not?..
+    use.unscaled <- if (!is.null(attr(E,"use.unscaled"))) TRUE else FALSE
     
+    if (is.null(start)) {
+      
+      jj <- attr(x,"lpi")
+
+      # Objective function is penalized likelihood, 
+      # mult is the multiplier of ( logP[ , k + 1] - logP[ , 1] )
+      objFun <- function(mult) {
+        
+        if (is.list(x)) { ## discrete case
+          start <- rep(0, max(unlist(jj)))
+          for (k in 1:length(jj)) { ## loop over the linear predictors
+            yt1 <- mult * ( logP[ , k + 1] - logP[ , 1] )
+            R <- suppressWarnings(
+              chol(XWXd(x$Xd,w=rep(1,length(y)),k=x$kd,ks=x$ks,ts=x$ts,dt=x$dt,v=x$v,
+                        qc=x$qc,nthreads=1,drop=x$drop,lt=x$lpid[[k]]) + 
+                     crossprod(E[,jj[[k]]]),
+                   pivot=TRUE))
+            Xty <- XWyd(x$Xd,rep(1,length(y)),yt1,x$kd,x$ks,x$ts,x$dt,x$v,
+                        x$qc,x$drop,lt=x$lpid[[k]])
+            piv <- attr(R,"pivot")
+            rrank <- attr(R,"rank")
+            startji <- rep(0,ncol(R))
+            if (rrank<ncol(R)) {
+              R <- R[1:rrank,1:rrank]
+              piv <- piv[1:rrank]
+            }
+            startji[piv] <- backsolve(R,forwardsolve(t(R),Xty[piv]))
+            startji[!is.finite(startji)] <- 0
+            start[jj[[k]]] <- startji
+            
+          } 
+        } else {
+          jj <- attr(x,"lpi")
+          start <- rep(0,ncol(x))
+          for (k in 1:length(jj)) { ## loop over the linear predictors
+            yt1 <- mult * ( logP[ , k + 1] - logP[ , 1] )
+            x1 <- x[,jj[[k]],drop=FALSE]
+            e1 <- E[,jj[[k]],drop=FALSE] ## square root of total penalty
+            if (use.unscaled) {
+              qrx <- qr(rbind(x1,e1))
+              x1 <- rbind(x1,e1)
+              startji <- qr.coef(qr(x1),c(yt1,rep(0,nrow(E))))
+              startji[!is.finite(startji)] <- 0
+            } else startji <- penReg(x1,e1,yt1)
+            start[jj[[k]]] <- startji ## copy coefficients back into overall start coef vector
+          } ## lp loop
+        }
+        
+        # Produce matrix of linear predictors
+        nu <- sapply(1:length(jj), 
+                     function(ii) {
+                       if (is.list(x)) {
+                         Xbd(x$Xd,start,k=x$kd,ks=x$ks,ts=x$ts,dt=x$dt,v=x$v,qc=x$qc,
+                             drop=x$drop,lt=x$lpid[[ii]])
+                       } else {
+                         x[, jj[[ii]], drop = FALSE] %*% start[jj[[ii]]]
+                       }
+                     })
+        
+        nu1 <- cbind(0, nu)
+        nuCen <- nu1 - rowMaxs(nu1)
+        a <- exp(nuCen) / rowSums(exp(nuCen))
+        
+        - sum(log(rowSums(a * P))) + sum( (E%*%start) ^ 2 )
+        
+      }
+      
+      # Optimize, then initialize using the optimal mult
+      tmpOpt <- optimize(f = objFun, interval = c(0.01, 100))
+      mult <- tmpOpt$minimum
+      
+      if (is.list(x)) { ## discrete case
+        start <- rep(0,max(unlist(jj)))
+        for (k in 1:length(jj)) { ## loop over the linear predictors
+          yt1 <- mult * ( logP[ , k + 1] - logP[ , 1] )
+          R <- suppressWarnings(
+            chol(XWXd(x$Xd,w=rep(1,length(y)),k=x$kd,ks=x$ks,ts=x$ts,dt=x$dt,v=x$v,
+                      qc=x$qc,nthreads=1,drop=x$drop,lt=x$lpid[[k]]) + 
+                   crossprod(E[,jj[[k]]]),
+                 pivot=TRUE))
+          Xty <- XWyd(x$Xd,rep(1,length(y)),yt1,x$kd,x$ks,x$ts,x$dt,x$v,
+                      x$qc,x$drop,lt=x$lpid[[k]])
+          piv <- attr(R,"pivot")
+          rrank <- attr(R,"rank")
+          startji <- rep(0,ncol(R))
+          if (rrank<ncol(R)) {
+            R <- R[1:rrank,1:rrank]
+            piv <- piv[1:rrank]
+          }
+          startji[piv] <- backsolve(R,forwardsolve(t(R),Xty[piv]))
+          startji[!is.finite(startji)] <- 0
+          start[jj[[k]]] <- startji
+          
+        } 
+      } else {
+        jj <- attr(x,"lpi")
+        start <- rep(0,ncol(x))
+        for (k in 1:length(jj)) { ## loop over the linear predictors
+          yt1 <- mult * ( logP[ , k + 1] - logP[ , 1] )
+          x1 <- x[,jj[[k]],drop=FALSE]
+          e1 <- E[,jj[[k]],drop=FALSE] ## square root of total penalty
+          if (use.unscaled) {
+            qrx <- qr(rbind(x1,e1))
+            x1 <- rbind(x1,e1)
+            startji <- qr.coef(qr(x1),c(yt1,rep(0,nrow(E))))
+            startji[!is.finite(startji)] <- 0
+          } else startji <- penReg(x1,e1,yt1)
+          start[jj[[k]]] <- startji ## copy coefficients back into overall start coef vector
+        } ## lp loop
+      }
+    }
   }) ## initialize
   
   
-  ll <- function(y,x,coef,wt,family,offset=NULL,deriv=0,d1b=0,d2b=0,Hp=NULL,rank=0,fh=NULL,D=NULL) {
+  ll <- function(y,x,coef,wt,family,offset=NULL,deriv=0,
+                 d1b=0,d2b=0,Hp=NULL,rank=0,fh=NULL,D=NULL) {
     ## deriv: 0 - eval
     ##        1 - grad and Hess
     ##        2 - diagonal of first deriv of Hess
@@ -285,12 +411,14 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
                  link="identity",
                  getRho = getRho,
                  getLogP = getLogP,
+                 getP = getP,
                  putRho = putRho,
                  putLogP = putLogP,
+                 putP = putP,
                  preinitialize=preinitialize,
                  initialize=initialize,
                  # postproc=postproc,
-                 tri = trind.generator(K - 1), ## symmetric indices for accessing derivative arrays
+                 tri = trind.generator(K - 1), ## symmetric indices for accessing deriv. arrays
                  residuals=residuals,
                  linfo = stats,
                  rd=rd,
