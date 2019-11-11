@@ -12,39 +12,45 @@ bundleMARKOV
 XXX.
 }
 \examples{
+
 library(gamFactory)
 
-# Simulate some data
-n <- 2000
-myDat <- data.frame(x = sort(runif(n, -1, 1)))
-p1 <- pnorm(myDat$x, 0, 0.7)[-1]
-p2 <- pnorm(-myDat$x, 0, 0.7)[-1]
+# Simulate some data from Markov chain with two states (0, 1)
+n <- 5000
+x = sort(runif(n, -1, 1))
 
+# Probabilities of staying in state 0 and 1
+p1 <- exp(x^2) / (1 + exp(x^2))
+p2 <- exp(-x - 0.6*x^2) / (1 + exp(-x - 0.6*x^2))
+
+# Simulate observations 
 y0 <- numeric(n)
 y0[1] <- 1
 for(ii in 2:n){
   if(y0[ii-1] == 0) y0[ii] <- rbinom(1, 1, 1 - p1[ii])
-  if(y0[ii-1] == 1) y0[ii] <- rbinom(1, 1, 1 - p1[ii])
+  if(y0[ii-1] == 1) y0[ii] <- rbinom(1, 1, p2[ii])
 }
 
-myDat$y <-  y0
+myDat <- data.frame(x = x, y = y0)
+
+# Plot data and probabilities
+par(mfrow = c(2, 2))
 plot(myDat)
+plot(x, p1)
+plot(x, p2)
 
-# Create GPD family and fit it
-library(mgcViz)
+# Create Markov model and fit it
 myMRK <- buildGAMLSS( bundleMARKOV )
-fit <- gamV(list(y ~ s(x), ~ s(x)), data = myDat, family = myMRK)
-print(plot(fit), pages = 1)
+fit <- gam(list(y ~ s(x), ~ s(x)), data = myDat, family = myMRK)
 
-# Compare true (black) and estimated (red) quantiles
-qu <- 0.95
-xseq <- seq(-1, 1, length.out = 1000)
-plot(myDat, col = "grey")
-lines(xseq, qexp(qu, 1 / (0.3 + abs(xseq)^2)), col = 2)
-lines(xseq, fit$family$qf(qu,
-                          mu = predict(fit, newdata = data.frame(x = xseq),
-                                       type = "response")),
-      col = 3)
-#' 
+# Compare true and estimated probabilities
+plot(fit, select = 1, 
+     trans = function(.x) exp(coef(fit)[1] + .x) / (1 + exp(coef(fit)[1] + .x))) 
+lines(x, p1, col = 2)
+
+plot(fit, select = 2, 
+     trans = function(.x) exp(coef(fit)[11] + .x) / (1 + exp(coef(fit)[11] + .x)))
+lines(x, p2, col = 2)
+
 }
 \keyword{datasets}

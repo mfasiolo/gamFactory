@@ -19,9 +19,7 @@ text-align: justify}
 
 ```{r setup, include=FALSE}
 library(knitr)
-library(rgl)
 opts_chunk$set(out.extra='style="display:block; margin: auto"', fig.align="center", tidy=FALSE)
-knit_hooks$set(webgl = hook_webgl)
 ```
 
 
@@ -138,7 +136,7 @@ lEta <- function(param, deriv = 0) {
   beta <- param[1:nbeta]
   theta <- param[- (1:nbeta)]
   pars <- betaToPars(beta, theta)
-  objSH <- createSH(y = y)$derObj(param = pars, deriv = deriv)
+  objSH <- logLikSH(y = y)$derObj(param = pars, deriv = deriv)
   
   l <- objSH$d0(SUM = T)
   le <- lt <- let <- ltt <- lee <- leee <- leet <- lett <- lttt <- NULL # default values
@@ -191,7 +189,7 @@ sig <- exp(tau)
 del <- exp(phi)
 y <- pars[, 1] + (del * sig) * sinh((1/del) * asinh(qnorm(runif(n))) + (eps/del))
 
-objSH <- createSH(y = y)$derObj(param = pars, deriv = 3)
+objSH <- logLikSH(y = y)$derObj(param = pars, deriv = 3)
 
 #### FUNCTIONS FOR TESTING DERIVATIVES
 
@@ -332,9 +330,6 @@ n <- 1e3
 K <- 2
 z <- 1:n
 
-nu <- cbind(nu1, nu2)
-a <- exp(nu)
-
 a1 <- sin(z * 2 * pi / n) / 2.1 + .5
 a2 <- cos(z * 2 * pi / n) / 2.1 + .5
 a <- cbind(a1, a2)
@@ -354,7 +349,7 @@ logSigma <- 1
 y <- rnorm(n, mean = mu, sd = exp(logSigma))
 
 form <- lapply(1:K, function(x) formula("y ~ s(z)"))
-mod <- gam(form, family = stackFamily(X, createGaussian(y)))
+mod <- gam(form, family = stackFamily(X, logLikGAU(y)))
 
 ## Plot estimated aplhas vs true
 nuHat <- mod$fitted.values
@@ -397,7 +392,7 @@ logSigma <- 1
 y <- rnorm(n, mean = mu, sd = exp(logSigma))
 
 form <- lapply(1:K, function(x) formula("y ~ s(z1, k = 5) + s(z2, k = 5)"))
-mod <- gam(form, family = stackFamily(X, createGaussian(y)))
+mod <- gam(form, family = stackFamily(X, logLikGAU(y)))
 
 rows1 <- sample(1:n, 1e3)
 rows1 <- rows1[order(z1[rows1])]

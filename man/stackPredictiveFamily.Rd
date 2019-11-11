@@ -19,7 +19,6 @@ for stacking predictive distributions.
 }
 \examples{
 library(gamFactory)
-library(mgcViz)
 
 # Generating training and stacking sets of increasing size
 sizes <- c(rep(100, 60), rep(125, 20), rep(150, 5), 
@@ -75,12 +74,12 @@ m2 <- lapply(1:ns,
 logPStack <- cbind(do.call("c", lapply(m1, "[[", "stack")), 
                    do.call("c", lapply(m2, "[[", "stack")))
 
-fitStack <- gamV(list(y ~ s(log(sizes), k = 7)), 
+fitStack <- gam(list(y ~ s(log(sizes), k = 7)), 
                  family = stackPredictiveFamily(logP = logPStack), 
                  data = datStack)
 
 # The weight of the second model should increase with the size of the data set
-plot(fitStack) + l_fitLine() + l_ciLine() + l_rug()
+plot(fitStack, pages = 1)
 summary(fitStack)
 
 }

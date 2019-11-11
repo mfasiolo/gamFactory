@@ -11,8 +11,9 @@
 #'
 #' @return A comparison between derivatives calculated according to the ll function of the family
 #' and numerical derivatives calculated using jacobian function
+#' @importFrom magrittr %>% 
 #' @export
-#'
+#' 
 testGeneralFamilyDeriv <- function(fam,
                             nsim = 30,
                             ndata = 1e2,

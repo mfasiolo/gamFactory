@@ -17,15 +17,14 @@ The formula for both models is the one used in the `qgam` vignette.
 ```{r, message = FALSE}
 library(gamFactory)
 library(qgam)
-library(dplyr)
 library(scoringRules)
 data("UKload")
 
 form <- NetDemand~s(wM,k=20,bs='cr') + s(wM_s95,k=20,bs='cr') + 
   s(Posan,bs='ad',k=30,xt=list("bs"="cc")) + Dow + s(Trend,k=4) + NetDemand.48 + Holy
 
-modSummer <- gam(form, data = filter(UKload, Posan >= .25, Posan <= .75))
-modWinter <- gam(form, data = filter(UKload, Posan < .25 | Posan > .75))
+modSummer <- gam(form, data = UKload[UKload$Posan >= .25 & UKload$Posan <= .75, ])
+modWinter <- gam(form, data = UKload[UKload$Posan < .25 | UKload$Posan > .75, ])
 modAll <- gam(form, data = UKload)
 ```
 

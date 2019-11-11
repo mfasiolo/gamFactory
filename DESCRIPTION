@@ -8,10 +8,13 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
+Imports:
+    gsubfn, 
+    magrittr
 Suggests: 
     testthat,
     knitr,
-    rmarkdown
-LinkingTo: Rcpp, RcppArmadillo
+    rmarkdown, 
+    scoringRules
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr

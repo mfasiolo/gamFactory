@@ -15,10 +15,9 @@
 #' plot(myDat)
 #' 
 #' # Create GPD family and fit it
-#' library(mgcViz)
 #' myGPD <- buildGAMLSS( bundleGPD )
-#' fit <- gamV(list(y ~ s(x), ~ s(x)), data = myDat, family = myGPD)
-#' print(plot(fit), pages = 1)
+#' fit <- gam(list(y ~ s(x), ~ s(x)), data = myDat, family = myGPD)
+#' plot(fit, pages = 1)
 #' 
 #' # Compare true (black) and estimated (red) quantiles 
 #' qu <- 0.95
