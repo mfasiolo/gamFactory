@@ -248,7 +248,10 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
         nuCen <- nu1 - rowMaxs(nu1)
         a <- exp(nuCen) / rowSums(exp(nuCen))
         
-        - sum(log(rowSums(a * P))) + sum( (E%*%start) ^ 2 )
+        logLik <- log(rowSums(a * P))
+        logLik[is.infinite(logLik)] <- - 1e5
+        
+        - sum(logLik) + sum( (E%*%start) ^ 2 )
         
       }
       
