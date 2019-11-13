@@ -182,6 +182,9 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
     logP <- family$getLogP()
     P <- family$getP()
     
+    # Set -Inf to min of finite values
+    logP[!is.finite(logP) & logP < 0] <- min( logP[is.finite(logP)] )
+    
     ## should E be used unscaled or not?..
     use.unscaled <- if (!is.null(attr(E,"use.unscaled"))) TRUE else FALSE
     
@@ -249,8 +252,7 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
         a <- exp(nuCen) / rowSums(exp(nuCen))
         
         logLik <- log(rowSums(a * P))
-        logLik[is.infinite(logLik)] <- - 1e5
-        
+
         - sum(logLik) + sum( (E%*%start) ^ 2 )
         
       }
