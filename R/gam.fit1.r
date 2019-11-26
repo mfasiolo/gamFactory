@@ -395,7 +395,7 @@ gam.fit1 <- function(G,Sl,sp,scale,Sld=NULL,start=NULL,etastart=NULL,mustart=NUL
     }  
     Sb1 <- mgcv:::Sl.mult(Sld,beta1)
    
-    for (k in 1:100) { ## step control loop...
+    for (k in 1:20) { ## step control loop...
       dev.up <- dev1 <- if (gfam) -2*llf(y,x,raw.beta1,weights,G$family,offset=G$offset,deriv=0)$l else sum(dev.resids(y, mu1, weights))
       dev1 <- dev1 + sum(beta1*Sb1)
       if (is.finite(dev1) && dev1-dev <= devtol) { ## fine
