@@ -5,6 +5,8 @@
 #' 
 #' @param logP n x K matrix of the log-predictive distributions of the single experts. 
 #' n is the total number of available observations, while K is the number of experts
+#' @param rho penalty dirichilet
+#' @param ridgePen ridge penalty
 #'
 #' @return A family to give as family argument to mgcv::gam
 #' @export
@@ -76,7 +78,17 @@
 #' plot(fitStack, pages = 1)
 #' summary(fitStack)
 #'
-stackPredictiveFamily <- function(logP, rho = NULL) {
+stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
+  
+  if (!is.null(rho)) {
+    if (length(rho) != ncol(logP)) 
+      stop("Number of rho parameters must be equal to number of experts")
+    if (sum(rho < 0)) stop("rho cannot be negative")
+  }
+  
+  if (!is.null(ridgePen)) {
+    if (ridgePen <= 0) stop("ridgePen must be positive")
+  }
   
   link <- "identity"
   K <- ncol(logP)
@@ -112,6 +124,10 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
   assign(".rho", rho, envir = environment())
   getRho <- function() get(".rho")
   putRho <- function(.x) assign(".rho", .x, envir = environment(sys.function()))
+  # ridgePen
+  assign(".ridgePen", ridgePen, envir = environment())
+  getRidgePen <- function() get(".ridgePen")
+  putRidgePen <- function(.x) assign(".ridgePen", .x, envir = environment(sys.function()))
   
   residuals <- function(object, type=c("deviance","pearson","response")) {
     
@@ -181,10 +197,15 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
     
     logP <- family$getLogP()
     P <- family$getP()
+    ridgePen <- family$getRidgePen()
     
-    # Set -Inf to min of finite values
-    logP[!is.finite(logP) & logP < 0] <- min( logP[is.finite(logP)] )
-
+    MAT <- apply(logP, 1, function(x) {
+      out <- rep(- 1, ncol(logP))
+      out[which.max(x)] <- 1
+      out
+    }) %>% t
+    MAT <- MAT[, - 1]
+    
     ## should E be used unscaled or not?..
     use.unscaled <- if (!is.null(attr(E,"use.unscaled"))) TRUE else FALSE
     
@@ -199,11 +220,12 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
         if (is.list(x)) { ## discrete case
           start <- rep(0, max(unlist(jj)))
           for (k in 1:length(jj)) { ## loop over the linear predictors
-            yt1 <- mult * ( logP[ , k + 1] - logP[ , 1] )
+            yt1 <- mult * MAT[ , k]
             R <- suppressWarnings(
               chol(XWXd(x$Xd,w=rep(1,length(y)),k=x$kd,ks=x$ks,ts=x$ts,dt=x$dt,v=x$v,
                         qc=x$qc,nthreads=1,drop=x$drop,lt=x$lpid[[k]]) + 
-                     crossprod(E[,jj[[k]]]),
+                     crossprod(E[,jj[[k]]]) +
+                     if (!is.null(ridgePen)) diag(ridgePen, ncol(E[,jj[[k]]])) else 0,
                    pivot=TRUE))
             Xty <- XWyd(x$Xd,rep(1,length(y)),yt1,x$kd,x$ks,x$ts,x$dt,x$v,
                         x$qc,x$drop,lt=x$lpid[[k]])
@@ -223,9 +245,16 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
           jj <- attr(x,"lpi")
           start <- rep(0,ncol(x))
           for (k in 1:length(jj)) { ## loop over the linear predictors
-            yt1 <- mult * ( logP[ , k + 1] - logP[ , 1] )
+            yt1 <- mult * MAT[ , k]
             x1 <- x[,jj[[k]],drop=FALSE]
             e1 <- E[,jj[[k]],drop=FALSE] ## square root of total penalty
+            if (!is.null(ridgePen)) {
+              sqrt(ridgePen)
+              e1rp <- matrix(0, nrow = nrow(E[,jj[[k]],drop=FALSE]),
+                     ncol = ncol(E[,jj[[k]],drop=FALSE]))
+              diag(e1rp) <- sqrt(ridgePen)
+              e1 <- e1 + e1rp
+            }
             if (use.unscaled) {
               qrx <- qr(rbind(x1,e1))
               x1 <- rbind(x1,e1)
@@ -267,11 +296,12 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
       if (is.list(x)) { ## discrete case
         start <- rep(0,max(unlist(jj)))
         for (k in 1:length(jj)) { ## loop over the linear predictors
-          yt1 <- mult * ( logP[ , k + 1] - logP[ , 1] )
+          yt1 <- mult * MAT[ , k]
           R <- suppressWarnings(
             chol(XWXd(x$Xd,w=rep(1,length(y)),k=x$kd,ks=x$ks,ts=x$ts,dt=x$dt,v=x$v,
                       qc=x$qc,nthreads=1,drop=x$drop,lt=x$lpid[[k]]) + 
-                   crossprod(E[,jj[[k]]]),
+                   crossprod(E[,jj[[k]]]) +
+                   if (!is.null(ridgePen)) diag(ridgePen, ncol(E[,jj[[k]]])) else 0,
                  pivot=TRUE))
           Xty <- XWyd(x$Xd,rep(1,length(y)),yt1,x$kd,x$ks,x$ts,x$dt,x$v,
                       x$qc,x$drop,lt=x$lpid[[k]])
@@ -291,9 +321,16 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
         jj <- attr(x,"lpi")
         start <- rep(0,ncol(x))
         for (k in 1:length(jj)) { ## loop over the linear predictors
-          yt1 <- mult * ( logP[ , k + 1] - logP[ , 1] )
+          yt1 <- mult * MAT[ , k]
           x1 <- x[,jj[[k]],drop=FALSE]
           e1 <- E[,jj[[k]],drop=FALSE] ## square root of total penalty
+          if (!is.null(ridgePen)) {
+            sqrt(ridgePen)
+            e1rp <- matrix(0, nrow = nrow(E[,jj[[k]],drop=FALSE]),
+                           ncol = ncol(E[,jj[[k]],drop=FALSE]))
+            diag(e1rp) <- sqrt(ridgePen)
+            e1 <- e1 + e1rp
+          }
           if (use.unscaled) {
             qrx <- qr(rbind(x1,e1))
             x1 <- rbind(x1,e1)
@@ -346,29 +383,32 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
     
     if (deriv > 0) { ## grad and Hess
       ## the gradient...
-      ln <- ln_r <- w - a[, - 1, drop = FALSE]
-      if (!is.null(rho)) {
-        ln_r <- ln_r + t(t(- a[, - 1, drop = FALSE] * (sum(rho) - K)) + 
-                           rho[- 1] - 1)
-      }
+      ln <- w - a[, - 1, drop = FALSE]
+      # ln_r <- ln
+      # if (!is.null(rho)) {
+      #   ln_r <- ln_r + t(t(- a[, - 1, drop = FALSE] * (sum(rho) - K)) + 
+      #                      rho[- 1] - 1)
+      # }
       
       ## the Hessian...
-      lnn <- lnn_rr <- list()
+      lnn <- list()
+      # lnn_rr <- list()
       coun <- 0
       for (jj in 1:(K - 1)) for (kk in jj:(K - 1)) {
         coun <- coun + 1
-        lnn[[coun]] <- lnn_rr[[coun]] <- 
+        lnn[[coun]] <- 
           ln[, jj] * (as.numeric(jj == kk) - w[, kk]) - 
           a[, jj + 1] * ln[, kk]
-        if (!is.null(rho)) {
-          lnn_rr[[coun]] <- 
-            lnn_rr[[coun]] - a[, jj + 1] *
-            (as.numeric(jj == kk) - a[, kk + 1]) *
-            (sum(rho) - K)
-        }
+        # lnn_rr[[coun]] <- lnn[[coun]]
+        # if (!is.null(rho)) {
+        #   lnn_rr[[coun]] <- 
+        #     lnn_rr[[coun]] - a[, jj + 1] *
+        #     (as.numeric(jj == kk) - a[, kk + 1]) *
+        #     (sum(rho) - K)
+        # }
       }
       lnn <- do.call(cbind, lnn)
-      lnn_rr <- do.call(cbind, lnn_rr)
+      # lnn_rr <- do.call(cbind, lnn_rr)
     } ## grad and Hess
     
     lnnn <- l4 <- 0 ## defaults
@@ -400,10 +440,24 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
     
     if (deriv) {
       ## get the gradient and Hessian...
-      ret <- gamlss.gH(x,lpi,ln_r,lnn_rr,tri$i2,l3=lnnn,i3=tri$i3,l4=l4,i4=tri$i4,
+      ret <- gamlss.gH(x,lpi,ln,lnn,tri$i2,l3=lnnn,i3=tri$i3,l4=l4,i4=tri$i4,
                        d1b=d1b,d2b=d2b,deriv=deriv-1,fh=fh,D=D) 
     } else ret <- list()
-    ret$l <- logLik; ret
+    ret$l <- logLik
+    
+    if (!is.null(ridgePen)) {
+      ret$l <- ret$l - 
+        .5 * length(coef) * log(2 * pi) + 
+        .5 * length(coef) * log(ridgePen) - 
+        .5 * ridgePen * sum(coef ^ 2)
+      
+      if (deriv) {
+        ret$lb <- ret$lb - ridgePen * coef
+        ret$lbb <- ret$lbb - diag(ridgePen, nrow(ret$lbb))
+      }
+    }
+    
+    ret
     
   } # end ll stackPredictiveFamily
   
@@ -419,9 +473,11 @@ stackPredictiveFamily <- function(logP, rho = NULL) {
                  getRho = getRho,
                  getLogP = getLogP,
                  getP = getP,
+                 getRidgePen = getRidgePen,
                  putRho = putRho,
                  putLogP = putLogP,
                  putP = putP,
+                 putRidgePen = putRidgePen,
                  preinitialize=preinitialize,
                  initialize=initialize,
                  # postproc=postproc,
