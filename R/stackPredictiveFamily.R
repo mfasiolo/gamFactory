@@ -5,7 +5,6 @@
 #' 
 #' @param logP n x K matrix of the log-predictive distributions of the single experts. 
 #' n is the total number of available observations, while K is the number of experts
-#' @param rho penalty dirichilet
 #' @param ridgePen ridge penalty
 #'
 #' @return A family to give as family argument to mgcv::gam
@@ -78,17 +77,9 @@
 #' plot(fitStack, pages = 1)
 #' summary(fitStack)
 #'
-stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
+stackPredictiveFamily <- function(logP, ridgePen = 1e-5) {
   
-  if (!is.null(rho)) {
-    if (length(rho) != ncol(logP)) 
-      stop("Number of rho parameters must be equal to number of experts")
-    if (sum(rho < 0)) stop("rho cannot be negative")
-  }
-  
-  if (!is.null(ridgePen)) {
-    if (ridgePen <= 0) stop("ridgePen must be positive")
-  }
+  if (!is.null(ridgePen) && ridgePen <= 0) stop("ridgePen must be positive")
   
   link <- "identity"
   K <- ncol(logP)
@@ -120,10 +111,6 @@ stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
   assign(".P", P, envir = environment())
   getP <- function() get(".P")
   putP <- function(.x) assign(".P", .x, envir = environment(sys.function()))
-  # rho
-  assign(".rho", rho, envir = environment())
-  getRho <- function() get(".rho")
-  putRho <- function(.x) assign(".rho", .x, envir = environment(sys.function()))
   # ridgePen
   assign(".ridgePen", ridgePen, envir = environment())
   getRidgePen <- function() get(".ridgePen")
@@ -199,12 +186,12 @@ stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
     P <- family$getP()
     ridgePen <- family$getRidgePen()
     
-    MAT <- apply(logP, 1, function(x) {
+    MAT <- t(apply(logP, 1, function(x) {
       out <- rep(- 1, ncol(logP))
       out[which.max(x)] <- 1
       out
-    }) %>% t
-    MAT <- MAT[, - 1]
+    }))
+    MAT <- MAT[ , -1, drop = FALSE]
     
     ## should E be used unscaled or not?..
     use.unscaled <- if (!is.null(attr(E,"use.unscaled"))) TRUE else FALSE
@@ -377,19 +364,11 @@ stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
                      rowSums(exp(nu + X[, - 1, drop = FALSE]))))
     
     logLik <- sum(log(rowSums(a * P)))
-    if (!is.null(rho)) {
-      logLik <- logLik + sum(t(t(log(a)) * (rho - 1)))
-    }
-    
+
     if (deriv > 0) { ## grad and Hess
       ## the gradient...
       ln <- w - a[, - 1, drop = FALSE]
-      # ln_r <- ln
-      # if (!is.null(rho)) {
-      #   ln_r <- ln_r + t(t(- a[, - 1, drop = FALSE] * (sum(rho) - K)) + 
-      #                      rho[- 1] - 1)
-      # }
-      
+
       ## the Hessian...
       lnn <- list()
       # lnn_rr <- list()
@@ -399,13 +378,6 @@ stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
         lnn[[coun]] <- 
           ln[, jj] * (as.numeric(jj == kk) - w[, kk]) - 
           a[, jj + 1] * ln[, kk]
-        # lnn_rr[[coun]] <- lnn[[coun]]
-        # if (!is.null(rho)) {
-        #   lnn_rr[[coun]] <- 
-        #     lnn_rr[[coun]] - a[, jj + 1] *
-        #     (as.numeric(jj == kk) - a[, kk + 1]) *
-        #     (sum(rho) - K)
-        # }
       }
       lnn <- do.call(cbind, lnn)
       # lnn_rr <- do.call(cbind, lnn_rr)
@@ -425,15 +397,6 @@ stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
           w[, kk] * (as.numeric(kk == tt) - w[, tt]) * ln[, jj] -
           a[, jj + 1] * (as.numeric(jj == tt) - a[, tt + 1]) * ln[, kk] -
           a[, jj + 1] * lnn[, tri$i2[kk, tt]]
-        if (!is.null(rho)) {
-          lnnn[[coun]] <- lnnn[[coun]] -
-            (
-              (as.numeric(jj == kk) - a[, kk + 1]) * 
-                (as.numeric(jj == tt) * a[, jj + 1] - a[, jj + 1] * a[, tt + 1]) - 
-                (as.numeric(kk == tt) * a[, kk + 1] - a[, kk + 1] * a[, tt + 1]) * 
-                a[, jj + 1]
-            ) * (sum(rho) - K)
-        }
       }
       lnnn <- do.call("cbind", lnnn)
     } 
@@ -461,6 +424,75 @@ stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
     
   } # end ll stackPredictiveFamily
   
+  predict <- function(family,se=FALSE,eta=NULL,y=NULL,X=NULL,
+                      beta=NULL,off=NULL,Vb=NULL) {
+    ## optional function to give predicted values - idea is that 
+    ## predict.gam(...,type="response") will use this, and that
+    ## either eta will be provided, or {X, beta, off, Vb}. family$data
+    ## contains any family specific extra information. 
+    ## if se = FALSE returns one item list containing matrix otherwise 
+    ## list of two matrices "fit" and "se.fit"... 
+
+    if (is.null(eta)) {
+      discrete <- is.list(X)
+      lpi <- attr(X,"lpi") 
+      if (is.null(lpi)) {
+        lpi <- list(1:ncol(X))
+      } 
+      K <- length(lpi) ## number of linear predictors
+      nobs <- if (discrete) nrow(X$kd) else nrow(X)
+      eta <- matrix(0,nobs,K)
+      if (se) { 
+        ve <- matrix(0,nobs,K) ## variance of eta
+        ce <- matrix(0,nobs,K*(K-1)/2) ## covariance of eta_i eta_j
+      } 
+      for (i in 1:K) {
+        if (discrete) {
+          eta[,i] <- Xbd(X$Xd,beta,k=X$kd,ks=X$ks,ts=X$ts,dt=X$dt,v=X$v,qc=X$qc,drop=X$drop,lt=X$lpid[[i]]) 
+        } else {
+          Xi <- X[,lpi[[i]],drop=FALSE]
+          eta[,i] <- Xi%*%beta[lpi[[i]]] ## ith linear predictor
+        }
+        if (!is.null(off[[i]])) eta[,i] <- eta[,i] + off[[i]]
+        if (se) { ## variance and covariances for kth l.p.
+          
+          ve[,i] <- if (discrete) diagXVXd(X$Xd,Vb,k=X$kd,ks=X$ks,ts=X$ts,dt=X$dt,v=X$v,qc=X$qc,drop=X$drop,nthreads=1,
+                                           lt=X$lpid[[i]],rt=X$lpid[[i]]) else drop(pmax(0,rowSums((Xi%*%Vb[lpi[[i]],lpi[[i]]])*Xi)))
+          ii <- 0
+          if (i<K) for (j in (i+1):K) {
+            ii <- ii + 1
+            ce[,ii] <- if (discrete) diagXVXd(X$Xd,Vb,k=X$kd,ks=X$ks,ts=X$ts,dt=X$dt,v=X$v,qc=X$qc,drop=X$drop,nthreads=1,
+                                              lt=X$lpid[[i]],rt=X$lpid[[j]]) else drop(pmax(0,rowSums((Xi%*%Vb[lpi[[i]],lpi[[j]]])*X[,lpi[[j]]])))
+          }
+        }
+      }
+    } else { 
+      se <- FALSE
+    }
+    gamma <- cbind(1,exp(eta))
+    beta <- rowSums(gamma)
+    gamma <- gamma/beta ## category probabilities
+    vp <- gamma*0
+    if (se) { ## need to loop to find se of probabilities...
+      for (j in 1:(K+1)) {
+        ## get dp_j/deta_k...
+        if (j==1) dp <- -gamma[,-1,drop=FALSE]/beta else { 
+          dp <- -gamma[,j]*gamma[,-1,drop=FALSE]
+          dp[,j-1] <- gamma[,j]*(1-gamma[,j]) 
+        }
+        ## now compute variance... 
+        vp[,j] <- rowSums(dp^2*ve)
+        ii <- 0
+        for (i in 1:K) if (i<K) for (k in (i+1):K) {
+          ii <- ii + 1
+          vp[,j] <- vp[,j] + 2 * dp[,i]*dp[,k]*ce[,ii] 
+        }
+        vp[,j] <- sqrt(pmax(0,vp[,j])) ## transform to se
+      }
+      return(list(fit=gamma,se.fit=vp))
+    } ## if se
+    list(fit=gamma)
+  } ## multinom predict
   
   rd <- function(mu,wt,scale) {
     
@@ -470,11 +502,9 @@ stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
   
   structure(list(family="stackPredictiveFamily",ll=ll,nlp=K - 1,
                  link="identity",
-                 getRho = getRho,
                  getLogP = getLogP,
                  getP = getP,
                  getRidgePen = getRidgePen,
-                 putRho = putRho,
                  putLogP = putLogP,
                  putP = putP,
                  putRidgePen = putRidgePen,
@@ -487,7 +517,8 @@ stackPredictiveFamily <- function(logP, rho = NULL, ridgePen = NULL) {
                  rd=rd,
                  dev.resids = dev.resids,
                  linkinv = stats$linkinv, # MAYBE IT'S NEEDED IN gam.fit5
-                 d2link=1,d3link=1,d4link=1, ## signals to fix.family.link that all done
+                 d2link=1,d3link=1,d4link=1, ## signals to fix.family.link that all done, 
+                 predict = predict,
                  ls=1, ## signals that ls not needed here
                  available.derivs = 1, ## signal only first derivatives available...
                  discrete.ok = TRUE

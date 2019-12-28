@@ -4,11 +4,13 @@
 \alias{stackPredictiveFamily}
 \title{Creates a family for stacking predictive distributions}
 \usage{
-stackPredictiveFamily(logP, rho = NULL)
+stackPredictiveFamily(logP, ridgePen = 1e-05)
 }
 \arguments{
 \item{logP}{n x K matrix of the log-predictive distributions of the single experts.
 n is the total number of available observations, while K is the number of experts}
+
+\item{ridgePen}{ridge penalty}
 }
 \value{
 A family to give as family argument to mgcv::gam
