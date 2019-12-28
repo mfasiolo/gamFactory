@@ -4,8 +4,15 @@
 \alias{derivCheck}
 \title{Checking derivatives by finited differences}
 \usage{
-derivCheck(np, parSim, obj, ord = 1, trans = identity, ...,
-  derFunNam = "derObj")
+derivCheck(
+  np,
+  parSim,
+  obj,
+  ord = 1,
+  trans = identity,
+  ...,
+  derFunNam = "derObj"
+)
 }
 \arguments{
 \item{np}{number of parameter vectors to be simulated.}

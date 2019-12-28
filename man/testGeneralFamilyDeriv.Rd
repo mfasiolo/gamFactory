@@ -4,8 +4,15 @@
 \alias{testGeneralFamilyDeriv}
 \title{Test derivatives of a general family to be used in mgcv}
 \usage{
-testGeneralFamilyDeriv(fam, nsim = 30, ndata = 100, p = 2,
-  seed = 0, nlp = 3, ntheta = NULL)
+testGeneralFamilyDeriv(
+  fam,
+  nsim = 30,
+  ndata = 100,
+  p = 2,
+  seed = 0,
+  nlp = 3,
+  ntheta = NULL
+)
 }
 \arguments{
 \item{fam}{A general family}

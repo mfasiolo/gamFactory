@@ -4,8 +4,17 @@
 \alias{convertDerivStackPositiveOld}
 \title{Calculating derivatives of log-likelihood wrt regression coefficients.}
 \usage{
-convertDerivStackPositiveOld(param, theta, X, Z, le, lee, leee = 0,
-  d1b = 0, deriv = 0)
+convertDerivStackPositiveOld(
+  param,
+  theta,
+  X,
+  Z,
+  le,
+  lee,
+  leee = 0,
+  d1b = 0,
+  deriv = 0
+)
 }
 \arguments{
 \item{param}{regression coefficients}

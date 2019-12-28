@@ -4,8 +4,22 @@
 \alias{convertDerivStackPositive}
 \title{Calculating derivatives of log-likelihood wrt regression coefficients}
 \usage{
-convertDerivStackPositive(beta, X, Z, le, lt, lee, let, ltt, leee = 0,
-  leet = 0, lett = 0, lttt = 0, d1b = 0, deriv = 0)
+convertDerivStackPositive(
+  beta,
+  X,
+  Z,
+  le,
+  lt,
+  lee,
+  let,
+  ltt,
+  leee = 0,
+  leet = 0,
+  lett = 0,
+  lttt = 0,
+  d1b = 0,
+  deriv = 0
+)
 }
 \arguments{
 \item{beta}{regression coefficients}
