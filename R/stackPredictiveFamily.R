@@ -207,12 +207,12 @@ stackPredictiveFamily <- function(logP, ridgePen = 1e-5) {
         if (is.list(x)) { ## discrete case
           start <- rep(0, max(unlist(jj)))
           for (k in 1:length(jj)) { ## loop over the linear predictors
-            yt1 <- mult * MAT[ , k]
+            yt1 <- mult * MAT[ , k, drop = FALSE]
             R <- suppressWarnings(
               chol(XWXd(x$Xd,w=rep(1,length(y)),k=x$kd,ks=x$ks,ts=x$ts,dt=x$dt,v=x$v,
                         qc=x$qc,nthreads=1,drop=x$drop,lt=x$lpid[[k]]) + 
-                     crossprod(E[,jj[[k]]]) +
-                     if (!is.null(ridgePen)) diag(ridgePen, ncol(E[,jj[[k]]])) else 0,
+                     crossprod(E[,jj[[k]], drop = FALSE]) +
+                     if (!is.null(ridgePen)) diag(ridgePen, ncol(E[,jj[[k]], drop = FALSE])) else 0,
                    pivot=TRUE))
             Xty <- XWyd(x$Xd,rep(1,length(y)),yt1,x$kd,x$ks,x$ts,x$dt,x$v,
                         x$qc,x$drop,lt=x$lpid[[k]])
@@ -287,8 +287,8 @@ stackPredictiveFamily <- function(logP, ridgePen = 1e-5) {
           R <- suppressWarnings(
             chol(XWXd(x$Xd,w=rep(1,length(y)),k=x$kd,ks=x$ks,ts=x$ts,dt=x$dt,v=x$v,
                       qc=x$qc,nthreads=1,drop=x$drop,lt=x$lpid[[k]]) + 
-                   crossprod(E[,jj[[k]]]) +
-                   if (!is.null(ridgePen)) diag(ridgePen, ncol(E[,jj[[k]]])) else 0,
+                   crossprod(E[,jj[[k]], drop = FALSE]) +
+                   if (!is.null(ridgePen)) diag(ridgePen, ncol(E[,jj[[k]], drop = FALSE])) else 0,
                  pivot=TRUE))
           Xty <- XWyd(x$Xd,rep(1,length(y)),yt1,x$kd,x$ks,x$ts,x$dt,x$v,
                       x$qc,x$drop,lt=x$lpid[[k]])
