@@ -15,7 +15,7 @@ XXX.
 \examples{
 library(gamFactory)
 n <- 1000
-pars <- c(1, 0.5)
+pars <- c(1, 0.5) # mu, log(sigma)
 obj <- logLikGAU( )$initialize(n, pars)
 
 # Derivatives should match exactly
@@ -25,7 +25,7 @@ fdDeriv(obj = derFunWrapper(obj$derObj),
 
 # Should look fine
 der <- derivCheck(np = 100, 
-                  parSim = function(n){ cbind(rnorm(n, 0, 1e3), 0.1 + rexp(n, 1)) }, 
+                  parSim = function(n){ cbind(rnorm(n, 0, 1e3), log(1 + rexp(n, 1))) }, 
                   obj = obj,
                   ord = 1:3, 
                   trans = function(.x){

@@ -8,7 +8,7 @@
 #' @examples 
 #' library(gamFactory)
 #' n <- 1000
-#' pars <- c(1, 0.5)
+#' pars <- c(1, 0.5) # mu, log(sigma)
 #' obj <- logLikGAU( )$initialize(n, pars)
 #' 
 #' # Derivatives should match exactly
@@ -18,7 +18,7 @@
 #' 
 #' # Should look fine
 #' der <- derivCheck(np = 100, 
-#'                   parSim = function(n){ cbind(rnorm(n, 0, 1e3), 0.1 + rexp(n, 1)) }, 
+#'                   parSim = function(n){ cbind(rnorm(n, 0, 1e3), log(1 + rexp(n, 1))) }, 
 #'                   obj = obj,
 #'                   ord = 1:3, 
 #'                   trans = function(.x){
@@ -43,8 +43,8 @@ logLikGAU <- function(y = NULL) {
     if (ncol(param) != 2) stop("Wrong number of parameters provided")
     
     mu <- param[ , 1, drop = TRUE]
-    g <- param[ , 2, drop = TRUE] ## g is log(sigma)
-    tau2 <- exp( - 2 * g )
+    g <- param[ , 2, drop = TRUE] # log(sigma)
+    tau2 <- exp( - 2 * g ) # 1 / sigma^2
     n <- length(y)
     
     if (length(mu) == 1) {
@@ -53,15 +53,15 @@ logLikGAU <- function(y = NULL) {
       tau2 <- rep(tau2, n)
     }
     
-    ymu <- y - mu          ## precompute
-    ymu2 <- ymu ^ 2        ## precompute
+    ymu <- y - mu        
+    ymu2 <- ymu ^ 2   
     
     l <- - .5 * log(2 * pi) - g - .5 * tau2 * ymu2
     
     if( deriv > 0 )
     {
       
-      ## First derivatives 
+      ## First derivatives wrt mu and log(sigma)
       Dm <- tau2 * ymu
       Ds <- - 1 + tau2 * ymu2
       
