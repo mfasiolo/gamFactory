@@ -2,10 +2,18 @@
 % Please edit documentation in R/penReg.R
 \name{penReg}
 \alias{penReg}
-\title{Basic function for penalized regression}
+\title{Internal function for penalized regression}
 \usage{
 penReg(x, e, y)
 }
+\arguments{
+\item{x}{design matrix}
+
+\item{e}{matrix square root of penalty}
+
+\item{y}{response vector}
+}
 \description{
-XXX.
+This is an internal function, which need to be exported for reasons having to
+do with R environments. Please do not use it.
 }

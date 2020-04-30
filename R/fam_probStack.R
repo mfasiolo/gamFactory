@@ -1,17 +1,18 @@
-#' Creates a family for stacking predictive distributions
+#' Family for probabilistic stacking
 #'
-#' @description Creates a family to be used in mgcv::gam 
-#' for stacking predictive distributions.
+#' @description Creates a family to be used in mgcv::gam for probabilistic stacking.
 #' 
 #' @param logP n x K matrix of the log-predictive distributions of the single experts. 
 #' n is the total number of available observations, while K is the number of experts
 #' @param ridgePen ridge penalty
-#'
 #' @return A family to give as family argument to mgcv::gam
+#' @importFrom matrixStats rowMaxs
+#' @importFrom stats make.link
+#' @importFrom mgcv fix.family.link Xbd diagXVXd trind.generator Rrank gamlss.gH
 #' @export
 #' 
-#' @name stackPredictiveFamily
-#' @rdname stackPredictiveFamily
+#' @name fam_probStack
+#' @rdname fam_probStack
 #' @examples 
 #' library(gamFactory)
 #' 
@@ -70,14 +71,14 @@
 #'                    do.call("c", lapply(m2, "[[", "stack")))
 #' 
 #' fitStack <- gam(list(y ~ s(log(sizes), k = 7)), 
-#'                  family = stackPredictiveFamily(logP = logPStack), 
+#'                  family = fam_probStack(logP = logPStack), 
 #'                  data = datStack)
 #' 
 #' # The weight of the second model should increase with the size of the data set
 #' plot(fitStack, pages = 1)
 #' summary(fitStack)
 #'
-stackPredictiveFamily <- function(logP, ridgePen = 1e-5) {
+fam_probStack <- function(logP, ridgePen = 1e-5) {
   
   if (!is.null(ridgePen) && ridgePen <= 0) stop("ridgePen must be positive")
   
@@ -422,7 +423,7 @@ stackPredictiveFamily <- function(logP, ridgePen = 1e-5) {
     
     ret
     
-  } # end ll stackPredictiveFamily
+  } # end ll fam_probStack
   
   predict <- function(family,se=FALSE,eta=NULL,y=NULL,X=NULL,
                       beta=NULL,off=NULL,Vb=NULL) {
@@ -498,9 +499,9 @@ stackPredictiveFamily <- function(logP, ridgePen = 1e-5) {
     
   } ## rd
   
-  dev.resids <- function(a, b, c, d) y # MAYBE IT'S NEEDED IN gam.fit5
+  # dev.resids <- function(a, b, c, d) y # MAYBE IT'S NEEDED IN gam.fit5
   
-  structure(list(family="stackPredictiveFamily",ll=ll,nlp=K - 1,
+  structure(list(family="fam_probStack",ll=ll,nlp=K - 1,
                  link="identity",
                  getLogP = getLogP,
                  getP = getP,
@@ -515,7 +516,7 @@ stackPredictiveFamily <- function(logP, ridgePen = 1e-5) {
                  residuals=residuals,
                  linfo = stats,
                  rd=rd,
-                 dev.resids = dev.resids,
+                 # dev.resids = dev.resids,
                  linkinv = stats$linkinv, # MAYBE IT'S NEEDED IN gam.fit5
                  d2link=1,d3link=1,d4link=1, ## signals to fix.family.link that all done, 
                  predict = predict,

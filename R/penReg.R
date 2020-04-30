@@ -1,7 +1,11 @@
 #'
-#' Basic function for penalized regression
+#' Internal function for penalized regression
 #' 
-#' @description XXX.
+#' @description This is an internal function, which need to be exported for reasons having to 
+#'              do with R environments. Please do not use it.
+#' @param x design matrix
+#' @param e matrix square root of penalty
+#' @param y response vector
 #' @name penReg
 #' @rdname penReg
 #' @export penReg
