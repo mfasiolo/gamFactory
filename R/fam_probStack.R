@@ -10,7 +10,6 @@
 #' @importFrom stats make.link
 #' @importFrom mgcv fix.family.link Xbd diagXVXd trind.generator Rrank gamlss.gH
 #' @export
-#' 
 #' @name fam_probStack
 #' @rdname fam_probStack
 #' @examples 
@@ -139,8 +138,6 @@ fam_probStack <- function(logP, ridgePen = 1e-5) {
     #er <- fitNull(G$y,G$family,G$w,G$offset,nlp=length(attr(G$X,"lpi")),tol=1e-7)
     #object$null.deviance <- sum(((object$y-er$mu[,1])*er$mu[,2])^2*G$w)
     
-    
-    ### I HAVE NOT CHANGED ANYTHING YET HERE!!!
     object$null.deviance <- sum(((object$y-mean(object$y))*object$fitted[,2])^2)
   })
   
@@ -168,18 +165,6 @@ fam_probStack <- function(logP, ridgePen = 1e-5) {
     list(X=G$X,term.names=G$term.names,family=G$family)
   } ## preinitialize
   
-  
-  # initialize <- expression({
-  #   
-  #   # n <- rep(1, nobs)
-  #   if (is.null(start)) start <- family$ibeta
-  #   
-  #   ### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WHAT happens here???
-  #   # if (exists("rp", inherits = FALSE) && length(rp$rp) > 0) 
-  #   #   attr(x, "XX") <- Sl.repara(rp$rp, t(Sl.repara(rp$rp, 
-  #   #                                                 attr(x, "XX"))))
-  #   
-  # }) ## initialize
   
   initialize <- expression({
     
@@ -495,9 +480,9 @@ fam_probStack <- function(logP, ridgePen = 1e-5) {
     list(fit=gamma)
   } ## multinom predict
   
-  rd <- function(mu,wt,scale) {
+  #rd <- function(mu,wt,scale) {
     
-  } ## rd
+  #} ## rd
   
   # dev.resids <- function(a, b, c, d) y # MAYBE IT'S NEEDED IN gam.fit5
   
@@ -515,7 +500,7 @@ fam_probStack <- function(logP, ridgePen = 1e-5) {
                  tri = trind.generator(K - 1), ## symmetric indices for accessing deriv. arrays
                  residuals=residuals,
                  linfo = stats,
-                 rd=rd,
+                 #rd=rd,
                  # dev.resids = dev.resids,
                  linkinv = stats$linkinv, # MAYBE IT'S NEEDED IN gam.fit5
                  d2link=1,d3link=1,d4link=1, ## signals to fix.family.link that all done, 
