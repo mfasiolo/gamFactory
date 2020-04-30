@@ -10,8 +10,8 @@
 #' @importFrom stats make.link
 #' @importFrom mgcv fix.family.link Xbd diagXVXd trind.generator Rrank gamlss.gH
 #' @export
-#' @name fam_probStack
-#' @rdname fam_probStack
+#' @name fam_stackProb
+#' @rdname fam_stackProb
 #' @examples 
 #' library(gamFactory)
 #' 
@@ -70,14 +70,14 @@
 #'                    do.call("c", lapply(m2, "[[", "stack")))
 #' 
 #' fitStack <- gam(list(y ~ s(log(sizes), k = 7)), 
-#'                  family = fam_probStack(logP = logPStack), 
+#'                  family = fam_stackProb(logP = logPStack), 
 #'                  data = datStack)
 #' 
 #' # The weight of the second model should increase with the size of the data set
 #' plot(fitStack, pages = 1)
 #' summary(fitStack)
 #'
-fam_probStack <- function(logP, ridgePen = 1e-5) {
+fam_stackProb <- function(logP, ridgePen = 1e-5) {
   
   if (!is.null(ridgePen) && ridgePen <= 0) stop("ridgePen must be positive")
   
@@ -408,7 +408,7 @@ fam_probStack <- function(logP, ridgePen = 1e-5) {
     
     ret
     
-  } # end ll fam_probStack
+  } # end ll fam_stackProb
   
   predict <- function(family,se=FALSE,eta=NULL,y=NULL,X=NULL,
                       beta=NULL,off=NULL,Vb=NULL) {
@@ -486,7 +486,7 @@ fam_probStack <- function(logP, ridgePen = 1e-5) {
   
   # dev.resids <- function(a, b, c, d) y # MAYBE IT'S NEEDED IN gam.fit5
   
-  structure(list(family="fam_probStack",ll=ll,nlp=K - 1,
+  structure(list(family="fam_stackProb",ll=ll,nlp=K - 1,
                  link="identity",
                  getLogP = getLogP,
                  getP = getP,
