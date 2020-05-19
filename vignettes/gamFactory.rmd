@@ -22,6 +22,68 @@ library(knitr)
 opts_chunk$set(out.extra='style="display:block; margin: auto"', fig.align="center", tidy=FALSE)
 ```
 
+At the moment this package simply offers a new family for performing additive stacking in `mgcv`,
+but in the future it will be expanded to provide tools for building more general GAM models.
+
+### Probabilistic additive stacking
+
+Probabilistic additive stacking is a semi-parametric extension of regression stacking (Breiman, 1996), proposed by Capezza et al. (2020) XXXLINK. The idea is to created a mixture of experts, where the weight of each expert depends on the covariates via parametric, random or smooth effect. See the paper for more details.
+
+Here we illustrate how to use additive stacking on a very simple example. Consider the UK electricity demand data contained in the `qgam` package:
+```{r, message = FALSE}
+library(qgam)
+data(UKload)
+head(UKload)
+```
+Here `NetDemand` is the aggregate electricity demand, `wM` is the external temperature, `Dow` is the day of the week (in French) and `Posan` is the time of year (0 on Jan 1st, 1 on Dec 31st). See `?UKload` for a description of the other variables. Let us divide the model between a training, a stacking and a testing set:
+```{r}
+dTrain <- subset(UKload, Year <= 2013)
+dStack <- subset(UKload, Year > 2013 & Year <= 2015)
+dTest  <- subset(UKload, Year == 2016)
+```
+A very basic generalised additive model (GAM) model for the demand $y_t$ might be $y_t \sim N(\mu_t,\sigma)$ where:
+$$
+\mu_t = \beta_0 + \psi(\text{Dow}_t) + f(\text{wM}_t),
+$$
+where $\psi(\text{Dow}_t)$ is a parametric factor effect and $f(\text{wM}_t)$ is a smooth effect. We can fit this model with `mgcv` by doing
+```{r}
+fitBasic <- gam(NetDemand ~ Dow + s(wM), data = dTrain)
+```
+
+In most countries, demand dynamics strongly depends on the time of year. Hence it is possible that a model fitted only on the (summer) winter data would perform better in the (summer) winter than a model fitted on all the data, as above. Let us fit the season specific models as follow:
+```{r}
+fitWinter <- gam(NetDemand ~ Dow + s(wM), data = subset(dTrain, Posan < 0.25 | Posan > 0.75))
+fitSummer <- gam(NetDemand ~ Dow + s(wM), data = subset(dTrain, Posan >= 0.25 & Posan <= 0.75))
+```
+We have divided the data in a summer and a winter model, but we would like to be able to transition smoothly between the two models when predicting electricity demand on the test set. We can do this by creating a mixture distribution which changes smoothly with `Posan`. To do this via probabilistic stacking, we first need to evaluate the probabilistic predictive log-densities of the two models on the stacking set:
+```{r}
+pW <- predict(fitWinter, newdata = dStack)
+pS <- predict(fitSummer, newdata = dStack)
+denW <- dnorm(dStack$NetDemand, pW, sqrt(fitWinter$sig2), log = TRUE)
+denS <- dnorm(dStack$NetDemand, pS, sqrt(fitSummer$sig2), log = TRUE)
+logP <- cbind(denW, denS)
+```
+The (second) first column of the matrix `logP` contains the a Gaussian log-density, with parameters estimated under the (summer) winter model, evaluated at the demand observations contained in the stacking set. Then we use additive stacking to create a mixture of the two densities, which varies smoothly with the time of year:
+```{r}
+library(gamFactory)
+fitStack <- gam(list(NetDemand ~ s(Posan)), data = dStack, family = fam_stackProb(logP))
+```
+
+The following plot:
+```{r, fig.align='center'}
+plot(fitStack)
+```
+shows that the weight of the summer model is higher is the summer than in the winter, as one would expect. See Capezza et al. (2020) for more details on the particular parametrization used by the stacking family. 
+
+
+
+
+### References
+
+   - Breiman, L. (1996). Stacked regressions. Machine learning 24 (1), 49–64.
+
+   - Capezza, C., Palumbo, B., Goude, Y., Wood, S. N. and Fasiolo, M. (2020). Additive stacking for disaggregate electricity demand forecasting.
+
 
 
 
