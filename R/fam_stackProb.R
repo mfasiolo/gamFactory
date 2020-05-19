@@ -486,7 +486,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
   
   # dev.resids <- function(a, b, c, d) y # MAYBE IT'S NEEDED IN gam.fit5
   
-  structure(list(family="fam_stackProb",ll=ll,nlp=K - 1,
+  structure(list(family="stackPredictiveFamily",ll=ll,nlp=K - 1,
                  link="identity",
                  getLogP = getLogP,
                  getP = getP,

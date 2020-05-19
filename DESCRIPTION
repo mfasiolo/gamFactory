@@ -15,6 +15,7 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown,
-    qgam
+    qgam, 
+    mgcViz
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
