@@ -1,8 +1,3 @@
-<style>
-body {
-text-align: justify}
-</style>
-
 At the moment this package simply offers a new family for performing
 additive stacking in `mgcv`, but in the future it will be expanded to
 provide tools for building more general GAM models.
