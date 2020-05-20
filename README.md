@@ -208,5 +208,5 @@ The ALE plot shows how the weight of the third model in the mixture
     forecasting.
 
   - Fasiolo, M., R. Nedellec, Y. Goude, and S. N. Wood (2020). Scalable
-    Visualisation meth- ods for modern generalized additive models.
+    Visualisation methods for modern generalized additive models.
     Journal of Computational and Graphical Statistics 29 (1), 78–86.
