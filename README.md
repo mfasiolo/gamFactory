@@ -1,3 +1,7 @@
+
+[![Build Status](https://travis-ci.org/mfasiolo/gamFactory.svg?branch=master)](https://travis-ci.org/mfasiolo/gamFactory)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/mfasiolo/gamFactory?branch=master&svg=true)](https://ci.appveyor.com/project/mfasiolo/gamFactory)
+
 At the moment this package simply offers a new family for performing
 additive stacking in `mgcv`, but in the future it will be expanded to
 provide tools for building more general GAM models.
