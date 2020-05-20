@@ -1,11 +1,13 @@
-#' Family for probabilistic stacking
+#' Family for probabilistic additive stacking
 #'
-#' @description Creates a family to be used in mgcv::gam for probabilistic stacking.
+#' @description Creates a family to be used in mgcv::gam for probabilistic additive stacking.
 #' 
-#' @param logP n x K matrix of the log-predictive distributions of the single experts. 
-#' n is the total number of available observations, while K is the number of experts
-#' @param ridgePen ridge penalty
-#' @return A family to give as family argument to mgcv::gam
+#' @param logP n x K matrix of the log-predictive densities of the experts. 
+#'             n is the total number of available observations, while K is the number of experts.
+#'             Hence, the i-th columns contains the log-densities corresponding to the k-th expert.
+#' @param ridgePen small ridge penalty on regression coefficients, useful for numerical stability.
+#'                 Do not change it unless you know what you are doing.
+#' @return A family that can be fitted via mgcv::gam.
 #' @importFrom matrixStats rowMaxs
 #' @importFrom stats make.link
 #' @importFrom mgcv fix.family.link Xbd diagXVXd trind.generator Rrank gamlss.gH
@@ -15,13 +17,56 @@
 #' @examples 
 #' library(gamFactory)
 #' 
-#' # Generating training and stacking sets of increasing size
+#' #### Very basic example: fitting a mixture with known mixture members (experts)
+#' # Generate some data from a weighted mixture of normals
+#' # The mixture weights change with x
+#' set.seed(424)
+#' n <- 1e3
+#' x <- seq(0, pi, length.out = n)
+#' w <- sin(x)
+#' 
+#' ii <- rbinom(n, size = 1, prob = w) 
+#' y <- ii * rnorm(n, 0, 2) + (!ii) * rnorm(n, 4, 0.5)
+#' plot(x, y)
+#' 
+#' # Normally our two experts would be fitted to some training data
+#' # but here they are known and they are two normals N(0, 2) and N(4, 0.5).
+#' # We evaluate their log-densities on the stacking data
+#' logDen <- cbind(dnorm(y, 0, 2, log = TRUE), 
+#'                 dnorm(y, 4, 0.5, log = TRUE))
+#' 
+#' # Estimate the mixture weights via additive stacking
+#' fit <- gam(list(y ~ s(x)), 
+#'            family = fam_stackProb(logDen), 
+#'            data = data.frame(x=x, y=y))
+#' 
+#' # Compare estimated vs true weight of first expert or mixture component
+#' prW <- predict(fit, type = "response", se = TRUE)
+#' plot(x, prW$fit[ , 1], type = 'l', 
+#'      main = "Estimated (black) and true (red) weight", 
+#'      ylab = "Weight of 1st expert")
+#' lines(x, prW$fit[ , 1] + 2*prW$se.fit[ , 1], lty = 2)
+#' lines(x, prW$fit[ , 1] - 2*prW$se.fit[ , 1], lty = 2 )
+#' lines(x, w, col = 2) # TRUTH
+#' 
+#' 
+#' #### More realistic example: 
+#' # We fit a simple and a more complex GAM model to several training data sets
+#' # of increasing size. Then we simulate stacking data sets of the same sizes
+#' # and we use them to estimate the weights of the two GAM models in the 
+#' # stacking ensemble (a mixture of the two GAMs). We let the stacking weights
+#' # depend on the sample size, because we expect that the more complex GAM should
+#' # be give more weight for large data sets (because it has less bias).
+#' 
+#' # Generating training and stacking sets of increasing size:
+#' # 60 data sets of size 100, 125 sets of size 20, ....
 #' sizes <- c(rep(100, 60), rep(125, 20), rep(150, 5), 
 #'            rep(175, 5), rep(200, 5), rep(300, 5),
 #'            rep(400, 5), rep(600, 5), rep(800, 5))
 #' 
 #' ns <- length(sizes)
 #' 
+#' # Simulate training data sets from a standard GAM example 
 #' datListTrain <- lapply(sizes, 
 #'                        function( .n ){
 #'                          gamSim(1, n = .n, dist = "binary", 
@@ -31,15 +76,18 @@
 #' datTrain <- as.data.frame(datTrain)
 #' datTrain$sizes <- rep(sizes, sizes)
 #' 
+#' # Simulate stacking data sets in the same way
 #' datListStack <- lapply(sizes, 
 #'                        function( .n ){
-#'                          gamSim(1, n = .n, dist = "binary", scale = 0.33, verbose = FALSE)
+#'                          gamSim(1, n = .n, dist = "binary", 
+#'                                 scale = 0.33, verbose = FALSE)
 #'                        })
 #' datStack <- do.call("rbind", datListStack)
 #' datStack <- as.data.frame(datStack)
 #' datStack$sizes <- rep(sizes, sizes)
 #' 
-#' # Estimate simple model and produce predictions on stacking set
+#' # Estimate simple GAM on each training data set and 
+#' # evaluate log-density (log-likelihood) of predictions on stacking sets
 #' m1 <- lapply(1:ns, 
 #'              function(.kk){
 #'                .fit <- gam(y ~ s(x0, k = 3) + s(x1, k = 3) + 
@@ -47,12 +95,14 @@
 #'                            family=binomial, data = datListTrain[[.kk]], 
 #'                            method="REML")
 #'                .y <- datListStack[[.kk]]$y
-#'                .p <- predict(.fit, newdata = datListStack[[.kk]], type = "response")
+#'                .p <- predict(.fit, newdata = datListStack[[.kk]], 
+#'                              type = "response")
 #'                .stack <- log(.p) * .y + log1p( - .p ) * ( !.y )
 #'                return( list("fit" = .fit, "stack" = .stack) )
 #'              })
 #' 
-#' ### Estimate simple model and produce predictions on stacking set
+#' # Estimate complex GAM on each training data set and 
+#' # evaluate log-density (log-likelihood) of predictions on stacking sets
 #' m2 <- lapply(1:ns, 
 #'              function(.kk){
 #'                .fit <- gam(y ~ s(x0, k = 10) + s(x1, k = 10) +
@@ -60,23 +110,31 @@
 #'                            family=binomial, data = datListTrain[[.kk]], 
 #'                            method="REML")
 #'                .y <- datListStack[[.kk]]$y
-#'                .p <- predict(.fit, newdata = datListStack[[.kk]], type = "response")
+#'                .p <- predict(.fit, newdata = datListStack[[.kk]], 
+#'                              type = "response")
 #'                .stack <- log(.p) * .y + log1p( - .p ) * ( !.y )
 #'                return( list("fit" = .fit, "stack" = .stack) )
 #'              })
 #' 
-#' # Perform the probabilistic stacking
+#' # Build matrix of log-densities on stacking set for both sets of GAMs
 #' logPStack <- cbind(do.call("c", lapply(m1, "[[", "stack")), 
 #'                    do.call("c", lapply(m2, "[[", "stack")))
 #' 
+#' # Fit additive stacking model where the experts weights depends on the 
+#' # sample sizes 
 #' fitStack <- gam(list(y ~ s(log(sizes), k = 7)), 
 #'                  family = fam_stackProb(logP = logPStack), 
 #'                  data = datStack)
 #' 
-#' # The weight of the second model should increase with the size of the data set
-#' plot(fitStack, pages = 1)
-#' summary(fitStack)
-#'
+#' # As expected, the weight of the second model (the more complex GAM) 
+#' # increases with the size of the training set
+#' prW <- predict(fitStack, type = "response", se = TRUE)
+#' plot(datStack$sizes, prW$fit[ , 2], type = 'l', 
+#'      main = "Estimated (black) and true (red) weight", 
+#'      ylab = "Weight of 2nd expert", ylim = c(0.2, 1.1))
+#' lines(datStack$sizes, prW$fit[ , 2] + 2*prW$se.fit[ , 2], lty = 2)
+#' lines(datStack$sizes, prW$fit[ , 2] - 2*prW$se.fit[ , 2], lty = 2 )
+#' 
 fam_stackProb <- function(logP, ridgePen = 1e-5) {
   
   if (!is.null(ridgePen) && ridgePen <= 0) stop("ridgePen must be positive")
