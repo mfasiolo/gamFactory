@@ -3,3 +3,12 @@
 language: R
 sudo: false
 cache: packages
+
+# Some libraries need to be installed, otheriwse rgl install fails
+addons:
+  apt:
+    packages:
+      - libgl1-mesa-dev 
+      - libglu1-mesa-dev
+      
+      
