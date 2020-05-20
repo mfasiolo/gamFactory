@@ -13,7 +13,7 @@ penReg <- function(x,e,y) {
   ## Taken from Simon N. Wood (in mgcv it is "pen.reg")
   ## get coefficients of penalized regression of y on matrix x
   ## where e is a square root penalty. Idea is to use e mainly for 
-  ## regularization, so that edf is close to rank of x.  
+  ## regularization, so that edf is close to rank of x. 
   if (sum(abs(e))==0) { ## no penalization - easy
     b <- qr.coef(qr(x),y);b[!is.finite(b)] <- 0
     return(b)
