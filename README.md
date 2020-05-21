@@ -146,8 +146,11 @@ lines(dTest$Posan, denBasic_t, col = 2) # Basic
 
 <img src="gamFactory_files/figure-gfm/unnamed-chunk-11-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
 The higher the better, hence stacking seems to be doing sligthly better
-here. Obviously this is a fairly dumb example, whose only purpose is to
-illustrate how additive stacking works.
+than the basic GAM. Obviously this is a fairly dumb example, whose only 
+purpose is to illustrate how additive stacking works. For example, we 
+have not excluded holidays and both models do badly on those days. In 
+particular, on the plot we see very negative likelihood values on Jan 
+1st, around Easter and around the 1st May bank holiday. 
 
 Note that the `fam_stackProb` family can be used to create mixtures of
 more than two experts. For example, we could get the log-density of the
