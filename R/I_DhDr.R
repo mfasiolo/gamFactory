@@ -7,7 +7,7 @@
   # Only one effect involved: call effect-specific method
   if( neff == 1 ){ 
     
-    DHnam <- paste0("DHessDrho.", o[[1]]$type)
+    DHnam <- paste0("DHessDrho.", class(o[[1]]))
     out <- do.call(DHnam, list(o = o[[1]], llk = llk, DbDr = DbDr))[[1]]
     
     
@@ -22,42 +22,42 @@
 }
 
 transEta <- function(eta, o, ii){
-  if(o$type == "singleIndex"){
-    if(ii == 1){ eta <- eta * o$xtra$f1 }
+  if(class(o) == "singleIndex"){
+    if(ii == 1){ eta <- eta * o$store$f1 }
   } else {
-    stopifnot(o$type == "standard")
+    stopifnot(class(o) == "standard")
   } 
   return( eta )
 }
 
 getM <- function(o, ii){
-  if(o$type == "singleIndex"){
-    M <- if(ii == 1){  o$xtra$Xi } else { o$xtra$X }
+  if(class(o) == "singleIndex"){
+    M <- if(ii == 1){  o$store$Xi } else { o$store$X0 }
   } else {
-    M <- o$xtra$X
-    stopifnot(o$type == "standard")
+    M <- o$store$X
+    stopifnot(class(o) == "standard")
   } 
   return( M )
 }
 
 getDetaDr <- function(o, DbDr, ii){
   M <- getM(o, ii)
-  if(o$type == "singleIndex"){
+  if(class(o) == "singleIndex"){
     if(ii == 1){ 
-      Deta <- M %*% DbDr[1:o$xtra$na] 
+      Deta <- M %*% DbDr[1:o$na] 
     } else {
-      Deta <- M %*% DbDr[-(1:o$xtra$na)]  
+      Deta <- M %*% DbDr[-(1:o$na)]  
     }
   } else {
     Deta <- M %*% DbDr
-    stopifnot(o$type == "standard")
+    stopifnot(class(o) == "standard")
   } 
   return( drop(Deta) )
 }
 
 DHessDrho.easy <- function(o, llk, DbDr, index){
   
-  type <- sapply(o, "[[", "type")
+  type <- sapply(o, class)
   
   # Indexes of duplicate single index effect (same effect twice)
   duplSI <- which(type == "singleIndex" & (index %in% index[duplicated(index)]))
@@ -86,22 +86,22 @@ DHessDrho.easy <- function(o, llk, DbDr, index){
       for(i1 in 1:nc[1]){
         V2 <- transEta(V1, o[[1]], i1)
         if( twoSI && all(c(i1, i2, i3)[duplSI] == c(1, 1)) ){
-          V2 <- V2 + transEta(llk$d2 * o[[duplSI[1]]]$xtra$f2, 
+          V2 <- V2 + transEta(llk$d2 * o[[duplSI[1]]]$store$f2, 
                               o[[notDupl]], c(i1, i2, i3)[notDupl]) * getDetaDr(o[[3]], DbDr, i3)  
         }
         if( (needEG && i3 == 2) && ( (index[3] == index[2] && i2 == 1) || (index[3] == index[1] && i1 == 1) ) ){
-          V2 <- V2 + transEta(llk$d2, o[[notDupl]], c(i1, i2, i3)[notDupl]) * drop(o[[3]]$xtra$X1 %*% DbDr[-(1:o[[3]]$xtra$na)])
+          V2 <- V2 + transEta(llk$d2, o[[notDupl]], c(i1, i2, i3)[notDupl]) * drop(o[[3]]$store$X1 %*% DbDr[-(1:o[[3]]$na)])
         }
         M1 <- getM(o[[1]], i1) 
         M2VM1 <- crossprod(M2, V2 * M1)
         if( (needEG && i3 == 1) ){
           if(index[3] == index[2] && i2 == 2){
             D <- transEta(llk$d2, o[[notDupl]], c(i1, i2, i3)[notDupl]) * getDetaDr(o[[3]], DbDr, i3)
-            M2VM1 <- M2VM1 + crossprod(o[[2]]$xtra$X1, D * M1)  
+            M2VM1 <- M2VM1 + crossprod(o[[2]]$store$X1, D * M1)  
           } 
           if(index[3] == index[1] && i1 == 2){
             D <- transEta(llk$d2, o[[notDupl]], c(i1, i2, i3)[notDupl]) * getDetaDr(o[[3]], DbDr, i3)
-            M2VM1 <- M2VM1 + crossprod(M2, D * o[[1]]$xtra$X1)
+            M2VM1 <- M2VM1 + crossprod(M2, D * o[[1]]$store$X1)
           }
         }
         dH[[jj]] <- if(i3 == 1) { M2VM1 } else { dH[[jj]] + M2VM1 }
@@ -112,7 +112,7 @@ DHessDrho.easy <- function(o, llk, DbDr, index){
     # Extra X'^T %*% D %*% Xi component needed 
     if( needD ){
       D <- transEta(llk$d2, o[[3]], i3) * getDetaDr(o[[3]], DbDr, i3)
-      tmp <- crossprod(o[[1]]$xtra$Xi, D * o[[1]]$xtra$X1)
+      tmp <- crossprod(o[[1]]$store$Xi, D * o[[1]]$store$X1)
       dH[[2]] <- dH[[2]] + tmp
       dH[[3]] <- dH[[3]] + t(tmp)
     }

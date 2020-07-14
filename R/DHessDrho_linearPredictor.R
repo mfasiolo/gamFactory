@@ -7,8 +7,8 @@
 #'
 DHessDrho.linearPredictor <- function(o, llk, DbDr){
   
-  der <- o$xtra$der
-  KK <- o$xtra$KK
+  der <- o$store$der
+  KK <- o$store$KK
   
   # Number of components and smoothing parameters
   nc <- length( der )

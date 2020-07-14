@@ -14,6 +14,7 @@ buildStandardEffect <- function(X){
     if(deriv >= 1){
       o$store <- list("X" = X)
     }
+    o$deriv <- deriv
   
     return( o )
     

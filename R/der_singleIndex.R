@@ -15,7 +15,7 @@ der.singleIndex <- function(o, llk, deriv = 1, param = NULL){
   }
   
   # Need to update the object
-  if( is.null(o$param) || !identical(param, o$param)){
+  if( is.null(o$param) || !identical(param, o$param) || o$deriv < deriv){
     o <- o$eval(param = param, deriv = deriv)
   }
   

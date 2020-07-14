@@ -38,6 +38,7 @@ buildSingleIndexEffect <- function(Xi, splineDes){
     o$param <- param
     o$na <- na
     o$store <- store
+    o$deriv <- deriv
     
     return( o )
     
