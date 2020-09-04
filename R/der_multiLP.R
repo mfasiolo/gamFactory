@@ -25,7 +25,7 @@ der.multiLP <- function(o, llk, deriv = 1, param = NULL){
   
   der <- lapply(1:nc, function(ii) der(o$eff[[ii]], 
                                        param = param[ iec[[ii]] ], 
-                                       llk = subset_llk(i1 = iel[[ii]], i2 = iel[[ii]], i3 = iel[[ii]], deriv = deriv),
+                                       llk = subset_llk(i1 = iel[[ii]], i2 = iel[[ii]], deriv = deriv),
                                        deriv = deriv))
   
   d1 <- do.call("c", lapply(der, "[[", "d1"))
@@ -40,7 +40,7 @@ der.multiLP <- function(o, llk, deriv = 1, param = NULL){
         Hess <- paste0(".Hess.", class(o$eff[[ic]]), "_", class(o$eff[[ir]]))
         H[[ic+(ir-1)*nc]] <- if(ir != ic){ 
           do.call(Hess, list("o1" = o$eff[[ic]], "o2" = o$eff[[ir]], 
-                             "llk" = subset_llk(i1 = iel[[ic]], i2 = iel[[ir]], i3 = iel[[ir]], deriv = 2)))
+                             "llk" = subset_llk(i1 = iel[[ic]], i2 = iel[[ir]], deriv = 2)))
         } else { 
           der[[ir]]$d2 
         }

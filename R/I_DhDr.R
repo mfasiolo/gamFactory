@@ -6,7 +6,7 @@
   
   # Only one effect involved: call effect-specific method
   if( neff == 1 ){ 
-    
+    llk$d2 <- llk$d2[[1]]
     DHnam <- paste0("DHessDrho.", class(o[[1]]))
     out <- do.call(DHnam, list(o = o[[1]], llk = llk, DbDr = DbDr))[[1]]
     
@@ -75,6 +75,10 @@ DHessDrho.easy <- function(o, llk, DbDr, index){
   # Standard effects have one linear predictors, nested effects 2
   nc <- (type != "standard") + 1
   
+  # Derivative wrt first-and-second and first-and-third linear predictors
+  llkH12 <- llk$d2[[2]]
+  llkH13 <- llk$d2[[3]]
+
   out <- NULL
   dH <- list()
   for(i3 in 1:nc[3]){
@@ -85,22 +89,26 @@ DHessDrho.easy <- function(o, llk, DbDr, index){
       M2 <- getM(o[[2]], i2)
       for(i1 in 1:nc[1]){
         V2 <- transEta(V1, o[[1]], i1)
+        # We have two SIs we are looking at alpha entry. Hence we need additional entry (NOT YET DOCUMENTED IN TEXT)
         if( twoSI && all(c(i1, i2, i3)[duplSI] == c(1, 1)) ){
-          V2 <- V2 + transEta(llk$d2 * o[[duplSI[1]]]$store$f2, 
+          tmp <- if(notDupl %in% c(1, 2)){ llkH12 } else{ llkH13 } 
+          V2 <- V2 + transEta(tmp * o[[duplSI[1]]]$store$f2, 
                               o[[notDupl]], c(i1, i2, i3)[notDupl]) * getDetaDr(o[[3]], DbDr, i3)  
         }
+        # Need to add E to diagonal
         if( (needEG && i3 == 2) && ( (index[3] == index[2] && i2 == 1) || (index[3] == index[1] && i1 == 1) ) ){
-          V2 <- V2 + transEta(llk$d2, o[[notDupl]], c(i1, i2, i3)[notDupl]) * drop(o[[3]]$store$X1 %*% DbDr[-(1:o[[3]]$na)])
+          V2 <- V2 + transEta(llkH12, o[[notDupl]], c(i1, i2, i3)[notDupl]) * drop(o[[3]]$store$X1 %*% DbDr[-(1:o[[3]]$na)])
         }
         M1 <- getM(o[[1]], i1) 
         M2VM1 <- crossprod(M2, V2 * M1)
+        # Need to add G factor
         if( (needEG && i3 == 1) ){
           if(index[3] == index[2] && i2 == 2){
-            D <- transEta(llk$d2, o[[notDupl]], c(i1, i2, i3)[notDupl]) * getDetaDr(o[[3]], DbDr, i3)
+            D <- transEta(llkH12, o[[notDupl]], c(i1, i2, i3)[notDupl]) * getDetaDr(o[[3]], DbDr, i3)
             M2VM1 <- M2VM1 + crossprod(o[[2]]$store$X1, D * M1)  
           } 
           if(index[3] == index[1] && i1 == 2){
-            D <- transEta(llk$d2, o[[notDupl]], c(i1, i2, i3)[notDupl]) * getDetaDr(o[[3]], DbDr, i3)
+            D <- transEta(llkH12, o[[notDupl]], c(i1, i2, i3)[notDupl]) * getDetaDr(o[[3]], DbDr, i3)
             M2VM1 <- M2VM1 + crossprod(M2, D * o[[1]]$store$X1)
           }
         }
@@ -111,7 +119,7 @@ DHessDrho.easy <- function(o, llk, DbDr, index){
     
     # Extra X'^T %*% D %*% Xi component needed 
     if( needD ){
-      D <- transEta(llk$d2, o[[3]], i3) * getDetaDr(o[[3]], DbDr, i3)
+      D <- transEta(llkH13, o[[3]], i3) * getDetaDr(o[[3]], DbDr, i3)
       tmp <- crossprod(o[[1]]$store$Xi, D * o[[1]]$store$X1)
       dH[[2]] <- dH[[2]] + tmp
       dH[[3]] <- dH[[3]] + t(tmp)
@@ -126,81 +134,4 @@ DHessDrho.easy <- function(o, llk, DbDr, index){
   return( out )
   
 }
-
-
-
-
-###
-
-##### Exceptions
-# singleIndex1 singleIndex1 ...
-# X V tilde(X) + X' D tilde(X) 
-# alpha beta  gamma   DONE
-# alpha beta  alpha*  DONE
-# alpha beta  beta*   DONE
-
-# (index[1] != index[2]) && (sum(type == "singleIndex") >= 1)
-
-
-
-# Mixed index of same effect finishing with beta -> E
-# if( (needEG && i3 == 2) && ( (index[3] == index[2] && i3 != i2) || (index[3] == index[1] && i3 != i1) ) ){
-#   V2 <- V2 + transEta(llk$d2, o[[2]], i2) * getDetaDr(o[[3]], DbDr, i3)
-# }
-
-
-
-# singleIndex1 ... singleIndex1or2
-# M (V + E) M
-# alpha alpha* beta
-# alpha alpha* beta*
-# alpha beta*  beta
-# alpha gamma  beta
-
-# singleIndex1 ... singleIndex1or2
-# M V M + G 
-# alpha beta*  alpha*
-# beta  beta*  alpha
-# beta  beta*  alpha*
-# beta  gamma  alpha
-
-
-
-
-
-# DHessDrho.messy <- function(o, llk, DbDr, index){
-#   
-#   type <- sapply(o, "[[", "type")
-#   sii <- which(type != "standard")
-#   nsi <- length( sii )
-#   # Standard effects have one linear predictors, nested effects 2
-#   nc <- (type != "standard") + 1
-#   
-#   out <- NULL
-#   dH <- list()
-#   for(i3 in 1:nc[3]){
-#     jj <- 1
-#     V0 <- transEta(llk$d3, o[[3]], i3) * getDetaDr(o[[3]], DbDr, i3) 
-#     for(i2 in 1:nc[2]){
-#       V1 <- transEta(V0, o[[2]], i2)
-#       M2 <- getM(o[[2]], i2)
-#       for(i1 in 1:nc[1]){
-#         V2 <- transEta(V1, o[[1]], i1)
-#         M1 <- getM(o[[1]], i1) 
-#         M2VM1 <- crossprod(M2, V2 * M1)
-#         dH[[jj]] <- if(i3 == 1) { M2VM1 } else { dH[[jj]] + M2VM1 }
-#         jj <- jj + 1
-#       }
-#     }
-#   }
-#   
-#   # Build Hessian # INEFFICIENT
-#   for(ir in 1:nc[2]){
-#     out <- rbind(out, do.call("cbind", dH[(1+(ir-1)*nc[1]):(ir*nc[1])])) * 0
-#   }
-#   
-#   return( out )
-#   
-# }
-
 
