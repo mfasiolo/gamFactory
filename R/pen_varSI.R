@@ -58,13 +58,17 @@ pen_varSI <- function(a, x, v, deriv = 0){
 #' @export pen_varSI_outer
 pen_varSI_outer <- function(a, x, DaDr){
   
+  m <- ncol(DaDr)
   n <- nrow(x)  
   S <- cov(x) * (n-1) / n
   Sa <- S %*% a
-  SD <- S %*% DaDr
   
-  out <- 8 * { tcrossprod(Sa, SD) + tcrossprod(SD, Sa) + S * drop(crossprod(a, S %*% DaDr)) }
-  
-  return( out ) 
+  d1H <- list()
+  for(ii in 1:m) {
+    SD <- S %*% DaDr[ , ii]
+    d1H[[ii]] <- 8 * { tcrossprod(Sa, SD) + tcrossprod(SD, Sa) + S * drop(crossprod(a, S %*% DaDr[ , ii])) }
+  } 
+
+  return( d1H ) 
   
 }

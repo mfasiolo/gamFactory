@@ -4,7 +4,7 @@
 \alias{DHessDrho.linearPredictor}
 \title{Derivative of Hessian w.r.t smoothing parameters}
 \usage{
-DHessDrho.linearPredictor(o, llk, DbDr)
+\method{DHessDrho}{linearPredictor}(o, llk, DbDr)
 }
 \description{
 Derivative of Hessian w.r.t smoothing parameters

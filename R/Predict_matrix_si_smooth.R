@@ -10,10 +10,10 @@ Predict.matrix.si.smooth <- function(object, data){
   xlim <- sort( object$xt$xlim )
   if( is.null(xlim) ){ xlim <- c(-6, 6) }
   
-  XI <- object$xt$X
-  
+  X <- object$xt$si$X
+
   out <- Predict.matrix.pspline.smooth(object, data)
-  out <- cbind(XI[1:nrow(out), ], out)
+  out <- cbind(X[1:nrow(out), ], out)
   
   return(out)
 }

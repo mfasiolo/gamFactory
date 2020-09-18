@@ -7,6 +7,8 @@
 #'
 buildSingleIndexEffect <- function(Xi, splineDes){
   
+  force(Xi); force(splineDes)
+
   eval <- function(param, deriv = 0){
     
     na <- ncol( Xi )
@@ -39,7 +41,7 @@ buildSingleIndexEffect <- function(Xi, splineDes){
     o$na <- na
     o$store <- store
     o$deriv <- deriv
-    
+
     return( o )
     
   }

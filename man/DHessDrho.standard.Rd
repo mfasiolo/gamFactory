@@ -4,7 +4,7 @@
 \alias{DHessDrho.standard}
 \title{Derivative of standard Hessian w.r.t smoothing parameters}
 \usage{
-DHessDrho.standard(o, llk, DbDr)
+\method{DHessDrho}{standard}(o, llk, DbDr)
 }
 \description{
 Derivative of standard Hessian w.r.t smoothing parameters

@@ -4,7 +4,7 @@
 \alias{DHessDrho.multiLP}
 \title{Derivative of Hessian w.r.t smoothing parameters}
 \usage{
-DHessDrho.multiLP(o, llk, DbDr)
+\method{DHessDrho}{multiLP}(o, llk, DbDr)
 }
 \description{
 Derivative of Hessian w.r.t smoothing parameters

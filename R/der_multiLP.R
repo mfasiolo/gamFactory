@@ -6,6 +6,7 @@
 #' @export
 der.multiLP <- function(o, llk, deriv = 1, param = NULL){
   
+  if( deriv > 2 ) stop("Does not work with deriv > 2") 
   nlp <- o$nlp
   iec <- o$iec
   iel <- o$iel

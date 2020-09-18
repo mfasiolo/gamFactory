@@ -4,7 +4,7 @@
 \alias{DHessDrho.singleIndex}
 \title{Derivative of single index Hessian w.r.t smoothing parameters}
 \usage{
-DHessDrho.singleIndex(o, llk, DbDr)
+\method{DHessDrho}{singleIndex}(o, llk, DbDr)
 }
 \description{
 Derivative of single index Hessian w.r.t smoothing parameters

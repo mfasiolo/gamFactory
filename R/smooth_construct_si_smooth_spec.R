@@ -19,9 +19,11 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   xlim <- sort( object$xt$xlim )
   if( is.null(xlim) ){ xlim <- c(-6, 6) }
   
-  XI <- object$xt$X
-  dsi <- ncol(XI)
-  n <- nrow(XI)
+  # Information on single index matrix and penalty
+  si <- object$xt$si
+
+  dsi <- ncol( si$X )
+  n <- nrow( si$X )
   
   ## a truncated power spline constructor method function
   ## object$p.order = null space dimension
@@ -31,31 +33,30 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   out <- smooth.construct.ps.smooth.spec(object, data, knots)
   
   dsmo <- out$bs.dim
+  dtot <- dsmo + dsi
   
-  B <- solve( t( sqrtPenDec(P = out$S[[1]], r = out$rank) ))
+  # Reparametrise the outer smooth so that penalty is diagonal
+  sm <- .diagPen(X = out$X, S = out$S[[1]], out$rank)
   
-  # print(out$S[[1]])
-  # print(D)
+  out$X <- cbind(si$X, sm$X) 
   
-  # Reparametrise so that P-spline penalty is diagonal
-  out$X <- out$X %*% B 
-  out$X <- cbind(XI, out$X) 
-  
-  # Expand S to include 0 penalty on SI coefficients
+  # Both penalty matrices are diagonal diag( c(0, 0, 0, ..., 1, 1, 1, ..., 0, 0)) with as many 1s as rank of penalty
   if( !out$fixed ){ 
     out$S <- list(rbind(cbind(matrix(0, dsi, dsi), matrix(0, dsi, dsmo)),
-                        cbind(matrix(0, dsmo, dsi), diag(1, dsmo))))
+                        cbind(matrix(0, dsmo, dsi), sm$S)))
+    out$S[[2]] <- rbind(cbind(si$S, matrix(0, dsi, dsmo)),
+                        cbind(matrix(0, dsmo, dsi), matrix(0, dsmo, dsmo)))
   }
-  out$bs.dim <- out$bs.dim + dsi
-  out$null.space.dim <- dsi
-  out$rank <- dsmo
-  
-  out$df <- ncol(out$X)     
-  out$C <- matrix(0, 0, ncol(out$X))
+  out$bs.dim <- dtot
+  out$null.space.dim <- c(dtot - sm$rank, dtot - si$rank)
+  out$rank <- c(sm$rank, si$rank)
+  out$D <- NULL
+  out$df <- dtot     
+  out$C <- matrix(0, 0, dtot)
   out$side.constrain <- FALSE
   out$no.rescale <- TRUE
-  out$D <- NULL
+  out$updateX <- TRUE
   
-  class(out)<-"si.smooth"  # Give object a class
+  class(out) <- "si.smooth"
   return( out )
 } 

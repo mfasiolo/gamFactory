@@ -18,7 +18,7 @@ PsplineDesign <- function(x, k, m, lim, deriv){
                   knots = list(x = lim), scale.penalty = FALSE)[[1]]
   
   # Square root of penalty
-  B <- solve( t( sqrtPenDec(P = sm$S[[1]], r = sm$rank) ))
+  B <- .getBmatrix(P = sm$S[[1]], r = sm$rank)
   
   # Get full design matrix using also data outside knots 
   X0 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T)$design %*% B
@@ -38,7 +38,7 @@ PsplineDesign <- function(x, k, m, lim, deriv){
     }
   }
   
-  return( list("X0" = X0, "X1" = X1, "X2" = X2, "X3" = X3, "S" = diag(1, nrow(B)), "knots" = sm$knots) )
+  return( list("X0" = X0, "X1" = X1, "X2" = X2, "X3" = X3) )
 }
 
 

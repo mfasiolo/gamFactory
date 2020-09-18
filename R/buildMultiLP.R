@@ -12,7 +12,7 @@ buildMultiLP <- function(eff, iel, iec){
   # Number of linear predictors
   nlp <- length( table(iel) )
 
-  # List of vectors indicating which componets belong to each linear predictor
+  # List of vectors indicating which components belong to each linear predictor
   ile <- lapply(1:nlp, function(ii) which(iel == ii))
   
   # Number of components
@@ -29,7 +29,7 @@ buildMultiLP <- function(eff, iel, iec){
     
     o <- buildMultiLP(eff = eff, iel = iel, iec = iec)
     
-    # For each effect, sum its evaluated effects 
+    # For each linear predictor, sum its evaluated effects 
     o$f <- lapply(ile, 
                     function(ii){
                       Reduce("+", lapply(ii, function(kk) eff[[kk]]$f ))
