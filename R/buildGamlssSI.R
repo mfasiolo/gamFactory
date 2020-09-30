@@ -7,7 +7,7 @@
 #' @rdname buildGamlssSI
 #' @export buildGamlssSI
 #'
-buildGamlssSI <- function(fam, effInfo){
+buildGamlssSI <- function(fam, effInfo, lamVar = 100){
   
   availableDeriv <- min(fam$availableDeriv, 3)
   cdf <- fam$cdf
@@ -72,35 +72,12 @@ buildGamlssSI <- function(fam, effInfo){
       effType <- effInfo$type
       ne <- length( effType )
       
-      eff <- list()
-      pen <- list()
-      kk <- 1
-      for(ii in 1:ne){
-        if( effType[ii] == "standard" ){
-          eff[[ii]] <- buildStandardEffect( X[ , effInfo$iec[[ii]], drop = FALSE] )  
-        } else {
-          if( effType[ii] == "singleIndex" ){
-            eff[[ii]] <- buildSingleIndexEffect(Xi = effInfo$extra[[ii]]$Xi, 
-                                                splineDes = constrSplineDes(k = effInfo$extra[[ii]]$k, 
-                                                                            m = effInfo$extra[[ii]]$m, 
-                                                                            lim = effInfo$extra[[ii]]$xlim)) 
-            pen[[kk]] <- pen_varSI(a = coef[effInfo$iec[[ii]][1:ncol(effInfo$extra[[ii]]$Xi)]], 
-                                   x = effInfo$extra[[ii]]$Xi, 
-                                   v = 1, 
-                                   deriv = derLev)
-            if(deriv > 1){
-              pen[[kk]]$outer <- pen_varSI_outer(a = coef[effInfo$iec[[ii]][1:ncol(effInfo$extra[[ii]]$Xi)]], 
-                                                 x = effInfo$extra[[ii]]$Xi, 
-                                                 DaDr = d1b[effInfo$iec[[ii]][1:ncol(effInfo$extra[[ii]]$Xi)], , drop = FALSE])
-            }
-            pen[[kk]]$iec <- effInfo$iec[[ii]][1:ncol(effInfo$extra[[ii]]$Xi)]
-          } else {
-            stop("Don't know this effect type")
-          }
-        }
-      }
-      
-      # Build linear predictor object
+      # Build list of effect and penalties
+      tmp <- .buildEffects(X = X, coef = coef, effInfo = effInfo, d1b = d1b, deriv = derLev, outer = deriv > 1)
+      eff <- tmp$eff
+      pen <- tmp$pen
+    
+      # Build linear predictors and evaluate them
       olp <- buildMultiLP(eff = eff, iel = effInfo$iel, iec = effInfo$iec)
       olp <- olp$eval(param = coef, deriv = derLev)
       
@@ -113,8 +90,7 @@ buildGamlssSI <- function(fam, effInfo){
       
       ret <- list("l" = drop(crossprod(wt, DllkDmu$d0)))
       
-      lamVar <- 100
-      
+      # Add penalties to likelihood
       npen <- length(pen) 
       if( npen ){
         for(ii in 1:npen){
@@ -124,36 +100,28 @@ buildGamlssSI <- function(fam, effInfo){
       
       if( deriv ){
         
-        # Derivatives of llk w.r.t. eta 
+        # Derivatives of llk w.r.t. etas (linear predictors) 
         DllkDeta <- DllkDMu_to_DllkDeta(DllkDMu = DllkDmu, etas = etas, mus = mus, family = family, wt = wt, deriv = derLev)
         
         # Derivatives of log-likelihood w.r.t. beta
         DllkDbeta <- der(olp, param = coef, llk = DllkDeta, deriv = min(derLev, 2))
-        
         ret$lb <- DllkDbeta$d1
         ret$lbb <- DllkDbeta$d2
         
+        # Add derivatives of penalties w.r.t. beta
         if( npen ){
           for(ii in 1:npen){
-            # print(str(pen))
-            # print(coef[1:4])
-            # print(summary(effInfo$extra[[1]]$Xi%*%coef[1:4]))
             ret$lb[pen[[ii]]$iec] <- ret$lb[pen[[ii]]$iec] - lamVar * pen[[ii]]$d1
             ret$lbb[pen[[ii]]$iec, pen[[ii]]$iec] <- ret$lbb[pen[[ii]]$iec, pen[[ii]]$iec] - lamVar * pen[[ii]]$d2
           }
         }
         
-        # print("###")
-        # print(ret$l)
-        # print(range(etas[[1]]))
-        # print(var(Xsi %*% coefSI))
-        print(coef)
-        
-        # We want also derivatives w.r.t. smoothing parameters
+        # We want also derivatives w.r.t. rho (smoothing parameters)
         if( deriv > 1 ){
           
           ret$d1H <- DHessDrho(o = olp, llk = DllkDeta, DbDr = d1b)
           
+          # Add derivatives of penalties w.r.t. rho
           if( npen ){
             for(ii in 1:npen){
               for(kk in 1:length(ret$d1H)){

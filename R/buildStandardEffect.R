@@ -7,6 +7,8 @@
 #'
 buildStandardEffect <- function(X){
   
+  force(X)
+  
   eval <- function(param, deriv){
     
     o <- buildStandardEffect(X = X)
