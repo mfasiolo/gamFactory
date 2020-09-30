@@ -12,6 +12,7 @@
   
   out <- list("X" = X, 
               "S" = diag(as.numeric(1:d <= r), d, d), 
+              "B" = B,
               "rank" = r)
   
   return( out )

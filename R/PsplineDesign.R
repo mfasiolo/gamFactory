@@ -5,7 +5,7 @@
 #' @rdname PsplineDesign
 #' @export PsplineDesign
 #'
-PsplineDesign <- function(x, k, m, lim, deriv){
+PsplineDesign <- function(x, k, m, lim, B, deriv){
   
   n <- length(x)
   
@@ -17,10 +17,7 @@ PsplineDesign <- function(x, k, m, lim, deriv){
                   data = data.frame(x = x[whIn]), 
                   knots = list(x = lim), scale.penalty = FALSE)[[1]]
   
-  # Square root of penalty
-  B <- .getBmatrix(P = sm$S[[1]], r = sm$rank)
-  
-  # Get full design matrix using also data outside knots 
+  # Get full design matrix using also data outside knots: need to call this to get X1, X2 and X3 
   X0 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T)$design %*% B
   
   if( any(abs(X0[whIn, ] - sm$X %*% B) > 1e-6)  ){ 

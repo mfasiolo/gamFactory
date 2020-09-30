@@ -4,7 +4,7 @@
 \alias{PsplineDesign}
 \title{Costruct P-spline design with derivatives}
 \usage{
-PsplineDesign(x, k, m, lim, deriv)
+PsplineDesign(x, k, m, lim, B, deriv)
 }
 \description{
 Costruct P-spline design with derivatives
