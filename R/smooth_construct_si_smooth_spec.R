@@ -50,7 +50,7 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   }
   
   # Reparametrise the outer smooth so that penalty is diagonal
-  sm <- .diagPen(X = out$X, S = out$S[[1]], out$rank)
+  sm <- gamFactory:::.diagPen(X = out$X, S = out$S[[1]], out$rank)
   
   out$X <- cbind(si$X, sm$X) 
   
@@ -71,6 +71,7 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   out$no.rescale <- TRUE
   out$updateX <- TRUE
   out$xt$splineDes <- constrSplineDes("k" = dsmo, "m" = m, "lim" = xlim, "B" = sm$B)
+  out$xt$special <- TRUE
   
   class(out) <- "si.smooth"
   return( out )

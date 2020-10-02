@@ -13,6 +13,8 @@ DHessDrho.multiLP <- function(o, llk, DbDr){
   iel <- o$iel
   nc  <- o$nc
   
+  ord <- order(do.call("c", iec))
+  
   # Number of smoothing parameters
   m <- ncol( DbDr )
   
@@ -44,8 +46,10 @@ DHessDrho.multiLP <- function(o, llk, DbDr){
       out[[ism]] <- rbind(out[[ism]], do.call("cbind", dH[(1+(ir-1)*nc):(ir*nc)]))
     }
     
+    out[[ism]] <- out[[ism]][ord, ord]
+    
   }
-  
+
   return( out )
   
 }

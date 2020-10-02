@@ -23,20 +23,16 @@
     } else {
       
       extra <- effInfo$extra[[ii]]
+      Xi <- extra$si$X
+      vr <- extra$si$vr
       
-      if( effType[ii] == "singleIndex" ){
+      if( effType[ii] == "si.smooth" ){
         
-        aii <- ncol(extra$Xi)
-        eff[[ii]] <- buildSingleIndexEffect(Xi = extra$Xi, 
-                                            splineDes = extra$splineDes) 
-        pen[[kk]] <- pen_varSI(a = coef[aii], 
-                               x = extra$Xi, 
-                               v = extra$vr, 
-                               deriv = deriv)
+        aii <- iec[ 1:ncol(Xi) ]
+        eff[[ii]] <- buildSingleIndexEffect(Xi = Xi, splineDes = extra$splineDes) 
+        pen[[kk]] <- pen_varSI(a = coef[aii], x = Xi, v = vr, deriv = deriv)
         if(outer){
-          pen[[kk]]$outer <- pen_varSI_outer(a = coef[aii], 
-                                             x = extra$Xi, 
-                                             DaDr = d1b[aii, , drop = FALSE])
+          pen[[kk]]$outer <- pen_varSI_outer(a = coef[aii], x = Xi, DaDr = d1b[aii, , drop = FALSE])
         }
         pen[[kk]]$iec <- aii
         

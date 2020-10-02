@@ -24,6 +24,7 @@ der.multiLP <- function(o, llk, deriv = 1, param = NULL){
   
   subset_llk <- .create_subset_llk(llk, nlp) 
   
+  # For ii-th effect: calculate derivative of log-likelihood w.r.t. its regression coefficients
   der <- lapply(1:nc, function(ii) der(o$eff[[ii]], 
                                        param = param[ iec[[ii]] ], 
                                        llk = subset_llk(i1 = iel[[ii]], i2 = iel[[ii]], deriv = deriv),
@@ -58,7 +59,9 @@ der.multiLP <- function(o, llk, deriv = 1, param = NULL){
     
   }
   
-  out <- list("d1" = d1, "d2" = d2)
+  ord <- order(do.call("c", iec))
+
+  out <- list("d1" = d1[ord], "d2" = d2[ord, ord])
   
   return( out )
   

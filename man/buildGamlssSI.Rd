@@ -4,7 +4,7 @@
 \alias{buildGamlssSI}
 \title{Function for building new GAMLSS families}
 \usage{
-buildGamlssSI(fam, effInfo)
+buildGamlssSI(fam, effInfo, lamVar = 100)
 }
 \arguments{
 \item{np}{XXX.}

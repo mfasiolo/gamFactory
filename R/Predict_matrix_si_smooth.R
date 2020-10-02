@@ -10,10 +10,15 @@ Predict.matrix.si.smooth <- function(object, data){
   xlim <- sort( object$xt$xlim )
   if( is.null(xlim) ){ xlim <- c(-6, 6) }
   
-  X <- object$xt$si$X
-
-  out <- Predict.matrix.pspline.smooth(object, data)
-  out <- cbind(X[1:nrow(out), ], out)
+  si <- object$xt$si
   
+  xa <- object$xt$si$xa
+  if( is.null(xa) ){
+    xa <- si$X %*% si$alpha
+  } 
+  
+  out <- object$xt$splineDes(x = xa, deriv = 0)$X0
+  out <- cbind(matrix(0, nrow(out), ncol(si$X)), out) 
+
   return(out)
 }
