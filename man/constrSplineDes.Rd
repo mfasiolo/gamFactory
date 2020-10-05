@@ -4,7 +4,7 @@
 \alias{constrSplineDes}
 \title{Wrapper for PsplineDesign}
 \usage{
-constrSplineDes(k, m, lim, B)
+constrSplineDes(k, m, lim, B, NS)
 }
 \description{
 Wrapper for PsplineDesign

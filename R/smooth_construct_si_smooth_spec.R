@@ -4,6 +4,7 @@
 #' @name smooth.construct.si.smooth.spec
 #' @rdname smooth.construct.si.smooth.spec
 #' @export smooth.construct.si.smooth.spec
+#' @importFrom MASS Null
 #'
 smooth.construct.si.smooth.spec <- function(object, data, knots)
 { 
@@ -30,28 +31,36 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   if( length(object$p.order)==1 ){ object$p.order <- c(3, 2) }
   m <- object$p.order
   
-  # Construct P-spline basis
+  # Construct initial P-spline basis
   out <- smooth.construct.ps.smooth.spec(object, data, knots)
   
+  # Effect is not centered, so we impose that sum_i f(x_i) = 0 were x_i ~ N(0, vr).
+  # We need to a) create X0 corresponding to x_i ~ N(0, vr), 
+  #            b) find null space (NS) of xme = colMeans(X0)
+  #            c) project original X and S on NS
+  xseq <- qnorm(1:(n-1)/n, 0, sqrt(object$xt$si$vr))
+  tmp <- smoothCon(object = s(x, bs = "ps", k = out$bs.dim, m = m),
+                   data = data.frame(x = xseq),
+                   knots = list(x = xlim), scale.penalty = FALSE)[[1]]
+  xme <- colMeans( splines::spline.des(tmp$knots, x = xseq, ord = tmp$m[1] + 2, outer.ok = T)$design )
+  NS <- Null( xme %*% t(xme) )
+  out$X <- out$X %*% NS
+  out$S[[1]] <- t(NS) %*% out$S[[1]] %*% NS 
+  
+  # Here a) bs.dim certainly decreases by 1 
+  #      b) rank of pen stays the same unless full-rank (in which case must decrease by 1)
+  #      c) null.space decreases by one, unless is was already empty.
+  out$bs.dim <- out$bs.dim - 1
+  out$rank <- min(out$rank, out$bs.dim)
+  out$null.space.dim <- max(out$null.space.dim - 1, 0) 
+
   dsmo <- out$bs.dim
   dtot <- dsmo + dsi
-  
-  # If intercept is not penalised, we penalise average value of smooth over normal distributed
-  # vector of single index values 
-  if( m[2] != 0 ){
-    xseq <- qnorm(1:(n-1)/n, 0, object$xt$si$vr)
-    tmp <- smoothCon(object = s(x, bs = "ps", k = dsmo, m = m),
-                     data = data.frame(x = xseq),
-                     knots = list(x = xlim), scale.penalty = FALSE)[[1]]
-    xme <- colMeans( splines::spline.des(tmp$knots, x = xseq, ord = tmp$m[1] + 2, outer.ok = T)$design )
-    out$rank <- out$rank + 1
-    out$null.space.dim <- out$null.space.dim - 1 
-    out$S[[1]] <- out$S[[1]] + xme %*% t(xme)
-  }
   
   # Reparametrise the outer smooth so that penalty is diagonal
   sm <- gamFactory:::.diagPen(X = out$X, S = out$S[[1]], out$rank)
   
+  # Model matrix includes inned and outer matrix 
   out$X <- cbind(si$X, sm$X) 
   
   # Both penalty matrices are diagonal diag( c(0, 0, 0, ..., 1, 1, 1, ..., 0, 0)) with as many 1s as rank of penalty
@@ -70,7 +79,10 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   out$side.constrain <- FALSE
   out$no.rescale <- TRUE
   out$updateX <- TRUE
-  out$xt$splineDes <- constrSplineDes("k" = dsmo, "m" = m, "lim" = xlim, "B" = sm$B)
+  
+  # Extra stuff needed later on. 
+  # NB: "k" = dsmo+1 because we lost 1 dimension via centering constraint
+  out$xt$splineDes <- constrSplineDes("k" = dsmo+1, "m" = m, "lim" = xlim, "B" = sm$B, "NS" = NS)
   out$xt$special <- TRUE
   
   class(out) <- "si.smooth"
