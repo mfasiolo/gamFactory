@@ -3,7 +3,7 @@
 #' 
 #' @name Predict.matrix.si.smooth
 #' @rdname Predict.matrix.si.smooth
-#' @export Predict.matrix.si.smooth
+#' @export
 #'
 Predict.matrix.si.smooth <- function(object, data){
   # x-limits for P-spline basis

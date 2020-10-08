@@ -3,8 +3,8 @@
 #' 
 #' @name smooth.construct.si.smooth.spec
 #' @rdname smooth.construct.si.smooth.spec
-#' @export smooth.construct.si.smooth.spec
 #' @importFrom MASS Null
+#' @export
 #'
 smooth.construct.si.smooth.spec <- function(object, data, knots)
 { 
