@@ -36,6 +36,8 @@
         }
         pen[[kk]]$iec <- aii
         
+        kk <- kk + 1
+        
       } else {
         
         stop("Don't know this effect type")
