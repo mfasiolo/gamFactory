@@ -22,9 +22,16 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   
   # Information on single index matrix and penalty
   si <- object$xt$si
-
+  
   dsi <- ncol( si$X )
   n <- nrow( si$X )
+
+  # Need to initialize inner coefficient? If so alpha chosen so that var(X %*% alpha) = si$vr 
+  alpha <- object$xt$si$alpha
+  if( is.null(alpha) ){ alpha <- object$xt$si$alpha <- rep(1, dsi) * sqrt(si$vr) / sd(rowSums(si$X)) }
+  
+  ax <- si$X %*% alpha
+  data[[object$term]] <- ax
   
   ## a truncated power spline constructor method function
   ## object$p.order = null space dimension

@@ -24,9 +24,40 @@ buildGamlssSI <- function(fam, effInfo, lamVar = 100){
   checkExtra <- fam$checkExtra
   if( is.null(checkExtra) ){ checkExtra <- function(.ex) NULL }
   
+  initializeInner <- fam$initialize
+  
+  initFun <- function(y, nobs, E, x, family, offset){
+    
+    si <- which( effInfo$type == "si.smooth" )
+    nsi <- length(si)
+
+    # If there are single index effects we: 
+    # a) set initialise their alpha coefficients using the values contained in effInfo$extra
+    # b) initialize the remaining coefficients using the initialize function provided by the family
+    if( nsi ){
+      iec <- effInfo$iec[si]
+      dsi <- sapply(effInfo$extra[si], function(.x) ncol(.x$si$X))
+      kk <- do.call("c", lapply(1:nsi, function(.ii) iec[[.ii]][1:dsi[.ii]]))
+      alpha <- do.call("c", lapply(effInfo$extra[si], function(.x) .x$si$alpha))
+  
+      E1 <- E[ , -kk, drop = FALSE]
+      x1 <- x[ , -kk, drop = FALSE]
+      
+      start <- numeric( ncol(x) )
+      start[ kk ] <- alpha
+      start[ -kk ] <- initializeInner(y = y, nobs = nobs, E = E1, x = x1, family = family, offset = offset)
+    } else {
+      
+      start <- initializeInner(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset)
+      
+    }
+    
+    return( start )
+    
+  }
+  
   initialize <- expression({
-    if ( is.null(start) ) { start <- rep(1, ncol(x)) }
-   # if ( is.null(start) ) { start <- family$initFun(y = y, nobs = nobs, E = E, x = x, family = family) }
+    if ( is.null(start) ) { start <- family$initFun(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset) }
   }) 
   
   defLinks <- lapply(okLinks, "[[", 1) # Default link function(s)
@@ -138,14 +169,34 @@ buildGamlssSI <- function(fam, effInfo, lamVar = 100){
       
     } ## end ll 
     
+    # predict <- function(family,se=FALSE,eta=NULL,y=NULL,
+    #                     X=NULL,beta=NULL,off=NULL,Vb=NULL) {
+    # 
+    #   effType <- effInfo$type
+    #   ne <- length( effType )
+    #   
+    #   # Build list of effect and penalties
+    #   tmp <- .buildEffects(X = X, coef = beta, effInfo = effInfo, d1b = NULL, deriv = 0, outer = FALSE)
+    #   eff <- tmp$eff
+    # 
+    #   # Build linear predictors and evaluate them
+    #   olp <- buildMultiLP(eff = eff, iel = effInfo$iel, iec = effInfo$iec)
+    #   olp <- olp$eval(param = coef, deriv = derLev)
+    #   
+    #   if (se) return(list(fit=s,se.fit=sef)) else return(list(fit=olp$f))
+    # } ## predict
+    
     structure(list(family = nam, 
                    ll = ll, 
                    link = paste(link), 
                    nlp = np,
                    tri = trind.generator( np ), ## symmetric indices for accessing derivative arrays
                    initialize = initialize, 
+                   initializeInner = initializeInner, 
+                   initFun = initFun,
                    postproc = postproc, 
                    residuals = residuals,
+                   #predict = predict,
                    qf = qf,
                    linfo = stats,
                    rd = rd, 
