@@ -26,11 +26,12 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   dsi <- ncol( Xi )
   n <- nrow( Xi )
   
-  # Information on single index matrix and penalty
+  # Information on single index matrix and penalty is in "si"
+  # Reparametrise Xi so that the penalty on the single index vector is diagonal
   si <- object$xt$si
   si <- append(si, gamFactory:::.diagPen(X = Xi, S = .psp(d = dsi, ord = si$ord), r = ncol(Xi) - si$ord))
   
-  # Need to initialize inner coefficient? If so alpha chosen so that var(X %*% alpha) = si$vr 
+  # Need to initialize inner coefficient? If so, alpha chosen so that var(X %*% alpha) = si$vr 
   alpha <- si$alpha
   if( is.null(alpha) ){ alpha <- si$alpha <- rep(1, dsi) * sqrt(si$vr) / sd(rowSums(si$X)) }
   
