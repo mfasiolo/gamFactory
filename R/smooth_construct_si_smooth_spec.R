@@ -19,16 +19,20 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   # x-limits for P-spline basis
   xlim <- sort( object$xt$xlim )
   if( is.null(xlim) ){ xlim <- c(-6, 6) }
+
+  # Inner model matrix (to be projected via single index)
+  Xi <- matrix(data[[object$term]], ncol = object$xt$si$d)
+  
+  dsi <- ncol( Xi )
+  n <- nrow( Xi )
   
   # Information on single index matrix and penalty
   si <- object$xt$si
+  si <- append(si, gamFactory:::.diagPen(X = Xi, S = .psp(d = dsi, ord = si$ord), r = ncol(Xi) - si$ord))
   
-  dsi <- ncol( si$X )
-  n <- nrow( si$X )
-
   # Need to initialize inner coefficient? If so alpha chosen so that var(X %*% alpha) = si$vr 
-  alpha <- object$xt$si$alpha
-  if( is.null(alpha) ){ alpha <- object$xt$si$alpha <- rep(1, dsi) * sqrt(si$vr) / sd(rowSums(si$X)) }
+  alpha <- si$alpha
+  if( is.null(alpha) ){ alpha <- si$alpha <- rep(1, dsi) * sqrt(si$vr) / sd(rowSums(si$X)) }
   
   ax <- si$X %*% alpha
   data[[object$term]] <- ax
@@ -45,7 +49,7 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   # We need to a) create X0 corresponding to x_i ~ N(0, vr), 
   #            b) find null space (NS) of xme = colMeans(X0)
   #            c) project original X and S on NS
-  xseq <- qnorm(1:(n-1)/n, 0, sqrt(object$xt$si$vr))
+  xseq <- qnorm(1:(n-1)/n, 0, sqrt(si$vr))
   tmp <- smoothCon(object = s(x, bs = "ps", k = out$bs.dim, m = m),
                    data = data.frame(x = xseq),
                    knots = list(x = xlim), scale.penalty = FALSE)[[1]]
@@ -89,6 +93,7 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   
   # Extra stuff needed later on. 
   # NB: "k" = dsmo+1 because we lost 1 dimension via centering constraint
+  out$xt$si <- si
   out$xt$splineDes <- constrSplineDes("k" = dsmo+1, "m" = m, "lim" = xlim, "B" = sm$B, "NS" = NS)
   out$xt$special <- TRUE
   
