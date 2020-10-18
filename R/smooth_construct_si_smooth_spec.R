@@ -72,8 +72,8 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   # Reparametrise the outer smooth so that penalty is diagonal
   sm <- gamFactory:::.diagPen(X = out$X, S = out$S[[1]], out$rank)
   
-  # Model matrix includes inned and outer matrix 
-  out$X <- cbind(si$X, sm$X) 
+  # Model matrix includes inner and outer matrix 
+  out$X <- cbind(matrix(0, n, dsi), sm$X) 
   
   # Both penalty matrices are diagonal diag( c(0, 0, 0, ..., 1, 1, 1, ..., 0, 0)) with as many 1s as rank of penalty
   if( !out$fixed ){ 
