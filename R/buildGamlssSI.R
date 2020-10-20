@@ -25,32 +25,32 @@ buildGamlssSI <- function(fam, effInfo, lamVar = 100){
   if( is.null(checkExtra) ){ checkExtra <- function(.ex) NULL }
   
   initializeInner <- fam$initialize
-  
+
   initFun <- function(y, nobs, E, x, family, offset){
     
+    p <- ncol( x )
+    unscaled <- attr(E,"use.unscaled")
+    lpi <- attr(x, "lpi")
+    
     si <- which( effInfo$type == "si.smooth" )
-    nsi <- length(si)
+    nsi <- length( si )
 
-    # If there are single index effects we: 
-    # a) set initialise their alpha coefficients using the values contained in effInfo$extra
-    # b) initialize the remaining coefficients using the initialize function provided by the family
-    if( nsi ){
+    start <- numeric( ncol(x) )
+    if( nsi ){ # If there are single index effects we: 
+      # a) Identify coefficients of single index vector (alpha)
       iec <- effInfo$iec[si]
       dsi <- sapply(effInfo$extra[si], function(.x) ncol(.x$si$X))
       kk <- do.call("c", lapply(1:nsi, function(.ii) iec[[.ii]][1:dsi[.ii]]))
+      # b) set the corresponding elements of start to the values contained in effInfo$extra
       alpha <- do.call("c", lapply(effInfo$extra[si], function(.x) .x$si$alpha))
-  
-      E1 <- E[ , -kk, drop = FALSE]
-      x1 <- x[ , -kk, drop = FALSE]
-      
-      start <- numeric( ncol(x) )
       start[ kk ] <- alpha
-      start[ -kk ] <- initializeInner(y = y, nobs = nobs, E = E1, x = x1, family = family, offset = offset)
-    } else {
-      
-      start <- initializeInner(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset)
-      
+      # c) modify lpi so that family$initializeInner will initialize only the remaining coefficients
+      #    (in the output initializeInner, the values corresponding to the alphas will be set to zero)
+      lpi <- lapply(lpi, function(.x) .x[ !(.x %in% kk) ])
     }
+    
+    start <- start + family$initializeInner(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset, 
+                                            jj = lpi, unscaled = unscaled)
     
     return( start )
     
