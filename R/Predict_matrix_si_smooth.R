@@ -14,7 +14,8 @@ Predict.matrix.si.smooth <- function(object, data){
   
   d <- length( alpha )
   
-  Xi <- matrix(data[[object$term]], ncol = d) %*% si$B
+  # Need to subtract colMeans of original data "xm" and rescale using B
+  Xi <- t(t(matrix(data[[object$term]], ncol = d)) - si$xm)  %*% si$B
   
   xa <- Xi %*% alpha 
   

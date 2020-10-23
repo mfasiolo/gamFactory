@@ -23,6 +23,10 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   # Inner model matrix (to be projected via single index)
   Xi <- matrix(data[[object$term]], ncol = object$xt$si$d)
   
+  # Need to center Xi and save colMeans because we need to subtract is when using new data
+  Xi <- scale(Xi, scale = FALSE)
+  object$xt$si$xm <- attr(Xi, "scaled:center")
+  
   dsi <- ncol( Xi )
   n <- nrow( Xi )
   
