@@ -90,13 +90,12 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   out$C <- matrix(0, 0, dtot)
   out$side.constrain <- FALSE
   out$no.rescale <- TRUE
-  out$updateX <- TRUE
-  
+
   # Extra stuff needed later on. 
   # NB: "k" = dsmo+1 because we lost 1 dimension via centering constraint
   out$xt$si <- si
   out$xt$splineDes <- constrSplineDes("k" = dsmo+1, "m" = m, "lim" = xlim, "B" = sm$B, "NS" = NS)
-  out$xt$special <- TRUE
+  out$special <- TRUE
   
   class(out) <- "si.smooth"
   return( out )

@@ -14,6 +14,8 @@
   
   o$smooth <- sms
   
+  o$fitted.values <- predict(o, type = "response")
+  
   return( o )
   
 }

@@ -10,7 +10,7 @@
   sms <- o$smooth
   cls <- lapply(sms, class)
   sp <- which(sapply(sms, function(.x){ 
-    .o <- .x$xt$special
+    .o <- .x$special
     if( is.null(.o) ){ .o <- FALSE }
     return( .o ) }))
   nsp <- length(sp)
