@@ -16,20 +16,20 @@ llk_gaussian <- function(y, param, deriv = 0, ...) {
   
   p <- ncol( param )
   mu <- param[ , 1, drop = TRUE]
-  g <- param[ , 2, drop = TRUE] # log(sigma)
-  tau2 <- exp( - 2 * g )        # 1 / sigma^2
+  tau <- param[ , 2, drop = TRUE] # 1 / sigma
+  tau2 <- tau^2                   # 1 / sigma^2
   n <- length(y)
   
   if (length(mu) == 1) {
     mu <- rep(mu, n)
-    g <- rep(g, n)
+    tau <- rep(tau, n)
     tau2 <- rep(tau2, n)
   }
   
   ymu <- y - mu        
-  ymu2 <- ymu ^ 2   
+  ymu2 <- ymu ^ 2
     
-  d0 <- - .5 * log(2 * pi) - g - .5 * tau2 * ymu2
+  d0 <- - .5 * log(2 * pi) + log(tau) - .5 * tau2 * ymu2
 
   out <- list()
   out$d0 <- d0
@@ -37,27 +37,27 @@ llk_gaussian <- function(y, param, deriv = 0, ...) {
   if( deriv > 0 )
   {
     d1 <- tau2 * ymu
-    d2 <- - 1 + tau2 * ymu2
+    d2 <- 1/tau - tau*ymu2
     out[["d1"]] <- list(d1, d2)
     
     if( deriv > 1 ){
       d11 <- - tau2
-      d12 <- - 2 * tau2 * ymu
-      d22 <- - 2 * tau2 * ymu2
+      d12 <- 2 * d1 / tau
+      d22 <- - ymu2 - 1/tau2
       out[["d2"]] <- list(d11, d12, d22) 
       
       if( deriv > 2 ){
         zeros <- rep(0, n)
         d111 <- zeros
-        d112 <- 2 * tau2
-        d122 <- 4 * tau2 * ymu
-        d222 <- 4 * tau2 * ymu2
+        d112 <- - 2 * tau
+        d122 <- 2 * ymu
+        d222 <- 2 / tau^3
         out[["d3"]] <- list(d111, d112, d122, d222) 
         
         if( deriv > 3){
           d1111 <- d1112 <- d1222 <- zeros
           d1122 <- rep(-2, n)
-          d2222 <- -6/tau2^2
+          d2222 <- -6 / tau2^2
           out[["d3"]] <- list(d1111, d1112, d1122, d1222, d2222)
         }
       }

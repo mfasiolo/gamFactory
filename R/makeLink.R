@@ -4,7 +4,7 @@
 #' @description Extension of \code{mgcv::make.link} including additional links.
 #' @param link a character string indicating the link function to be used.
 #' @name makeLink
-#' @rdname makeLink
+#' @rdname getStats
 #' @importFrom gsubfn strapplyc
 #' @export makeLink
 #'
@@ -24,6 +24,15 @@ makeLink <- function(link){
       l2 <- tmp[2]
       link <- "logitab"
       
+    } 
+      
+    # Get limit (a, \infinity) of loga link
+    if( grepl("loga", link, fixed=TRUE) ){
+        
+        tmp <- sort( as.numeric(strapplyc(link, "[-+.e0-9]*\\d")[[1]]) )
+        l1 <- tmp[1]
+        link <- "loga"
+        
     }
     
     switch(link, 
@@ -33,6 +42,12 @@ makeLink <- function(link){
              mu.eta <- eval(parse(text=paste("function(eta) binomial()$mu.eta(eta) * ", l2 - l1, sep=''))) 
              linkinv <- eval(parse(text=paste("function(eta) binomial()$linkinv(eta) * ",
                                               l2 - l1, " + ", l1, sep='')))
+             valideta <- function(eta) all( is.finite(eta) )
+           }, 
+           loga = {
+             linkfun <-  eval(parse(text=paste("function(mu) log(1/mu -",l1,")")))
+             mu.eta <- eval(parse(text=paste("function(eta) { ee <- exp(eta); -ee/(ee +",l1,")^2 }")))
+             linkinv <- eval(parse(text=paste("function(eta) 1/(exp(eta) +",l1,")")))
              valideta <- function(eta) all( is.finite(eta) )
            }, 
            stop(gettextf("%s link not recognised", sQuote(link)), domain = NA))
