@@ -12,10 +12,8 @@ Predict.matrix.si.smooth <- function(object, data){
   
   alpha <- si$alpha
   
-  d <- length( alpha )
-  
   # Need to subtract colMeans of original data "xm" and rescale using B
-  Xi <- t(t(matrix(data[[object$term]], ncol = d)) - si$xm)  %*% si$B
+  Xi <- t(t(data[[object$term]]) - si$xm)  %*% si$B
   
   xa <- Xi %*% alpha 
   
@@ -24,7 +22,7 @@ Predict.matrix.si.smooth <- function(object, data){
   
   # Total model matrix is X0 preceded my matrix of zeros. 
   # predict.gam will multiply the latter by alpha, which will have no effect (this is a trick).
-  Xtot <- cbind(matrix(0, nrow(X0), d), X0) 
+  Xtot <- cbind(matrix(0, nrow(X0), length(alpha)), X0) 
 
   return(Xtot)
 }

@@ -9,10 +9,7 @@
   nlp <- length( lpi )
   sms <- o$smooth
   cls <- lapply(sms, class)
-  sp <- which(sapply(sms, function(.x){ 
-    .o <- .x$special
-    if( is.null(.o) ){ .o <- FALSE }
-    return( .o ) }))
+  sp <- which(sapply(sms, function(.x){ return(!is.null(.x$xt$si)) }))
   nsp <- length(sp)
   spCo <- lapply(sp, function(.kk) sms[[.kk]]$first.para:sms[[.kk]]$last.para) 
   

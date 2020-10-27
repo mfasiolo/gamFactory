@@ -21,7 +21,7 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   if( is.null(xlim) ){ xlim <- c(-6, 6) }
 
   # Inner model matrix (to be projected via single index)
-  Xi <- matrix(data[[object$term]], ncol = object$xt$si$d)
+  Xi <- data[[object$term]]
   
   # Need to center Xi and save colMeans because we need to subtract is when using new data
   Xi <- scale(Xi, scale = FALSE)
@@ -33,6 +33,8 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   # Information on single index matrix and penalty is in "si"
   # Reparametrise Xi so that the penalty on the single index vector is diagonal
   si <- object$xt$si
+  if( is.null(si$vr) ){ si$vr <- 1 }
+  if( is.null(si$ord) ){ si$ord <- 1 }
   si <- append(si, gamFactory:::.diagPen(X = Xi, S = .psp(d = dsi, ord = si$ord), r = ncol(Xi) - si$ord))
   
   # Need to initialize inner coefficient? If so, alpha chosen so that var(X %*% alpha) = si$vr 
@@ -94,12 +96,12 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   out$C <- matrix(0, 0, dtot)
   out$side.constrain <- FALSE
   out$no.rescale <- TRUE
+  out$plot.me <- FALSE
 
   # Extra stuff needed later on. 
   # NB: "k" = dsmo+1 because we lost 1 dimension via centering constraint
   out$xt$si <- si
   out$xt$splineDes <- constrSplineDes("k" = dsmo+1, "m" = m, "lim" = xlim, "B" = sm$B, "NS" = NS)
-  out$special <- TRUE
   
   class(out) <- "si.smooth"
   return( out )
