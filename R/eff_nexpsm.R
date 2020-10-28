@@ -1,14 +1,14 @@
 #'
-#' Build single index effects
+#' Build nested exponential smooth effect
 #' 
-#' @name buildSingleIndexEffect
-#' @rdname buildSingleIndexEffect
-#' @export buildSingleIndexEffect
+#' @name eff_nexpsm
+#' @rdname eff_nexpsm
+#' @export eff_nexpsm
 #'
-buildSingleIndexEffect <- function(Xi, splineDes){
+eff_nexpsm <- function(Xi, splineDes){
   
   force(Xi); force(splineDes)
-
+  
   eval <- function(param, deriv = 0){
     
     na <- ncol( Xi )
@@ -35,18 +35,18 @@ buildSingleIndexEffect <- function(Xi, splineDes){
       }
     }
     
-    o <- buildSingleIndexEffect(Xi = Xi, splineDes = splineDes)
+    o <- eff_nexpsm(Xi = Xi, splineDes = splineDes)
     o$f <- drop( store$X0 %*% beta )
     o$param <- param
     o$na <- na
     o$store <- store
     o$deriv <- deriv
-
+    
     return( o )
     
   }
   
-  out <- structure(list("eval" = eval), class = c("singleIndex"))
+  out <- structure(list("eval" = eval), class = c("NestedExpSmooth"))
   
   return( out )
   

@@ -1,11 +1,11 @@
 #'
 #' Derivatives of single index effects
 #' 
-#' @rdname der.singleIndex
-#' @export der.singleIndex
+#' @rdname DllkDbeta.singleIndex
+#' @export DllkDbeta.singleIndex
 #' @export
 #'
-der.singleIndex <- function(o, llk, deriv = 1, param = NULL){
+DllkDbeta.singleIndex <- function(o, llk, deriv = 1, param = NULL){
   
   if( deriv == 0 ){ return( list() ) }
   

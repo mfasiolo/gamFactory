@@ -18,7 +18,7 @@
     
     if( effType[ii] == "standard" ){
       
-      eff[[ii]] <- buildStandardEffect( X[ , iec, drop = FALSE] )  
+      eff[[ii]] <- eff_stand( X[ , iec, drop = FALSE] )  
       
     } else {
       
@@ -29,7 +29,7 @@
       if( effType[ii] == "si.smooth" ){
         
         aii <- iec[ 1:ncol(Xi) ]
-        eff[[ii]] <- buildSingleIndexEffect(Xi = Xi, splineDes = extra$splineDes) 
+        eff[[ii]] <- eff_si(Xi = Xi, splineDes = extra$splineDes) 
         pen[[kk]] <- pen_varSI(a = coef[aii], x = Xi, v = vr, deriv = deriv)
         if(outer){
           pen[[kk]]$outer <- pen_varSI_outer(a = coef[aii], x = Xi, DaDr = d1b[aii, , drop = FALSE])

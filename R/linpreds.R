@@ -1,13 +1,14 @@
 #'
-#' Build a linear predictor
+#' Build linear predictors
 #' 
-#' @param iel vectors indicating to which linear predictor each component belongs to.
-#' @param iec list of vectors indicating which regression coefficients belong to each component.
-#'  
-#' @rdname buildMultiLP
-#' @export buildMultiLP
+#' @param eff list of effects, see e.g. [eff_stand] or [eff_si].
+#' @param iel vectors indicating to which linear predictor each effect belongs to.
+#' @param iec list of vectors indicating which regression coefficients belong to each effect.
+#' 
+#' @rdname linpreds
+#' @export linpreds
 #'
-buildMultiLP <- function(eff, iel, iec){
+linpreds <- function(eff, iel, iec){
   
   # Number of linear predictors
   nlp <- length( table(iel) )
@@ -27,7 +28,7 @@ buildMultiLP <- function(eff, iel, iec){
                     eff[[ii]]$eval(param = param[iec[[ii]]], deriv = deriv)
                   })
     
-    o <- buildMultiLP(eff = eff, iel = iel, iec = iec)
+    o <- linpreds(eff = eff, iel = iel, iec = iec)
     
     # For each linear predictor, sum its evaluated effects 
     o$f <- lapply(ile, 

@@ -97,11 +97,11 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   out$side.constrain <- FALSE
   out$no.rescale <- TRUE
   out$plot.me <- FALSE
-
+  
   # Extra stuff needed later on. 
   # NB: "k" = dsmo+1 because we lost 1 dimension via centering constraint
   out$xt$si <- si
-  out$xt$splineDes <- constrSplineDes("k" = dsmo+1, "m" = m, "lim" = xlim, "B" = sm$B, "NS" = NS)
+  out$xt$splineDes <- PsplineDesign(k = dsmo+1, m = m[1], lim = xlim, P = NS %*% sm$B)
   
   class(out) <- "si.smooth"
   return( out )

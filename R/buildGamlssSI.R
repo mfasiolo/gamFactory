@@ -1,13 +1,11 @@
-#'
-#' Function for building new GAMLSS families
-#' 
-#' @description XXX.
-#' @param np XXX.
-#' @name buildGamlssSI
-#' @rdname buildGamlssSI
-#' @export buildGamlssSI
-#'
-buildGamlssSI <- function(fam, effInfo, lamVar = 100){
+#
+# Function for building new GAMLSS families
+# 
+# @name buildGamlssSI
+# @rdname buildGamlssSI
+# @export buildGamlssSI
+#
+.buildGamlssSI <- function(fam, effInfo, lamVar = 100){
   
   availableDeriv <- min(fam$availableDeriv, 3)
   cdf <- fam$cdf
@@ -109,7 +107,7 @@ buildGamlssSI <- function(fam, effInfo, lamVar = 100){
       pen <- tmp$pen
     
       # Build linear predictors and evaluate them
-      olp <- buildMultiLP(eff = eff, iel = effInfo$iel, iec = effInfo$iec)
+      olp <- linpreds(eff = eff, iel = effInfo$iel, iec = effInfo$iec)
       olp <- olp$eval(param = coef, deriv = derLev)
       
       # Evaluate eta and mu
@@ -135,9 +133,9 @@ buildGamlssSI <- function(fam, effInfo, lamVar = 100){
         DllkDeta <- DllkDMu_to_DllkDeta(DllkDMu = DllkDmu, etas = etas, mus = mus, family = family, wt = wt, deriv = derLev)
         
         # Derivatives of log-likelihood w.r.t. beta
-        DllkDbeta <- der(olp, param = coef, llk = DllkDeta, deriv = min(derLev, 2))
-        ret$lb <- DllkDbeta$d1
-        ret$lbb <- DllkDbeta$d2
+        Dbeta <- DllkDbeta(olp, param = coef, llk = DllkDeta, deriv = min(derLev, 2))
+        ret$lb <- Dbeta$d1
+        ret$lbb <- Dbeta$d2
         
         # Add derivatives of penalties w.r.t. beta
         if( npen ){
@@ -180,7 +178,7 @@ buildGamlssSI <- function(fam, effInfo, lamVar = 100){
     #   eff <- tmp$eff
     # 
     #   # Build linear predictors and evaluate them
-    #   olp <- buildMultiLP(eff = eff, iel = effInfo$iel, iec = effInfo$iec)
+    #   olp <- linpreds(eff = eff, iel = effInfo$iel, iec = effInfo$iec)
     #   olp <- olp$eval(param = coef, deriv = derLev)
     #   
     #   if (se) return(list(fit=s,se.fit=sef)) else return(list(fit=olp$f))

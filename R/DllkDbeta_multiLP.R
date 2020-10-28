@@ -1,10 +1,10 @@
 #'
-#' Derivatives of log-likelihood with multiple linear predictor
+#' Derivatives of log-likelihood w.r.t. coefs of multiple linear predictors
 #' 
-#' @rdname der.multiLP
-#' @export der.multiLP
+#' @rdname DllkDbeta.multiLP
+#' @export DllkDbeta.multiLP
 #' @export
-der.multiLP <- function(o, llk, deriv = 1, param = NULL){
+DllkDbeta.multiLP <- function(o, llk, deriv = 1, param = NULL){
   
   if( deriv > 2 ) stop("Does not work with deriv > 2") 
   nlp <- o$nlp
@@ -25,10 +25,10 @@ der.multiLP <- function(o, llk, deriv = 1, param = NULL){
   subset_llk <- .create_subset_llk(llk, nlp) 
   
   # For ii-th effect: calculate derivative of log-likelihood w.r.t. its regression coefficients
-  der <- lapply(1:nc, function(ii) der(o$eff[[ii]], 
-                                       param = param[ iec[[ii]] ], 
-                                       llk = subset_llk(i1 = iel[[ii]], i2 = iel[[ii]], deriv = deriv),
-                                       deriv = deriv))
+  der <- lapply(1:nc, function(ii) DllkDbeta(o$eff[[ii]], 
+                                             param = param[ iec[[ii]] ], 
+                                             llk = subset_llk(i1 = iel[[ii]], i2 = iel[[ii]], deriv = deriv),
+                                             deriv = deriv))
   
   d1 <- do.call("c", lapply(der, "[[", "d1"))
   

@@ -2,7 +2,7 @@
 % Please edit documentation in R/generic_functions.R
 \name{DHessDrho}
 \alias{DHessDrho}
-\title{Generic derivative function}
+\title{Derivatives of Hessian w.r.t. smoothing parameters}
 \usage{
 DHessDrho(o, ...)
 }
@@ -12,5 +12,5 @@ DHessDrho(o, ...)
 \item{...}{arguments to be passed to methods.}
 }
 \description{
-Generic derivative function
+Derivatives of Hessian w.r.t. smoothing parameters
 }
