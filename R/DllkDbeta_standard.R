@@ -9,6 +9,16 @@ DllkDbeta.standard <- function(o, llk, deriv = 1, param = NULL){
   
   if( deriv == 0 ){ return( list() ) }
   
+  if( is.null(param) ){
+    param <- o$param
+    if( is.null(param) ){ stop("param vector not provided!") }
+  }
+  
+  # Need to update the object
+  if( o$deriv == 0 ){
+    o <- o$eval(param = param, deriv = deriv)
+  }
+  
   X <- o$store$X
   n <- nrow(X)
   p <- ncol( X )

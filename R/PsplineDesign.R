@@ -30,7 +30,7 @@ PsplineDesign <- function(k, m, lim, P){
   force(k); force(m); force(lim); force(P);
   
   out <- function(x, deriv){
-    .PsplineDesign(x = x, k = k, m = m, lim = lim, P = P, deriv = deriv)
+    gamFactory:::.PsplineDesign(x = x, k = k, m = m, lim = lim, P = P, deriv = deriv)
   }
   
   return( out )

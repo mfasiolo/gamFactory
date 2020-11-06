@@ -3,7 +3,7 @@
 #' 
 #' @name DHessDrho.standard
 #' @rdname DHessDrho.standard
-#' @export DHessDrho.standard
+#' @export 
 #'
 DHessDrho.standard <- function(o, llk, DbDr){
   

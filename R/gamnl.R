@@ -9,7 +9,7 @@
 #'
 gamnl <- function(formula, family = gaulss(), data = list(), ...){
   
-  out <- gam(formul = formula, family = family, data = data, fit = FALSE, ...)
+  out <- gam(formula = formula, family = family, data = data, fit = FALSE, ...)
   
   info <- .prepEffInfo(o = out)
   

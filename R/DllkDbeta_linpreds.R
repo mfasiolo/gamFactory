@@ -1,10 +1,10 @@
 #'
 #' Derivatives of log-likelihood w.r.t. coefs of multiple linear predictors
 #' 
-#' @rdname DllkDbeta.multiLP
-#' @export DllkDbeta.multiLP
+#' @rdname DllkDbeta.linpreds
+#' @export DllkDbeta.linpreds
 #' @export
-DllkDbeta.multiLP <- function(o, llk, deriv = 1, param = NULL){
+DllkDbeta.linpreds <- function(o, llk, deriv = 1, param = NULL){
   
   if( deriv > 2 ) stop("Does not work with deriv > 2") 
   nlp <- o$nlp

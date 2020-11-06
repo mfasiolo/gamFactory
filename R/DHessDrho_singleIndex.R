@@ -3,7 +3,7 @@
 #' 
 #' @name DHessDrho.singleIndex
 #' @rdname DHessDrho.singleIndex
-#' @export DHessDrho.singleIndex
+#' @export 
 #'
 DHessDrho.singleIndex <- function(o, llk, DbDr){
   

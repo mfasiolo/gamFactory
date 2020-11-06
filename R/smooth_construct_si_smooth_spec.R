@@ -8,33 +8,30 @@
 #'
 smooth.construct.si.smooth.spec <- function(object, data, knots)
 { 
-  # Extra args:
-  # - object$xt$X (n x p) matrix of variables to be projected via single index model
-  # - object$xt$xlim limit knots for P-spline basis
-  # Secret storage in output object:
-  # - object$X stores single index matrix in the last p columns. First p columns are useless.
-  # - object$xlim store limit know position
-  # - object$S is (k+p) x (k+p) and the last p x p submatrix on the bottom-right is zero.
-  #   Hence no penalty on the single index coefficients.
-  # x-limits for P-spline basis
-  xlim <- sort( object$xt$xlim )
-  if( is.null(xlim) ){ xlim <- c(-6, 6) }
-
+  
+  si <- object$xt$si
+  if( is.null(si) ){ si <- object$xt$si <- list() }
+  
   # Inner model matrix (to be projected via single index)
   Xi <- data[[object$term]]
   
   # Need to center Xi and save colMeans because we need to subtract is when using new data
   Xi <- scale(Xi, scale = FALSE)
-  object$xt$si$xm <- attr(Xi, "scaled:center")
+  si$xm <- attr(Xi, "scaled:center")
   
   dsi <- ncol( Xi )
   n <- nrow( Xi )
   
   # Information on single index matrix and penalty is in "si"
   # Reparametrise Xi so that the penalty on the single index vector is diagonal
-  si <- object$xt$si
+  
   if( is.null(si$vr) ){ si$vr <- 1 }
   if( is.null(si$ord) ){ si$ord <- 1 }
+  
+  # x-limits for P-spline basis
+  xlim <- sort( object$xt$xlim )
+  if( is.null(xlim) ){ xlim <- c(-6, 6) * sqrt(si$vr) }
+  
   si <- append(si, gamFactory:::.diagPen(X = Xi, S = .psp(d = dsi, ord = si$ord), r = ncol(Xi) - si$ord))
   
   # Need to initialize inner coefficient? If so, alpha chosen so that var(X %*% alpha) = si$vr 

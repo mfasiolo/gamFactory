@@ -1,11 +1,11 @@
 #'
 #' Derivative of Hessian w.r.t smoothing parameters
 #' 
-#' @name DHessDrho.multiLP
-#' @rdname DHessDrho.multiLP
-#' @export DHessDrho.multiLP
+#' @name DHessDrho.linpreds
+#' @rdname DHessDrho.linpreds
+#' @export 
 #'
-DHessDrho.multiLP <- function(o, llk, DbDr){
+DHessDrho.linpreds <- function(o, llk, DbDr){
   
   eff <- o$eff
   nlp <- o$nlp

@@ -44,7 +44,7 @@ linpreds <- function(eff, iel, iec){
   }
   
   out <- structure(list("eff" = eff, "eval" = eval, "nc" = nc, "nlp" = nlp, "iel" = iel, "iec" = iec, "ile" = ile), 
-                   class = "multiLP")
+                   class = "linpreds")
   
   return( out )
   

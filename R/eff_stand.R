@@ -10,7 +10,7 @@ eff_stand <- function(X){
   
   force(X)
   
-  eval <- function(param, deriv){
+  eval <- function(param, deriv = 0){
     
     o <- eff_stand(X = X)
     o$f <- drop( X %*% param ) 
@@ -18,6 +18,7 @@ eff_stand <- function(X){
       o$store <- list("X" = X)
     }
     o$deriv <- deriv
+    o$param <- param
   
     return( o )
     
