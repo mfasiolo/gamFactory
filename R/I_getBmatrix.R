@@ -11,7 +11,7 @@
     v[ (r+1):d ] <- 1
   }
   
-  B <- ei$vectors * 1 / sqrt(v)
+  B <- diag(sqrt(v), d) %*% t(ei$vectors)
   
   return( B )
 }
