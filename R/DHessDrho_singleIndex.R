@@ -31,21 +31,34 @@ DHessDrho.singleIndex <- function(o, llk, DbDr){
   
   # Derivatives of alpha and beta wrt log-smoothing parameters
   dArho = DbDr[1:na, , drop = FALSE]
-  dBrho = DbDr[-(1:na), , drop = FALSE] 
+  dBrho = DbDr[-(1:na), , drop = FALSE]
+  
+  aaB <- (legg * X + 2 * leg * X1 + le * X2)
+  lgggXi <- lggg * Xi
+  leeeX <- leee * X
+  leegXi <- leeg * Xi
+  leeXi <- lee * Xi
+  leegX <- leeg * X
+  leeX1 <- lee * X1
+  leggXi <- legg * Xi
+  leeX <- lee * X 
+  legXi <- leg * Xi 
+  leeX <- lee * X
+  leXi <- le * Xi
   
   for(ii in 1:m){
     dAi <- dArho[ , ii]
     dBi <- dBrho[ , ii]
-    Vaa <- drop( (legg * X + 2 * leg * X1 + le * X2) %*% dBi + lggg * Xi %*% dAi )
+    Vaa <- drop( aaB %*% dBi + lgggXi %*% dAi )
     derHAA <- t(Xi) %*% (Vaa * Xi)
     
-    Vbb1 <- drop(leee * X %*% dBi + leeg * Xi %*% dAi)
-    Vbb2 <- drop(lee * Xi %*% dAi)
+    Vbb1 <- drop(leeeX %*% dBi + leegXi %*% dAi)
+    Vbb2 <- drop(leeXi %*% dAi)
     derHBB <- t(X) %*% (Vbb1 * X) + t(X1) %*% (Vbb2 * X) + t(X) %*% (Vbb2 * X1)
     
-    Vab1 <- drop(leeg * X %*% dBi + lee * X1 %*% dBi + legg * Xi %*% dAi)
-    Vab2 <- drop(lee * X %*% dBi + 2 * leg * Xi %*% dAi)
-    Vab3 <- drop(le * Xi %*% dAi)
+    Vab1 <- drop(leegX %*% dBi + leeX1 %*% dBi + leggXi %*% dAi)
+    Vab2 <- drop(leeX %*% dBi + 2 * legXi %*% dAi)
+    Vab3 <- drop(leXi %*% dAi)
     derHBA <- t(X) %*% (Vab1 * Xi) + t(X1) %*% (Vab2 * Xi) + t(X2) %*% (Vab3 * Xi)
     
     d1H[[ii]] <- rbind(cbind(derHAA, t(derHBA)), cbind(derHBA, derHBB))

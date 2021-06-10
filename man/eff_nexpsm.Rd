@@ -2,10 +2,10 @@
 % Please edit documentation in R/eff_nexpsm.R
 \name{eff_nexpsm}
 \alias{eff_nexpsm}
-\title{Build nested exponential smooth effect}
+\title{Build nested adaptive exponential smooth effect}
 \usage{
-eff_nexpsm(Xi, splineDes)
+eff_nexpsm(y, Xi, splineDes, x0 = NULL)
 }
 \description{
-Build nested exponential smooth effect
+Build nested adaptive exponential smooth effect
 }

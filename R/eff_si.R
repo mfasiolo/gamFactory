@@ -30,6 +30,7 @@ eff_si <- function(Xi, splineDes){
     store$Xi <- Xi
     if( deriv >= 1 ){
       store$f1 <- drop( store$X1 %*% beta )
+      store$g1 <- Xi
       if( deriv >= 2 ){
         store$f2 <- drop( store$X2 %*% beta )
         if( deriv >= 3 ){

@@ -4,8 +4,40 @@
 \alias{expSmooth}
 \title{Exponential smooth and its derivatives}
 \usage{
-expSmooth(x, alpha, x0 = NULL, deriv = 0)
+expSmooth(y, Xi, beta, x0 = NULL, deriv = 0)
 }
 \description{
 Exponential smooth and its derivatives
+}
+\examples{
+n <- 1000
+xseq <- seq(-4, 4, length.out = n)
+y <- sin(xseq^2) + rnorm(n, 0, 0.5)
+plot(xseq, y, col = "grey")
+
+Xi <- cbind(1, xseq, xseq^2)
+beta <- c(2, 0, -0.2)
+p <- length(beta)
+xsm <- expSmooth(y = y, Xi = Xi, beta = beta, deriv = 3)
+
+lines(xseq, xsm$d0, col = 2, lwd = 2)
+
+obj <- list(d0 = function(param){ 
+  sum(expSmooth(y = y, Xi = Xi, beta = param, deriv = 0)$d0)
+}, 
+d1 = function(param){
+  tmp <- colSums(expSmooth(y = y, Xi = Xi, beta = param, deriv = 1)$d1)
+  as.list(tmp)
+}, 
+d2 = function(param){
+  tmp <- colSums(expSmooth(y = y, Xi = Xi, beta = param, deriv = 2)$d2)
+  as.list(tmp)
+}, 
+d3 = function(param){
+  tmp <- colSums(expSmooth(y = y, Xi = Xi, beta = param, deriv = 3)$d3)
+  as.list(tmp)
+})
+
+checkDeriv(obj = obj, param = beta, ord = 1:3)
+
 }

@@ -94,7 +94,8 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   out$side.constrain <- FALSE
   out$no.rescale <- TRUE
   out$plot.me <- FALSE
-  
+  out$repara <- FALSE
+
   # Extra stuff needed later on. 
   # NB: "k" = dsmo+1 because we lost 1 dimension via centering constraint
   out$xt$si <- si

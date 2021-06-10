@@ -39,7 +39,7 @@ DllkDbeta.linpreds <- function(o, llk, deriv = 1, param = NULL){
     H <- vector(mode = "list", length = nc^2)
     for( ir in 1:nc ){
       for( ic in ir:nc ){
-        Hess <- paste0(".Hess.", class(o$eff[[ic]]), "_", class(o$eff[[ir]]))
+        Hess <- paste0(".Hess.", class(o$eff[[ic]])[1], "_", class(o$eff[[ir]])[1])
         H[[ic+(ir-1)*nc]] <- if(ir != ic){ 
           do.call(Hess, list("o1" = o$eff[[ic]], "o2" = o$eff[[ir]], 
                              "llk" = subset_llk(i1 = iel[[ic]], i2 = iel[[ir]], deriv = 2)))
