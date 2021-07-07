@@ -30,7 +30,13 @@ PsplineDesign <- function(k, m, lim, P){
   force(k); force(m); force(lim); force(P);
   
   out <- function(x, deriv){
+    withCallingHandlers({
     gamFactory:::.PsplineDesign(x = x, k = k, m = m, lim = lim, P = P, deriv = deriv)
+    }, warning = function(w) {
+      if (length(grep("there is \\*no\\* information about some basis coefficients", conditionMessage(w)))){
+        invokeRestart("muffleWarning")
+      }
+    })
   }
   
   return( out )

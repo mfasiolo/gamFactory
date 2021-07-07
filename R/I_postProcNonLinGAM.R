@@ -4,8 +4,8 @@
   ne <- length( info$type )
   for(ii in 1:ne){
     
-    # Coefficients of single index must be saved in smooth object
-    if( "si.smooth" %in%  info$type[ii] ){
+    # Coefficients of nested smooth must be saved in smooth object
+    if( ("si.smooth" %in%  info$type[ii]) || ("nexpsm.smooth" %in%  info$type[ii]) ){
       ism <- info$extra[[ii]]$ism
       sms[[ism]]$xt$si$alpha <- coef(o)[ info$iec[[ii]][1:ncol(sms[[ism]]$xt$si$X)] ]
     }

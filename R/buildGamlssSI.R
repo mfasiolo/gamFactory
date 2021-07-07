@@ -30,12 +30,12 @@
     unscaled <- attr(E,"use.unscaled")
     lpi <- attr(x, "lpi")
     
-    si <- which( effInfo$type == "si.smooth" )
+    si <- which( effInfo$type != "standard" )
     nsi <- length( si )
 
     start <- numeric( ncol(x) )
-    if( nsi ){ # If there are single index effects we: 
-      # a) Identify coefficients of single index vector (alpha)
+    if( nsi ){ # If there are nested effects we: 
+      # a) Identify coefficients of inner vector (alpha)
       iec <- effInfo$iec[si]
       dsi <- sapply(effInfo$extra[si], function(.x) ncol(.x$si$X))
       kk <- do.call("c", lapply(1:nsi, function(.ii) iec[[.ii]][1:dsi[.ii]]))

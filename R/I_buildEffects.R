@@ -40,7 +40,15 @@
         
       } else {
         
-        stop("Don't know this effect type")
+        if( effType[ii] == "nexpsm.smooth" ){
+          
+          eff[[ii]] <- eff_nexpsm(y = extra$si$x, Xi = Xi, splineDes = extra$splineDes) 
+   
+        } else {
+          
+          stop("Don't know this effect type")  
+          
+        }
         
       }
     }
