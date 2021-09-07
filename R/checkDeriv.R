@@ -69,7 +69,7 @@ checkDeriv <- function(obj, param, ord = 1){
     derPair <- cbind(exd, fd)
     colnames(derPair) <- c("EX", "FD")
     
-    out[[paste0("fd", od)]] <- derPair
+    out[[paste0("fd", od)]] <- matrix(unlist(derPair), ncol = ncol(derPair))
     
   }
   
