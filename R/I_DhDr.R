@@ -22,7 +22,7 @@
 }
 
 transEta <- function(eta, o, ii){
-  if(class(o)[1] %in% c("singleIndex", "expsmooth")){
+  if(class(o)[1] %in% c("singleIndex", "expsmooth", "mgks")){
     if(ii == 1){ eta <- eta * o$store$f1 }
   } else {
     stopifnot(class(o) == "standard")
@@ -31,7 +31,7 @@ transEta <- function(eta, o, ii){
 }
 
 getM <- function(o, ii){
-  if(class(o)[1] %in% c("singleIndex", "expsmooth")){
+  if(class(o)[1] %in% c("singleIndex", "expsmooth", "mgks")){
     M <- if(ii == 1){  o$store$g1 } else { o$store$X0 }
   } else {
     M <- o$store$X
@@ -42,7 +42,7 @@ getM <- function(o, ii){
 
 getDetaDr <- function(o, DbDr, ii){
   M <- getM(o, ii)
-  if(class(o)[1] %in% c("singleIndex", "expsmooth")){
+  if(class(o)[1] %in% c("singleIndex", "expsmooth", "mgks")){
     if(ii == 1){ 
       Deta <- M %*% DbDr[1:o$na] 
     } else {

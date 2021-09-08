@@ -2,6 +2,7 @@
 
 S3method(DHessDrho,expsmooth)
 S3method(DHessDrho,linpreds)
+S3method(DHessDrho,mgks)
 S3method(DHessDrho,singleIndex)
 S3method(DHessDrho,standard)
 S3method(DllkDbeta,linpreds)
