@@ -45,20 +45,7 @@ DHessDrho.expsmooth <- function(o, llk, DbDr){
   lggXi <- lgg * g1
   legX <- leg * X 
   leX1 <- le * X1
-  
-  .contract3 <- function(X, v, ind){
-    d <- length(v)
-    Xv <- matrix(nrow = nrow(X), ncol = (d+1)*d/2)
-    zz <- 1
-    for(jj in 1:d){
-      for(kk in jj:d){
-      Xv[ , zz] <- X[ , drop(ind[jj, kk, ]), drop = FALSE] %*% v
-      zz <- zz + 1
-      }
-    }
-    return( Xv )
-  }
-  
+
   ind  <- trind.generator(na)
   
   for(ii in 1:m){
@@ -69,7 +56,7 @@ DHessDrho.expsmooth <- function(o, llk, DbDr){
     Vaaa1_Vaab1 <- drop(lgggXi %*% dAi + aaB %*% dBi)
     UVaaa2Q <- t(g1) %*% (lgg * Q) 
     Vaaa3 <- .vec_to_sym_mat(crossprod(lggXi %*% dAi, g2), na)
-    Vaaa4 <- .vec_to_sym_mat(crossprod(lg, .contract3(X = g3, v = dAi, ind = ind$i3)), na)
+    Vaaa4 <- .vec_to_sym_mat(.contract3_vect(x = crossprod(g3, lg), v = dAi, ind = ind$i3), na)
     Vaab2 <- .vec_to_sym_mat(crossprod(legX %*% dBi + leX1 %*% dBi, g2), na)
     derHAA <- t(g1) %*% (Vaaa1_Vaab1 * g1) + UVaaa2Q + t(UVaaa2Q) + Vaaa3 + Vaaa4 + Vaab2
     
