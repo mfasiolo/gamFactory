@@ -66,7 +66,7 @@ pen_varSI_outer <- function(a, x, DaDr){
   d1H <- list()
   for(ii in 1:m) {
     SD <- S %*% DaDr[ , ii]
-    d1H[[ii]] <- 8 * { tcrossprod(Sa, SD) + tcrossprod(SD, Sa) + S * drop(crossprod(a, S %*% DaDr[ , ii])) }
+    d1H[[ii]] <- 8 * ( tcrossprod(Sa, SD) + tcrossprod(SD, Sa) + S * drop(crossprod(a, S %*% DaDr[ , ii])) )
   } 
 
   return( d1H ) 

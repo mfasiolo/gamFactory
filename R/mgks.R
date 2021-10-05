@@ -77,6 +77,7 @@ mgks <- function(y, X, X0, beta, deriv = 0){
   n0 <- nrow(X0)
   d <- ncol(X0)
   p <- length(beta)
+  stopifnot( length(y) == n0 )
   
   # Under Gaussian log-kernel (x - x0)^2 / sigma^2 = (x - x0)^2 * w hence w = 1/sigma^2 
   w <- exp(2*beta)

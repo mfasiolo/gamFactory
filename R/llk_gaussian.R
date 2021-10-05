@@ -6,8 +6,35 @@
 #' @param param XXX.
 #' @param deriv XXX.
 #' @rdname llk_gaussian
+#' @examples 
+#' library(gamFactory)
+#' n <- 10
+#' y <- rnorm(n)
+#' param <- c(0.5, 1.5) # mu and 1/sigma
+#' 
+#' # Derivatives of Gaussian log-lik up to order 3
+#' llk_gaussian(y = y, param = param, deriv = 3)
+#' 
+#' # Wrap derivatives for compatibility with gamFactory::checkDeriv
+#' obj <- list(
+#'   "d0" = function(param){
+#'     sum(llk_gaussian(y = y, param = param, deriv = 0)$d0)
+#'   },
+#'   "d1" = function(param){
+#'     colSums(do.call("cbind", llk_gaussian(y = y, param = param, deriv = 1)$d1))
+#'     
+#'   },
+#'   "d2" = function(param){
+#'     colSums(do.call("cbind", llk_gaussian(y = y, param = param, deriv = 2)$d2))
+#'     
+#'   },
+#'   "d3" = function(param){
+#'     colSums(do.call("cbind", llk_gaussian(y = y, param = param, deriv = 3)$d3))
+#'   })
+#' 
+#' checkDeriv(obj = obj, param = param, ord = 1:3)
 #' @export
-#'
+#' 
 llk_gaussian <- function(y, param, deriv = 0, ...) {
   
   if (is.list(param) ) param <- do.call("cbind", param)

@@ -46,7 +46,16 @@
    
         } else {
           
+          if( effType[ii] == "mgks.smooth" ){
+           
+            eff[[ii]] <- eff_mgks(y = extra$si$x, X = Xi, Xi = extra$si$X0, 
+                                  splineDes = extra$splineDes)
+             
+          } else {
+          
           stop("Don't know this effect type")  
+            
+          }
           
         }
         
