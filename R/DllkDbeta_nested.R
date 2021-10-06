@@ -26,8 +26,6 @@ DllkDbeta.nested <- function(o, llk, deriv = 1, param = NULL){
   na <- length( alpha )
   nb <- length( beta ) 
   
-  Xi <- o$store$Xi
-  
   # Outer design matrix and its derivatives
   X <- o$store$X0; X1 <- o$store$X1; X2 <- o$store$X2; X3 <- o$store$X3
   
