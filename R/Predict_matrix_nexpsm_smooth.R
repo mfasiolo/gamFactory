@@ -11,11 +11,13 @@ Predict.matrix.nexpsm.smooth <- function(object, data){
   si <- object$xt$si
   
   alpha <- si$alpha
+  a0 <- alpha[1]
+  a1 <- alpha[-1]
   
   # Need to rescale using B
   Xi <- data[[object$term]][ , -1, drop = FALSE]  %*% si$B
   
-  xsm <-  expSmooth(y = data[[object$term]][ , 1], Xi = Xi, beta = alpha)$d0 
+  xsm <-  exp(a0) * expSmooth(y = data[[object$term]][ , 1], Xi = Xi, beta = a1)$d0 
   
   # Compute outer model matrix
   X0 <- object$xt$splineDes(x = xsm, deriv = 0)$X0

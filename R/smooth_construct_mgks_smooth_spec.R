@@ -20,12 +20,14 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   si <- object$xt$si
   
   Xi <- data[[object$term]]
-  di <- (ncol(Xi)-1)/2 
+  di <- (ncol(Xi)-1)/2 + 1
   n <- nrow( Xi )
   n0 <- si$n0
   si$x <- x <- Xi[1:n0, 1]
-  si$X0 <- X0 <- Xi[1:n0, 2:(di+1), drop = FALSE]
-  si$X <- Xi <- Xi[ , -(1:(di+1)), drop = FALSE]
+  si$X0 <- X0 <- Xi[1:n0, 2:di, drop = FALSE]
+  si$X <- Xi <- Xi[ , -(1:di), drop = FALSE]
+  
+  if( is.null(si$vr) ){ si$vr <- var(x) }
   
   # x-limits for outer P-spline basis
   xlim <- sort( object$xt$xlim )
@@ -33,10 +35,15 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   
   # Need to initialize inner coefficients?
   alpha <- si$alpha
-  if( is.null(alpha) ){ alpha <- si$alpha <- -log(colSds(X0)) }
-  
-  data[[object$term]] <- mgks(y = x, X = Xi, X0 = X0, beta = alpha)$d0
-  
+  if( is.null(alpha) ){ 
+    # alpha[1] s.t. sd(inner_lin_pred) = si$vr (target variance)
+    tmp <- mgks(y = x, X = Xi, X0 = X0, beta = -log(colSds(X0)))$d0
+    alpha <- si$alpha <- c(log(sqrt(si$vr)/sd(tmp)), -log(colSds(X0))) 
+    data[[object$term]] <- exp(alpha[1]) * tmp
+  } else {
+    data[[object$term]] <- exp(alpha[1]) * mgks(y = x, X = Xi, X0 = X0, beta = alpha[-1])$d0
+  }
+
   ## A truncated power spline constructor method function
   ## object$p.order = null space dimension
   if( length(object$p.order)==1 ){ object$p.order <- c(3, 2) }

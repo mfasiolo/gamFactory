@@ -1,17 +1,7 @@
-s#'
-#' Penalty on variance of a non-linear effect
-#' 
-#' @description Penalty on variance of a single index vector. 
-#' @param a single index parameter vector of dimension p.
-#' @param x an n by p matrix of covariates to be projected.
-#' @param v target variance of the projected covariates.
-#' @param deriv number of derivatives to be calculated.
-#' @param DaDr derivative for single index vector w.r.t. smoothing parameter.
-#' @name pen_vargen
-#' @rdname pen_vargen
-#' @export pen_vargen
-#'
-pen_vargen <- function(o, v, deriv = 0){
+####
+# Penalty on variance of inner linear predictor
+# 
+.pen_var_gen <- function(o, v, deriv = 0){
   
   p <- o$na
   
@@ -74,11 +64,8 @@ pen_vargen <- function(o, v, deriv = 0){
   
 }
 
-
-#' @name pen_vargen
-#' @rdname pen_vargen
-#' @export pen_vargen_outer
-pen_vargen_outer <- function(o, v, DaDr){
+# Derivatives of penalty's Hessian w.r.t. smoothing parameters
+.pen_var_gen_outer <- function(o, v, DaDr){
   
   g <- o$store$g
   g1 <- o$store$g1

@@ -1,17 +1,11 @@
-#'
-#' Penalty on variance of a single index vector
-#' 
-#' @description Penalty on variance of a single index vector. 
-#' @param a single index parameter vector of dimension p.
-#' @param x an n by p matrix of covariates to be projected.
-#' @param v target variance of the projected covariates.
-#' @param deriv number of derivatives to be calculated.
-#' @param DaDr derivative for single index vector w.r.t. smoothing parameter.
-#' @name pen_varSI
-#' @rdname pen_varSI
-#' @export pen_varSI
-#'
-pen_varSI <- function(a, x, v, deriv = 0){
+######
+# Penalty on variance of a single index vector
+#
+.pen_var_si <- function(o, v, deriv = 0){
+  
+  na <- o$na
+  a <- o$param[1:na]
+  x <- o$store$Xi
   
   p <- length(a)
   ax <- x %*% a
@@ -52,11 +46,12 @@ pen_varSI <- function(a, x, v, deriv = 0){
   
 }
 
-
-#' @name pen_varSI
-#' @rdname pen_varSI
-#' @export pen_varSI_outer
-pen_varSI_outer <- function(a, x, DaDr){
+# Derivatives of penalty's Hessian w.r.t. smoothing parameters
+.pen_var_si_outer <- function(o, v, DaDr){
+  
+  na <- o$na
+  a <- o$param[1:na]
+  x <- o$store$Xi
   
   m <- ncol(DaDr)
   n <- nrow(x)  

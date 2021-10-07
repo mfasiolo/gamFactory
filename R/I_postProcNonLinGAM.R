@@ -9,7 +9,7 @@
         ("nexpsm.smooth" %in%  info$type[ii]) ||
         ("mgks.smooth" %in%  info$type[ii]) ){
       ism <- info$extra[[ii]]$ism
-      sms[[ism]]$xt$si$alpha <- coef(o)[ info$iec[[ii]][1:ncol(sms[[ism]]$xt$si$X)] ]
+      sms[[ism]]$xt$si$alpha <- coef(o)[ info$iec[[ii]][1:length(sms[[ism]]$xt$si$alpha)] ]
     }
     
   }

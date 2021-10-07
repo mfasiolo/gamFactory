@@ -11,13 +11,15 @@ Predict.matrix.mgks.smooth <- function(object, data){
   si <- object$xt$si
   
   alpha <- si$alpha
+  a0 <- alpha[1]
+  a1 <- alpha[-1]
   
   Xi <- data[[object$term]]
-  di <- (ncol(Xi)-1)/2
+  di <- (ncol(Xi)-1)/2 + 1
   n0 <- si$n0
 
-  xsm <- mgks(y = Xi[1:n0, 1], X = Xi[ , -(1:(di+1)), drop = FALSE], 
-              X0 = Xi[1:n0, 2:(di+1), drop = FALSE], beta = alpha)$d0 
+  xsm <- exp(a0) * mgks(y = Xi[1:n0, 1], X = Xi[ , -(1:di), drop = FALSE], 
+                        X0 = Xi[1:n0, 2:di, drop = FALSE], beta = a1)$d0 
   
   # Compute outer model matrix
   X1 <- object$xt$splineDes(x = xsm, deriv = 0)$X0

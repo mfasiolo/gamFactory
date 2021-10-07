@@ -37,7 +37,7 @@
     if( nsi ){ # If there are nested effects we: 
       # a) Identify coefficients of inner vector (alpha)
       iec <- effInfo$iec[si]
-      dsi <- sapply(effInfo$extra[si], function(.x) ncol(.x$si$X))
+      dsi <- sapply(effInfo$extra[si], function(.x) length(.x$si$alpha))
       kk <- do.call("c", lapply(1:nsi, function(.ii) iec[[.ii]][1:dsi[.ii]]))
       # b) set the corresponding elements of start to the values contained in effInfo$extra
       alpha <- do.call("c", lapply(effInfo$extra[si], function(.x) .x$si$alpha))
@@ -97,18 +97,20 @@
       }
       
       derLev <- switch(as.character(deriv), "0" = 0, "1" = 2, "2" = 3, "3" = 3, "4" = 4)
+      outDer <- deriv > 1
       
       effType <- effInfo$type
       ne <- length( effType )
       
       # Build list of effect and penalties
-      tmp <- .buildEffects(X = X, coef = coef, effInfo = effInfo, d1b = d1b, deriv = derLev, outer = deriv > 1)
-      eff <- tmp$eff
-      pen <- tmp$pen
-    
+      eff <- .build_effects(X = X, effInfo = effInfo, outer = outDer)
+      
       # Build linear predictors and evaluate them
       olp <- linpreds(eff = eff, iel = effInfo$iel, iec = effInfo$iec)
       olp <- olp$eval(param = coef, deriv = derLev)
+      
+      # Evaluate effect-specifit (not ridge) penalties and their derivatives
+      pen <- .eval_penalties(eff = olp$eff, effInfo = effInfo, d1b = d1b, deriv = derLev, outer = outDer)
       
       # Evaluate eta and mu
       etas <- olp$f
@@ -140,13 +142,14 @@
         # Add derivatives of penalties w.r.t. beta
         if( npen ){
           for(ii in 1:npen){
-            ret$lb[pen[[ii]]$iec] <- ret$lb[pen[[ii]]$iec] - lamVar * pen[[ii]]$d1
-            ret$lbb[pen[[ii]]$iec, pen[[ii]]$iec] <- ret$lbb[pen[[ii]]$iec, pen[[ii]]$iec] - lamVar * pen[[ii]]$d2
+            zz <- pen[[ii]]$iec
+            ret$lb[zz] <- ret$lb[zz] - lamVar * pen[[ii]]$d1
+            ret$lbb[zz, zz] <- ret$lbb[zz, zz] - lamVar * pen[[ii]]$d2
           }
         }
         
         # We want also derivatives w.r.t. rho (smoothing parameters)
-        if( deriv > 1 ){
+        if( outDer ){
           
           ret$d1H <- DHessDrho(o = olp, llk = DllkDeta, DbDr = d1b)
           
@@ -154,7 +157,8 @@
           if( npen ){
             for(ii in 1:npen){
               for(kk in 1:length(ret$d1H)){
-                ret$d1H[[kk]][pen[[ii]]$iec, pen[[ii]]$iec] <- ret$d1H[[kk]][pen[[ii]]$iec, pen[[ii]]$iec] - lamVar * pen[[ii]]$outer[[kk]]
+                zz <- pen[[ii]]$iec
+                ret$d1H[[kk]][zz, zz] <- ret$d1H[[kk]][zz, zz] - lamVar * pen[[ii]]$outer[[kk]]
               }
             }
           }

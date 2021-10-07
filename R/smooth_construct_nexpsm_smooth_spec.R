@@ -7,7 +7,6 @@
 #'
 smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
 { 
-  
   si <- object$xt$si
   if( is.null(si) ){ si <- object$xt$si <- list() }
   
@@ -18,20 +17,27 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   Xi <- Xi[ , -1]
   n <- length( x )
   Si <- si$Si
-  di <- ncol(Xi) 
+  di <- ncol(Xi) + 1
+  
+  if( is.null(si$vr) ){ si$vr <- var(x) }
   
   # x-limits for outer P-spline basis
   xlim <- sort( object$xt$xlim )
   if( is.null(xlim) ){ xlim <- range(x) }
   
-  # Reparametrise Xi so that the penalty on the single index vector is diagonal
+  # Reparametrise Xi so that the penalty on alpha
   si <- append(si, gamFactory:::.diagPen(X = Xi, S = Si, r = si$rankp))
 
-  # Need to initialize inner coefficient? 
+  # Need to initialize inner coefficients?
   alpha <- si$alpha
-  if( is.null(alpha) ){ alpha <- si$alpha <- rep(0, di) }
-  
-  data[[object$term]] <- expSmooth(y = x, Xi = si$X, beta = alpha)$d0
+  if( is.null(alpha) ){ 
+    # alpha[1] s.t. sd(inner_lin_pred) = si$vr (target variance)
+    tmp <- expSmooth(y = x, Xi = si$X, beta = rep(0, di-1))$d0
+    alpha <- si$alpha <- c(log(sqrt(si$vr)/sd(tmp)), rep(0, di-1)) 
+    data[[object$term]] <- exp(alpha[1]) * tmp
+  } else {
+    data[[object$term]] <- exp(alpha[1]) * expSmooth(y = x, Xi = si$X, beta = alpha[-1])$d0
+  }
   
   ## A truncated power spline constructor method function
   ## object$p.order = null space dimension
@@ -72,7 +78,7 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   if( !out$fixed ){ 
     out$S <- list(rbind(cbind(matrix(0, di, di), matrix(0, di, dsmo)),
                         cbind(matrix(0, dsmo, di), sm$S)))
-    out$S[[2]] <- rbind(cbind(si$S, matrix(0, di, dsmo)),
+    out$S[[2]] <- rbind(cbind(rbind(0, cbind(0, si$S)), matrix(0, di, dsmo)),
                         cbind(matrix(0, dsmo, di), matrix(0, dsmo, dsmo)))
   }
   out$bs.dim <- dtot
