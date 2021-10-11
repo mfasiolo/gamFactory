@@ -5,9 +5,9 @@
 #' @rdname eff_nexpsm
 #' @export eff_nexpsm
 #'
-eff_nexpsm <- function(y, Xi, splineDes, x0 = NULL){
+eff_nexpsm <- function(y, Xi, basis, x0 = NULL){
   
-  force(y); force(Xi); force(splineDes); force(x0)
+  force(y); force(Xi); force(basis); force(x0)
   
   eval <- function(param, deriv = 0){
     
@@ -19,11 +19,11 @@ eff_nexpsm <- function(y, Xi, splineDes, x0 = NULL){
     alpha <- param[ 2:na ]
     beta <- param[ -(1:na) ]
     
-    inner <- expSmooth(y = y, Xi = Xi, beta = alpha, x0 = x0, deriv = deriv)
+    inner <- expsmooth(y = y, Xi = Xi, beta = alpha, x0 = x0, deriv = deriv)
 
     # Build P-spline basis and its derivatives
     # The error is probably due to the fact that no observations falls within range
-    store <- splineDes(x = a0 * inner$d0, deriv = deriv)
+    store <- basis(x = a0 * inner$d0, deriv = deriv)
     store$g <- a0 * inner$d0
     store$Xi <- Xi
     if( deriv >= 1 ){
@@ -39,7 +39,7 @@ eff_nexpsm <- function(y, Xi, splineDes, x0 = NULL){
       }
     }
     
-    o <- eff_nexpsm(y = y, Xi = Xi, splineDes = splineDes, x0 = x0)
+    o <- eff_nexpsm(y = y, Xi = Xi, basis = basis, x0 = x0)
     o$f <- drop( store$X0 %*% beta )
     o$param <- param
     o$na <- na
@@ -50,7 +50,7 @@ eff_nexpsm <- function(y, Xi, splineDes, x0 = NULL){
     
   }
   
-  out <- structure(list("eval" = eval), class = c("expsmooth", "nested"))
+  out <- structure(list("eval" = eval), class = c("nexpsm", "nested"))
   
   return( out )
   

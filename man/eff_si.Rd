@@ -4,12 +4,12 @@
 \alias{eff_si}
 \title{Build single index effect}
 \usage{
-eff_si(Xi, splineDes)
+eff_si(Xi, basis)
 }
 \arguments{
 \item{Xi}{matrix to be projected via single index vector \code{alpha}.}
 
-\item{splineDes}{function which takes \code{si = Xi\%*\%alpha} as input and returns model
+\item{basis}{function which takes \code{si = Xi\%*\%alpha} as input and returns model
 matrix and its derivatives w.r.t. \code{si}.}
 }
 \description{

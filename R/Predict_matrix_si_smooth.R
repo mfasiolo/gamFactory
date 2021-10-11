@@ -18,7 +18,7 @@ Predict.matrix.si.smooth <- function(object, data){
   xa <- Xi %*% alpha 
   
   # Compute outer model matrix
-  X0 <- object$xt$splineDes(x = xa, deriv = 0)$X0
+  X0 <- object$xt$basis(x = xa, deriv = 0)$X0
   
   # Total model matrix is X0 preceded my matrix of zeros. 
   # predict.gam will multiply the latter by alpha, which will have no effect (this is a trick).

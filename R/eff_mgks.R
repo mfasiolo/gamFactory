@@ -5,9 +5,9 @@
 #' @rdname eff_mgks
 #' @export eff_mgks
 #'
-eff_mgks <- function(y, X, Xi, splineDes){
+eff_mgks <- function(y, X, Xi, basis){
   
-  force(y); force(X); force(Xi); force(splineDes);
+  force(y); force(X); force(Xi); force(basis);
   
   eval <- function(param, deriv = 0){
     
@@ -24,7 +24,7 @@ eff_mgks <- function(y, X, Xi, splineDes){
     # Build P-spline basis and its derivatives
     # We are also getting the derivatives of the inner linear predictor w.r.t.
     # the scale parameter a0 and the coefficients alpha
-    store <- splineDes(x = a0 * inner$d0, deriv = deriv)
+    store <- basis(x = a0 * inner$d0, deriv = deriv)
     store$g <- a0 * inner$d0
     store$Xi <- Xi
     if( deriv >= 1 ){
@@ -40,7 +40,7 @@ eff_mgks <- function(y, X, Xi, splineDes){
       }
     }
     
-    o <- eff_mgks(y = y, X = X, Xi = Xi, splineDes = splineDes)
+    o <- eff_mgks(y = y, X = X, Xi = Xi, basis = basis)
     o$f <- drop( store$X0 %*% beta )
     o$param <- param
     o$na <- na

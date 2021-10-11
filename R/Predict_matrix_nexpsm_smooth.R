@@ -17,10 +17,10 @@ Predict.matrix.nexpsm.smooth <- function(object, data){
   # Need to rescale using B
   Xi <- data[[object$term]][ , -1, drop = FALSE]  %*% si$B
   
-  xsm <-  exp(a0) * expSmooth(y = data[[object$term]][ , 1], Xi = Xi, beta = a1)$d0 
+  xsm <-  exp(a0) * expsmooth(y = data[[object$term]][ , 1], Xi = Xi, beta = a1)$d0 
   
   # Compute outer model matrix
-  X0 <- object$xt$splineDes(x = xsm, deriv = 0)$X0
+  X0 <- object$xt$basis(x = xsm, deriv = 0)$X0
   
   # Total model matrix is X0 preceded my matrix of zeros. 
   # predict.gam will multiply the latter by alpha, which will have no effect (this is a trick).

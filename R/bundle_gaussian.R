@@ -7,7 +7,7 @@
 #'
 bundle_gaussian <- function(){
   out <- list(np = 2,
-              availableDeriv = 4,
+              available_deriv = 4,
               llk = gamFactory::llk_gaussian,
               links = list(c("identity", "inverse", "log", "sqrt"), "loga(0.01)"), 
               nam = "gaussian", 
@@ -38,7 +38,7 @@ bundle_gaussian <- function(){
                   startji <- qr.coef(qr(x1),c(yt1,rep(0,nrow(E))))
                   startji[!is.finite(startji)] <- 0       
                 } else {
-                  startji <- penReg(x1,e1,yt1)
+                  startji <- penreg(x1,e1,yt1)
                 }
                 start[jj[[1]]] <- startji
                 lres1 <- log(abs(y-family$linfo[[1]]$linkinv(x[,jj[[1]],drop=FALSE]%*%start[jj[[1]]])))
@@ -50,7 +50,7 @@ bundle_gaussian <- function(){
                   startji <- qr.coef(qr(x1),c(lres1,rep(0,nrow(E))))   
                   startji[!is.finite(startji)] <- 0
                 } else { 
-                  startji <- penReg(x1,e1,lres1)
+                  startji <- penreg(x1,e1,lres1)
                 }
                 start[jj[[2]]] <- startji
                 return( start )

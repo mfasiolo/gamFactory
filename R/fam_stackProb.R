@@ -291,7 +291,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
               x1 <- rbind(x1,e1)
               startji <- qr.coef(qr(x1),c(yt1,rep(0,nrow(E))))
               startji[!is.finite(startji)] <- 0
-            } else startji <- penReg(x1,e1,yt1)
+            } else startji <- penreg(x1,e1,yt1)
             start[jj[[k]]] <- startji ## copy coefficients back into overall start coef vector
           } ## lp loop
         }
@@ -367,7 +367,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
             x1 <- rbind(x1,e1)
             startji <- qr.coef(qr(x1),c(yt1,rep(0,nrow(E))))
             startji[!is.finite(startji)] <- 0
-          } else startji <- penReg(x1,e1,yt1)
+          } else startji <- penreg(x1,e1,yt1)
           start[jj[[k]]] <- startji ## copy coefficients back into overall start coef vector
         } ## lp loop
       }

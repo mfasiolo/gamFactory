@@ -2,15 +2,15 @@
 #' Build single index effect
 #' 
 #' @param Xi matrix to be projected via single index vector \code{alpha}.
-#' @param splineDes function which takes \code{si = Xi\%*\%alpha} as input and returns model
+#' @param basis function which takes \code{si = Xi\%*\%alpha} as input and returns model
 #'                  matrix and its derivatives w.r.t. \code{si}.
 #' @name eff_si
 #' @rdname eff_si
 #' @export eff_si
 #'
-eff_si <- function(Xi, splineDes){
+eff_si <- function(Xi, basis){
   
-  force(Xi); force(splineDes)
+  force(Xi); force(basis)
 
   eval <- function(param, deriv = 0){
     
@@ -26,7 +26,7 @@ eff_si <- function(Xi, splineDes){
     
     # Build P-spline basis and its derivatives
     # The error is probably due to the fact that no observations falls within range
-    store <- splineDes(x = ax, deriv = deriv)
+    store <- basis(x = ax, deriv = deriv)
     store$Xi <- Xi
     if( deriv >= 1 ){
       store$f1 <- drop( store$X1 %*% beta )
@@ -39,7 +39,7 @@ eff_si <- function(Xi, splineDes){
       }
     }
     
-    o <- eff_si(Xi = Xi, splineDes = splineDes)
+    o <- eff_si(Xi = Xi, basis = basis)
     o$f <- drop( store$X0 %*% beta )
     o$param <- param
     o$na <- na
@@ -50,7 +50,7 @@ eff_si <- function(Xi, splineDes){
     
   }
   
-  out <- structure(list("eval" = eval), class = c("singleIndex"))
+  out <- structure(list("eval" = eval), class = c("si", "nested"))
   
   return( out )
   

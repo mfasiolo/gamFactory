@@ -4,7 +4,7 @@
 \alias{eff_mgks}
 \title{Build nested adaptive exponential smooth effect}
 \usage{
-eff_mgks(y, X, Xi, splineDes)
+eff_mgks(y, X, Xi, basis)
 }
 \description{
 Build nested adaptive exponential smooth effect

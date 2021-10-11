@@ -99,7 +99,7 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   # Extra stuff needed later on. 
   # NB: "k" = dsmo+1 because we lost 1 dimension via centering constraint
   out$xt$si <- si
-  out$xt$splineDes <- PsplineDesign(k = dsmo+1, m = m[1], lim = xlim, P = NS %*% sm$B)
+  out$xt$basis <- basis_pspline(k = dsmo+1, m = m[1], lim = xlim, P = NS %*% sm$B)
   
   class(out) <- "si.smooth"
   return( out )

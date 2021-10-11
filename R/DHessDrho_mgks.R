@@ -7,7 +7,7 @@
 #'
 DHessDrho.mgks <- function(o, llk, DbDr){
   
-  DHessDrho.expsmooth(o = o, llk = llk, DbDr = DbDr)
+  DHessDrho.nexpsm(o = o, llk = llk, DbDr = DbDr)
   
 }
   

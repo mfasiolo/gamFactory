@@ -64,7 +64,7 @@ d3 = function(param){
 
 # Check derivatives up to order 3
 beta <- c(log(10), log(5), log(5))
-(tmp <- checkDeriv(obj = obj, param = beta, ord = 1:3))
+(tmp <- check_deriv(obj = obj, param = beta, ord = 1:3))
 
 par(mfrow = c(2, 2))
 for(ii in 1:3){

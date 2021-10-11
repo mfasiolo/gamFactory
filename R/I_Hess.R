@@ -1,5 +1,5 @@
 
-.Hess.standard_standard <- function(o1, o2, llk){
+.Hess.stand_stand <- function(o1, o2, llk){
   
   out <- crossprod(o2$store$X, llk$d2 * o1$store$X)
   
@@ -8,7 +8,7 @@
 }
 
 
-.Hess.singleIndex_standard <- .Hess.expsmooth_standard <- function(o1, o2, llk){
+.Hess.si_stand <- .Hess.nexpsm_stand <- function(o1, o2, llk){
 
   out <- cbind(crossprod(o2$store$X, llk$d2 * o1$store$f1 * o1$store$g1), 
                crossprod(o2$store$X, llk$d2 * o1$store$X0))
@@ -17,14 +17,14 @@
   
 }
 
-.Hess.standard_singleIndex <- .Hess.standard_expsmooth <- function(o1, o2, llk){
+.Hess.stand_si <- .Hess.stand_nexpsm <- function(o1, o2, llk){
 
   # Swapped o1 with o2 and lp1 with lp2
-  t( .Hess.singleIndex_standard(o2, o1, llk) ) 
+  t( .Hess.si_stand(o2, o1, llk) ) 
   
 }
 
-.Hess.singleIndex_expsmooth <- function(o1, o2, llk){
+.Hess.si_nexpsm <- function(o1, o2, llk){
   
   lgg1 <- llk$d2 * o1$store$f1 * o2$store$f1
   
@@ -39,16 +39,16 @@
   
 }
 
-.Hess.expsmooth_singleIndex <- function(o1, o2, llk){
+.Hess.nexpsm_si <- function(o1, o2, llk){
   
   # Swapped o1 with o2 and lp1 with lp2
-  out <- t( .Hess.singleIndex_expsmooth(o1 = o2, o2 = o1, llk) )
+  out <- t( .Hess.si_nexpsm(o1 = o2, o2 = o1, llk) )
   
   return( out )
   
 }
 
-.Hess.singleIndex_singleIndex <- .Hess.expsmooth_expsmooth <- function(o1, o2, llk){
+.Hess.si_si <- .Hess.nexpsm_nexpsm <- function(o1, o2, llk){
   
   lgg1 <- llk$d2 * o1$store$f1 * o2$store$f1
   

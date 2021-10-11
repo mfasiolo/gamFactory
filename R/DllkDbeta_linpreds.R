@@ -41,8 +41,8 @@ DllkDbeta.linpreds <- function(o, llk, deriv = 1, param = NULL){
       for( ic in ir:nc ){
         cl1 <- class(o$eff[[ic]])[1]
         cl2 <- class(o$eff[[ir]])[1]
-        if(!(cl1 %in% c("singleIndex", "standard"))){ cl1 <- "expsmooth" }
-        if(!(cl2 %in% c("singleIndex", "standard"))){ cl2 <- "expsmooth" }
+        if(!(cl1 %in% c("si", "stand"))){ cl1 <- "nexpsm" }
+        if(!(cl2 %in% c("si", "stand"))){ cl2 <- "nexpsm" }
         Hess <- paste0(".Hess.", cl1, "_", cl2)
         H[[ic+(ir-1)*nc]] <- if(ir != ic){ 
           do.call(Hess, list("o1" = o$eff[[ic]], "o2" = o$eff[[ir]], 

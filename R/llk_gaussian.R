@@ -32,7 +32,7 @@
 #'     colSums(do.call("cbind", llk_gaussian(y = y, param = param, deriv = 3)$d3))
 #'   })
 #' 
-#' checkDeriv(obj = obj, param = param, ord = 1:3)
+#' check_deriv(obj = obj, param = param, ord = 1:3)
 #' @export
 #' 
 llk_gaussian <- function(y, param, deriv = 0, ...) {

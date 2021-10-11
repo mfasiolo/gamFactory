@@ -32,11 +32,11 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   alpha <- si$alpha
   if( is.null(alpha) ){ 
     # alpha[1] s.t. sd(inner_lin_pred) = si$vr (target variance)
-    tmp <- expSmooth(y = x, Xi = si$X, beta = rep(0, di-1))$d0
+    tmp <- expsmooth(y = x, Xi = si$X, beta = rep(0, di-1))$d0
     alpha <- si$alpha <- c(log(sqrt(si$vr)/sd(tmp)), rep(0, di-1)) 
     data[[object$term]] <- exp(alpha[1]) * tmp
   } else {
-    data[[object$term]] <- exp(alpha[1]) * expSmooth(y = x, Xi = si$X, beta = alpha[-1])$d0
+    data[[object$term]] <- exp(alpha[1]) * expsmooth(y = x, Xi = si$X, beta = alpha[-1])$d0
   }
   
   ## A truncated power spline constructor method function
@@ -95,7 +95,7 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   # Extra stuff needed later on. 
   # NB: "k" = dsmo+1 because we lost 1 dimension via centering constraint
   out$xt$si <- si
-  out$xt$splineDes <- PsplineDesign(k = dsmo+1, m = m[1], lim = xlim, P = NS %*% sm$B)
+  out$xt$basis <- basis_pspline(k = dsmo+1, m = m[1], lim = xlim, P = NS %*% sm$B)
   out$xt$si$x <- x
 
   class(out) <- "nexpsm.smooth"
