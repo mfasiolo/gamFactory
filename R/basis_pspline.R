@@ -62,20 +62,20 @@ basis_pspline <- function(k, m, lim, P){
                   knots = list(x = lim), scale.penalty = FALSE)[[1]]
   
   # Get full design matrix using also data outside knots: need to call this to get X1, X2 and X3 
-  X0 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T)$design %*% P
+  X0 <- cbind(x, splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T)$design) %*% P
   
-  if( any(abs(X0[whIn, ] - sm$X %*% P) > 1e-6)  ){ 
+  if( any(abs(X0[whIn, ] - cbind(x[whIn], sm$X) %*% P) > 1e-6)  ){ 
     stop("Problem in the creation of the P-spline design matrix") 
   }
   
   X1 <- X2 <- X3 <- NULL
   if(deriv > 0){
-    X1 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T, derivs = x*0 + 1)$design %*% P
+    X1 <- cbind(1, splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T, derivs = x*0 + 1)$design) %*% P
     if(deriv > 1){
-      X2 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T, derivs = x*0 + 2)$design %*% P
+      X2 <- cbind(0, splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T, derivs = x*0 + 2)$design) %*% P
     }
     if(deriv > 2){
-      X3 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T, derivs = x*0 + 3)$design %*% P
+      X3 <- cbind(0, splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T, derivs = x*0 + 3)$design) %*% P
     }
   }
   
