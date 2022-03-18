@@ -18,7 +18,7 @@
 #' tmp <- basis_bspline(k = 6, 
 #'                      m = 3, 
 #'                      lim = c(-1, 1)
-#'                      )$eval(x = seq(-0.9, 0.9, 0.01), deriv = 3)
+#'                      )$evalX(x = seq(-0.9, 0.9, 0.01), deriv = 3)
 #'                      
 #' par(mfrow = c(2, 2)) 
 #' matplot(tmp$X0, type = 'l') # Design matrix
@@ -32,17 +32,11 @@ basis_bspline <- function(k, m, lim){
   
   out <- list()
   
-  .eval <- function(x, deriv){
-    withCallingHandlers({
+  evalX <- function(x, deriv){
     gamFactory:::.basis_bspline(x = x, k = k, m = m, lim = lim, deriv = deriv)
-    }, warning = function(w) {
-      if (length(grep("there is \\*no\\* information about some basis coefficients", conditionMessage(w)))){
-        invokeRestart("muffleWarning")
-      }
-    })
   }
   
-  out <- structure(list("eval" = .eval), class = c("B-spline", "basis"))
+  out <- structure(list("evalX" = evalX), class = c("B-spline", "basis"))
   
   return(out)
 }

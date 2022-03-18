@@ -20,7 +20,7 @@ Predict.matrix.nexpsm.smooth <- function(object, data){
   xsm <-  exp(a0) * expsmooth(y = data[[object$term]][ , 1], Xi = Xi, beta = a1)$d0 
   
   # Compute outer model matrix
-  X0 <- object$xt$basis$eval(x = xsm, deriv = 0)$X0
+  X0 <- object$xt$basis$evalX(x = xsm, deriv = 0)$X0
   
   # Total model matrix is X0 preceded my matrix of zeros. 
   # predict.gam will multiply the latter by alpha, which will have no effect (this is a trick).

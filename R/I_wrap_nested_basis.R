@@ -3,9 +3,9 @@
   
   force(b); force(P); force(slope)
   
-  .eval <- function(x, deriv){
+  evalX <- function(x, deriv){
     withCallingHandlers({
-      o <- b$eval(x = x, deriv = deriv)
+      o <- b$evalX(x = x, deriv = deriv)
       if(slope){ o$X0 <- cbind(x, o$X0) }
       o$X0 <- o$X0 %*% P
       if(deriv > 0){
@@ -28,10 +28,7 @@
     })
   }
   
-  out <- list()
-  out$eval <- .eval 
-  
-  environment(.eval) <- as.environment(environment())
+  out <- list("evalX" = evalX)
 
   return(out)
 }
