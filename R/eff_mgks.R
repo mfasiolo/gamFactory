@@ -12,7 +12,7 @@ eff_mgks <- function(y, X, Xi, basis){
   incall <- as.expression(quote(do.call("mgks", list("y" = y, "X" = X, "X0" = Xi, "beta" = alpha, "deriv" = deriv), quote = TRUE)))
   efcall <- as.expression(quote(do.call("eff_mgks", list("y" = y, "X" = X, "Xi" = Xi, "basis" = basis), quote = TRUE)))
   
-  .eval <- .get_eff_eval()
+  .eval <- .get_eff_eval_general()
   
   environment(.eval) <- as.environment(environment())
   

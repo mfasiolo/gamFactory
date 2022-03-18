@@ -70,8 +70,8 @@
   
   # Extra stuff needed later on. 
   out$xt$si <- si
-  out$xt$basis <- basis_pspline(k = dsmo, m = m[1], lim = xlim, P = NS %*% sm$B)
-  
+  out$xt$basis <- .wrap_nested_basis(b = basis_bspline(k = dsmo, m = m[1], lim = xlim), 
+                                     P = NS %*% sm$B, 
+                                     slope = TRUE)
   return(out)
-  
 }

@@ -26,7 +26,7 @@ eff_si <- function(Xi, basis){
     
     # Build P-spline basis and its derivatives
     # The error is probably due to the fact that no observations falls within range
-    store <- basis(x = ax, deriv = deriv)
+    store <- basis$eval(x = ax, deriv = deriv)
     store$Xi <- Xi
     if( deriv >= 1 ){
       store$f1 <- drop( store$X1 %*% beta )

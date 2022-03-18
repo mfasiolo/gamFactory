@@ -15,7 +15,7 @@
     # Build P-spline basis and its derivatives
     # We are also getting the derivatives of the inner linear predictor w.r.t.
     # the scale parameter a0 and the coefficients alpha
-    store <- basis(x = a0 * (inner$d0 - mean(inner$d0)), deriv = deriv)
+    store <- basis$eval(x = a0 * (inner$d0 - mean(inner$d0)), deriv = deriv)
     store$g <- a0 * (inner$d0 - mean(inner$d0)) 
     store$Xi <- Xi
     if( deriv >= 1 ){

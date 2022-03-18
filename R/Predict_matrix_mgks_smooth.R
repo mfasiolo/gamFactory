@@ -22,7 +22,7 @@ Predict.matrix.mgks.smooth <- function(object, data){
                         X0 = Xi[1:n0, 2:di, drop = FALSE], beta = a1)$d0 
   
   # Compute outer model matrix
-  X1 <- object$xt$basis(x = xsm, deriv = 0)$X0
+  X1 <- object$xt$basis$eval(x = xsm, deriv = 0)$X0
   
   # Total model matrix is X0 preceded my matrix of zeros. 
   # predict.gam will multiply the latter by alpha, which will have no effect (this is a trick).

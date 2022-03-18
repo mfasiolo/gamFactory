@@ -1,11 +1,10 @@
 #'
-#' Get P-spline design matrix constructor
+#' Get B-spline design matrix constructor
 #' 
 #' @param k number of knots.
-#' @param m order of the P-spline basis and penalty. For instance \code{m = 3} creates 
+#' @param m order of the B-spline basis and penalty. For instance \code{m = 3} creates 
 #'          a 3rd degree basis with a second order penalty.
 #' @param lim range over which the basis is created.
-#' @param P scaling matrix. The output design matrix X0 and its derivatives (X1, X2, X3) will be post-multiplied by P.
 #' 
 #' @return A function that take arguments \code{x} and \code{deriv} and returns a P-Spline model matrix and its first
 #'         \code{deriv} derivatives w.r.t. \code{x}.
@@ -43,8 +42,6 @@ basis_bspline <- function(k, m, lim){
     })
   }
   
-  environment(.eval) <- as.environment(environment())
-  
   out <- structure(list("eval" = .eval), class = c("B-spline", "basis"))
   
   return(out)
@@ -52,7 +49,7 @@ basis_bspline <- function(k, m, lim){
 
 
 ##########################
-# Internal to construct B-spline design
+# Internal to construct P-spline design
 # 
 .basis_bspline <- function(x, k, m, lim, deriv){
   
