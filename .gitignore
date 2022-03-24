@@ -1,9 +1,0 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-*.o
-*.so
-*.tmp
-gamFactory.Rproj
-inst/doc
