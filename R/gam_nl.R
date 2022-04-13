@@ -7,19 +7,28 @@
 #' @rdname gam_nl
 #' @export
 #'
-gam_nl <- function(formula, family = gaulss(), data = list(), ...){
+gam_nl <- function(formula, family = gaulss(), data = list(), fit = TRUE, ...){
   
-  out <- gam(formula = formula, family = family, data = data, fit = FALSE, ...)
+  ddd <- match.call(expand.dots = FALSE)$`...`
   
-  info <- prep_info(o = out)
+  out <- ddd$G
+  if( is.null(out) ){ # Do not build is G already provided
+    formula <- .compile_formula(formula)
+    
+    out <- gam(formula = formula, family = family, data = data, fit = FALSE, ...)
+    
+    info <- prep_info(o = out)
+    
+    fam <- build_family_nl(bundle = bundle_gaussian(), info = info)
+    
+    out$family <- fam()
+  }
   
-  fam <- build_family_nl(bundle = bundle_gaussian(), info = info)
-  
-  out$family <- fam()
-  
-  out <- gam(G = out, ...)
+  if( fit ){
+    out <- gam(G = out, ...)
 
-  out <- postproc_gam_nl(o = out, info = info)
+    out <- postproc_gam_nl(o = out, info = info)
+  }
   
   return( out )
   

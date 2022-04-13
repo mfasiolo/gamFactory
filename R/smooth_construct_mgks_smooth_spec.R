@@ -28,10 +28,7 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   si$X <- Xi <- Xi[ , -(1:di), drop = FALSE]
   
   if( is.null(si$vr) ){ si$vr <- var(x) }
-  
-  # x-limits for P-spline basis
-  if( is.null(object$xt$xlim) ){ object$xt$xlim <- c(-6, 6) * sqrt(si$vr) }
-  
+
   # Need to initialize inner coefficients?
   alpha <- si$alpha
   if( is.null(alpha) ){ 
@@ -47,9 +44,7 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   # Center and scale the initialiized inner linear preditor
   data[[object$term]] <- exp(alpha[1]) * (g - mean(g))
   
-  si$xseq <- qnorm(1:(n-1)/n, 0, sqrt(si$vr))
-
-  out <- .build_nested_pspline_basis(object = object, data = data, knots = knots, si = si)
+  out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
 
   class(out) <- "mgks.smooth"
   return( out )

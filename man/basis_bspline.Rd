@@ -4,15 +4,15 @@
 \alias{basis_bspline}
 \title{Get B-spline design matrix constructor}
 \usage{
-basis_bspline(k, m, lim)
+basis_bspline(knots, m)
 }
 \arguments{
-\item{k}{number of knots.}
+\item{knots}{positions of all the knots, both inner and outer.}
 
-\item{m}{order of the B-spline basis and penalty. For instance \code{m = 3} creates
-a 3rd degree basis with a second order penalty.}
-
-\item{lim}{range over which the basis is created.}
+\item{m}{order of the B-spline basis. Here \code{m = 0} for piecewise linear,
+\code{m = 1} for quadratic and so on. Number of continuous derivarives
+is \code{m}, e.g., if \code{m = 4} fourth order derivatives are continuous
+but fifth are not.}
 }
 \value{
 A function that take arguments \code{x} and \code{deriv} and returns a P-Spline model matrix and its first
@@ -24,15 +24,19 @@ Get B-spline design matrix constructor
 \examples{
 library(gamFactory)
 
-tmp <- basis_bspline(k = 6, 
-                     m = 3, 
-                     lim = c(-1, 1)
-                     )$evalX(x = seq(-0.9, 0.9, 0.01), deriv = 3)
-                     
+xseq <- seq(-6, 6, 0.01)
+k <- 10
+m <- 2
+ko <- k + m + 2
+knots <- 2 * qt((1:ko)/(ko+1), df = 3)
+tmp <- basis_bspline(knots = knots, 
+                     m = m)$evalX(x = xseq, deriv = 3)
+
 par(mfrow = c(2, 2)) 
-matplot(tmp$X0, type = 'l') # Design matrix
-matplot(tmp$X1, type = 'l') # 1st derivative w.r.t. x 
-matplot(tmp$X2, type = 'l') # 2nd derivative w.r.t. x 
-matplot(tmp$X3, type = 'l') # 3rd derivative w.r.t. x
+matplot(xseq, tmp$X0, type = 'l') # Design matrix
+matplot(xseq, tmp$X1, type = 'l') # 1st derivative w.r.t. x 
+matplot(xseq, tmp$X2, type = 'l') # 2nd derivative w.r.t. x 
+matplot(xseq, tmp$X3, type = 'l') # 3rd derivative w.r.t. x
+rug(knots)
 
 }

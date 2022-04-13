@@ -6,8 +6,7 @@
 #' @importFrom MASS Null
 #' @export
 #'
-smooth.construct.si.smooth.spec <- function(object, data, knots)
-{ 
+smooth.construct.si.smooth.spec <- function(object, data, knots){
   
   si <- object$xt$si
   if( is.null(si) ){ si <- object$xt$si <- list() }
@@ -26,23 +25,26 @@ smooth.construct.si.smooth.spec <- function(object, data, knots)
   # Reparametrise Xi so that the penalty on the single index vector is diagonal
   
   if( is.null(si$vr) ){ si$vr <- 1 }
-  if( is.null(si$ord) ){ si$ord <- 1 }
   
-  # x-limits for P-spline basis
-  if( is.null(object$xt$xlim) ){ object$xt$xlim <- c(-6, 6) * sqrt(si$vr) }
+  Si <- si$S
+  if( is.null(Si) ){ 
+    if( is.null(si$pord) ){ si$pord <- 1 }
+    Si <- .psp(d = di, ord = si$pord)
+    rankSi <- ncol(Xi) - si$pord
+  } else {
+    rankSi <- rankMatrix(Si)
+  }
   
-  si <- append(si, gamFactory:::.diagPen(X = Xi, S = .psp(d = di, ord = si$ord), r = ncol(Xi) - si$ord))
+  si <- append(si, gamFactory:::.diagPen(X = Xi, S = Si, r = rankSi))
   
   # Need to initialize inner coefficient? If so, alpha chosen so that var(X %*% alpha) = si$vr 
   alpha <- si$alpha
   if( is.null(alpha) ){ alpha <- si$alpha <- rep(1, di) * sqrt(si$vr) / sd(rowSums(si$X)) }
   
-  ax <- si$X %*% alpha
+  ax <- drop( si$X %*% alpha )
   data[[object$term]] <- ax
   
-  si$xseq <- qnorm(1:(n-1)/n, 0, sqrt(si$vr))
-  
-  out <- .build_nested_pspline_basis(object = object, data = data, knots = knots, si = si)
+  out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
   
   # Add inner penalty matrix
   dsmo <- out$bs.dim - di

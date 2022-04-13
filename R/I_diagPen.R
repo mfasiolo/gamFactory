@@ -1,6 +1,8 @@
 ########
 # Diagonalise penalty
 ########
+# r is rank of penalty matrix S
+#
 .diagPen <- function(X, S, r)
 {
   d <- ncol(X)

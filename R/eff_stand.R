@@ -26,5 +26,7 @@ eff_stand <- function(X){
   
   out <- structure(list("eval" = eval), class = c("stand"))
   
+  return(out)
+  
 }
 

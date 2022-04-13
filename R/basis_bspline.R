@@ -1,10 +1,11 @@
 #'
 #' Get B-spline design matrix constructor
 #' 
-#' @param k number of knots.
-#' @param m order of the B-spline basis and penalty. For instance \code{m = 3} creates 
-#'          a 3rd degree basis with a second order penalty.
-#' @param lim range over which the basis is created.
+#' @param knots positions of all the knots, both inner and outer.
+#' @param m order of the B-spline basis. Here \code{m = 0} for piecewise linear,
+#'          \code{m = 1} for quadratic and so on. Number of continuous derivarives
+#'          is \code{m}, e.g., if \code{m = 4} fourth order derivatives are continuous
+#'          but fifth are not. 
 #' 
 #' @return A function that take arguments \code{x} and \code{deriv} and returns a P-Spline model matrix and its first
 #'         \code{deriv} derivatives w.r.t. \code{x}.
@@ -15,25 +16,34 @@
 #' @examples
 #' library(gamFactory)
 #' 
-#' tmp <- basis_bspline(k = 6, 
-#'                      m = 3, 
-#'                      lim = c(-1, 1)
-#'                      )$evalX(x = seq(-0.9, 0.9, 0.01), deriv = 3)
-#'                      
-#' par(mfrow = c(2, 2)) 
-#' matplot(tmp$X0, type = 'l') # Design matrix
-#' matplot(tmp$X1, type = 'l') # 1st derivative w.r.t. x 
-#' matplot(tmp$X2, type = 'l') # 2nd derivative w.r.t. x 
-#' matplot(tmp$X3, type = 'l') # 3rd derivative w.r.t. x
+#' xseq <- seq(-6, 6, 0.01)
+#' k <- 10
+#' m <- 2
+#' ko <- k + m + 2
+#' knots <- 2 * qt((1:ko)/(ko+1), df = 3)
+#' tmp <- basis_bspline(knots = knots, 
+#'                      m = m)$evalX(x = xseq, deriv = 3)
 #' 
-basis_bspline <- function(k, m, lim){
+#' par(mfrow = c(2, 2)) 
+#' matplot(xseq, tmp$X0, type = 'l') # Design matrix
+#' matplot(xseq, tmp$X1, type = 'l') # 1st derivative w.r.t. x 
+#' matplot(xseq, tmp$X2, type = 'l') # 2nd derivative w.r.t. x 
+#' matplot(xseq, tmp$X3, type = 'l') # 3rd derivative w.r.t. x
+#' rug(knots)
+#'
+basis_bspline <- function(knots, m){
   
-  force(k); force(m); force(lim);
+  force(knots); force(m); 
+  
+  # Number of interior knots is kint
+  k <- length(knots)
+  kint <- k - m - 2
+  if(kint <= 0) stop("Basis dimension too small for b-spline order")
   
   out <- list()
   
-  evalX <- function(x, deriv){
-    gamFactory:::.basis_bspline(x = x, k = k, m = m, lim = lim, deriv = deriv)
+  evalX <- function(x, deriv = 0){
+    gamFactory:::.basis_bspline(x = x, knots = knots, m = m, deriv = deriv)
   }
   
   out <- structure(list("evalX" = evalX), class = c("B-spline", "basis"))
@@ -45,36 +55,22 @@ basis_bspline <- function(k, m, lim){
 ##########################
 # Internal to construct P-spline design
 # 
-.basis_bspline <- function(x, k, m, lim, deriv){
+.basis_bspline <- function(x, knots, m, deriv = 0){
   
   n <- length(x)
-  
-  # Order of the penalty does not matter here (we just want design matrix)
-  m <- c(m, 0)
-  
-  # Observations falling outside the boundary knots
-  whIn <- x >= lim[1] & x <= lim[2]
-  
-  # Construct basis and penalty only using data inside knots
-  sm <- smoothCon(object = s(x, bs = "ps", k = k, m = m), 
-                  data = data.frame(x = x[whIn]), 
-                  knots = list(x = lim), scale.penalty = FALSE)[[1]]
+  k <- length(knots)
   
   # Get full design matrix using also data outside knots: need to call this to get X1, X2 and X3 
-  X0 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T)$design
-  
-  if( any(abs(X0[whIn, ] - sm$X) > 1e-6)  ){ 
-    stop("Problem in the creation of the P-spline design matrix") 
-  }
-  
+  X0 <- splines::spline.des(knots, x = x, ord = m + 2, outer.ok = T)$design
+
   X1 <- X2 <- X3 <- NULL
   if(deriv > 0){
-    X1 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T, derivs = x*0 + 1)$design
+    X1 <- splines::spline.des(knots, x = x, ord = m + 2, outer.ok = T, derivs = x*0 + 1)$design
     if(deriv > 1){
-      X2 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T, derivs = x*0 + 2)$design
+      X2 <- splines::spline.des(knots, x = x, ord = m + 2, outer.ok = T, derivs = x*0 + 2)$design
     }
     if(deriv > 2){
-      X3 <- splines::spline.des(sm$knots, x = x, ord = sm$m[1] + 2, outer.ok = T, derivs = x*0 + 3)$design
+      X3 <- splines::spline.des(knots, x = x, ord = m + 2, outer.ok = T, derivs = x*0 + 3)$design
     }
   }
   

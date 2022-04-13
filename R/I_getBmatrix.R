@@ -1,6 +1,7 @@
 #################
 # Reparametrisation matrix to work with diagonal penalty
 # 
+# r is rank of penalty matrix P
 .getBmatrix <- function(P, r){
   
   d <- ncol( P )
