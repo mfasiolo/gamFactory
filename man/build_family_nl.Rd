@@ -4,7 +4,7 @@
 \alias{build_family_nl}
 \title{Function for building GAM families containing non-standard effects}
 \usage{
-build_family_nl(bundle, info, lamVar = 10)
+build_family_nl(bundle, info, lamVar = 1e+05)
 }
 \description{
 Function for building GAM families containing non-standard effects

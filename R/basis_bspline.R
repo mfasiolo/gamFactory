@@ -3,15 +3,16 @@
 #' 
 #' @param knots positions of all the knots, both inner and outer.
 #' @param m order of the B-spline basis. Here \code{m = 0} for piecewise linear,
-#'          \code{m = 1} for quadratic and so on. Number of continuous derivarives
+#'          \code{m = 1} for quadratic and so on. Number of continuous derivatives
 #'          is \code{m}, e.g., if \code{m = 4} fourth order derivatives are continuous
 #'          but fifth are not. 
 #' 
-#' @return A function that take arguments \code{x} and \code{deriv} and returns a P-Spline model matrix and its first
-#'         \code{deriv} derivatives w.r.t. \code{x}.
+#' @return A function that take arguments \code{x} and \code{deriv} and returns 
+#'         a B-splines model matrix and its first \code{deriv} derivatives w.r.t. \code{x}.
 #' 
 #' @name basis_bspline
 #' @rdname basis_bspline
+#' @importFrom splines spline.des
 #' @export basis_bspline
 #' @examples
 #' library(gamFactory)

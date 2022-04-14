@@ -12,7 +12,8 @@ Depends:
     matrixStats
 Imports:
     stats, 
-    gsubfn
+    gsubfn,
+    numDeriv
 Suggests: 
     knitr,
     rmarkdown,
