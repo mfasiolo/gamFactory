@@ -5,7 +5,7 @@
 #' @rdname build_family_nl
 #' @export build_family_nl
 #' 
-build_family_nl <- function(bundle, info, lamVar = 100){
+build_family_nl <- function(bundle, info, lamVar = 1e5){
   
   available_deriv <- min(bundle$available_deriv, 3)
   cdf <- bundle$cdf
