@@ -20,8 +20,6 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   Si <- si$S
   di <- ncol(Xi) + 1
   
-  if( is.null(si$vr) ){ si$vr <- var(x) }
-  
   if( !is.null(Si) ){ # Reparametrise Xi so that the penalty on alpha is diagonal
     si <- append(si, gamFactory:::.diagPen(X = Xi, S = Si, r = rankMatrix(Si)))
   } else {
@@ -33,9 +31,9 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   # Need to initialize inner coefficients?
   alpha <- si$alpha
   if( is.null(alpha) ){ 
-    # alpha[1] s.t. sd(inner_lin_pred) = si$vr (target variance)
+    # alpha[1] s.t. sd(inner_lin_pred) = 1 (target variance)
     g <- expsmooth(y = x, Xi = si$X, beta = rep(0, di-1))$d0
-    alpha <- si$alpha <- c(log(sqrt(si$vr)/sd(g)), rep(0, di-1))
+    alpha <- si$alpha <- c(log(1/sd(g)), rep(0, di-1))
   } else {
     g <- expsmooth(y = x, Xi = si$X, beta = alpha[-1])$d0
   }

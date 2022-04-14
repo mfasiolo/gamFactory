@@ -9,11 +9,10 @@
   for(ii in nstand){
     iec <- info$iec[[ii]]
     extra <- info$extra[[ii]]
-    vr <- extra$si$vr
     aii <- iec[1:eff[[ii]]$na]
-    pen[[kk]] <- pen_var(o = eff[[ii]], v = vr, deriv = deriv)
+    pen[[kk]] <- pen_var(o = eff[[ii]], v = 1, deriv = deriv)
     if(outer){
-      pen[[kk]]$outer <- pen_var_outer(o = eff[[ii]], v = vr, DaDr = d1b[aii, , drop = FALSE])
+      pen[[kk]]$outer <- pen_var_outer(o = eff[[ii]], v = 1, DaDr = d1b[aii, , drop = FALSE])
     }
     pen[[kk]]$iec <- aii 
     kk <- kk + 1

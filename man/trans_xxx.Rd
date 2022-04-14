@@ -6,11 +6,11 @@
 \alias{trans_linear}
 \title{Specifying a MGKS transformation}
 \usage{
-trans_mgks(n0, vr, init)
+trans_mgks(n0, alpha)
 
-trans_nexpsm(S, vr, init)
+trans_nexpsm(S, alpha)
 
-trans_linear(pord, S, vr, init)
+trans_linear(pord, S, alpha)
 }
 \description{
 Specifying a MGKS transformation

@@ -1,6 +1,6 @@
 .build_nested_bspline_basis <- function(object, data, knots, si){
   
-  si$xseq <- xseq <- qnorm(1:(n-1)/n, 0, sqrt(si$vr))
+  si$xseq <- xseq <- qnorm(1:(n-1)/n)
   
   dsmo <- object$bs.dim
   di <- length( si$alpha )
@@ -14,14 +14,20 @@
   
   if( is.null(knots[[object$term]]) ){
     ko <- dsmo + m[1] + 2  # Number of outer B-spline knots
-    knots[[object$term]] <- 3 * qt((1:ko)/(ko+1), df = 3)
+    knots[[object$term]] <- 6 * qunif((1:ko)/(ko+1), -1, 1)  #3 * qt((1:ko)/(ko+1), df = 3) # 6  * qunif((1:ko)/(ko+1), -1, 1) #
+    #3 * quantile(data[[object$term]], (1:ko)/(ko+1)) # 3 * qt((1:ko)/(ko+1), df = 3) #6  * qunif((1:ko)/(ko+1), -1, 1)
+      # 4 * qnorm((1:ko)/(ko+1)) ######!!!!!!!!!!!!!!!!!!!!!
+      #6 * * qunif((1:ko)/(ko+1), -1, 1) # qt((1:ko)/(ko+1), df = 3)
   }
-
+  
   # Call this just to get info such as rank, null-space etc
   out <- .my.smooth.construct.bs.smooth.spec(object, data, knots)
   
   # Create B-spline basis
   basis <- basis_bspline(knots = knots[[object$term]], m = m[1])
+  
+  # matplot(x = seq(-6, 6, length.out = 100), basis$evalX(seq(-6, 6, length.out = 100))$X0, type = 'l')
+  # rug(data[[object$term]])
   
   if(max(abs(out$X - basis$evalX(data[[object$term]])$X0)) > 1e-6){ 
     stop("Problem during B-splines basis construction") 

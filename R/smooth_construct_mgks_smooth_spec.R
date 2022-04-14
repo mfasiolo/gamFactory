@@ -27,16 +27,14 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   si$X0 <- X0 <- Xi[1:n0, 2:di, drop = FALSE]
   si$X <- Xi <- Xi[ , -(1:di), drop = FALSE]
   
-  if( is.null(si$vr) ){ si$vr <- var(x) }
-
   # Need to initialize inner coefficients?
   alpha <- si$alpha
   if( is.null(alpha) ){ 
-    # alpha[1] s.t. sd(inner_lin_pred) = si$vr (target variance)
+    # alpha[1] s.t. sd(inner_lin_pred) = 1 (target variance)
     # Other elements of alpha set to the negative marginal standard deviations / 10.
     # Dividing by 10 seems a good compromise between under- and over-smoothing.
     g <- mgks(y = x, X = Xi, X0 = X0, beta = -log(colSds(X0)/10))$d0
-    alpha <- si$alpha <- c(log(sqrt(si$vr)/sd(g)), -log(colSds(X0)/10)) 
+    alpha <- si$alpha <- c(log(1/sd(g)), -log(colSds(X0)/10)) 
   } else {
     g <- mgks(y = x, X = Xi, X0 = X0, beta = alpha[-1])$d0
   }
