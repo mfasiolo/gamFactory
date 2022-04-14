@@ -537,6 +537,17 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
     } ## if se
     list(fit=gamma)
   } ## multinom predict
+
+  jacobian <- function(eta, jj){
+    alpha <- cbind(1, exp(eta)) / rowSums(cbind(1, exp(eta)))
+    K <- ncol(alpha)
+    # D alpha / D eta
+    DaDe <- sapply(1:(K - 1), function(.kk) {
+      alpha[, jj] * (as.numeric(jj == .kk + 1) - alpha[, .kk + 1])
+    })
+    if(nrow(alpha) == 1) { DaDe <- matrix(DaDe, nrow = 1) }
+    return(DaDe)
+  }
   
   #rd <- function(mu,wt,scale) {
     
@@ -563,6 +574,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
                  linkinv = stats$linkinv, # MAYBE IT'S NEEDED IN gam.fit5
                  d2link=1,d3link=1,d4link=1, ## signals to fix.family.link that all done, 
                  predict = predict,
+                 jacobian = jacobian,
                  ls=1, ## signals that ls not needed here
                  available.derivs = 1, ## signal only first derivatives available...
                  discrete.ok = TRUE
