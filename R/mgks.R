@@ -69,15 +69,43 @@
 #'  abline(h = 0)
 #' }
 #' 
+#' # Test case where we have a different y vector for each location
+#' # at which we want to evaluate the smooth
+#' 
+#' y <- do.call("rbind", lapply(1:nrow(X), function(nouse) y))
+#' y <- y + rnorm(ncol(y) * nrow(y))
+#' 
+#' # Check derivatives up to order 3
+#' beta <- c(log(10), log(5), log(5))
+#' (tmp <- check_deriv(obj = obj, param = beta, ord = 1:3))
+#' 
+#' par(mfrow = c(2, 2))
+#' for(ii in 1:3){
+#'  plot(tmp[[ii]][ , 2], tmp[[ii]][ , 1] - tmp[[ii]][ , 2],
+#'       main = paste0("mgks deriv ", ii), ylab = "Error",
+#'       xlab = "Deriv value")
+#'  abline(h = 0)
+#' }
+#' 
 mgks <- function(y, X, X0, beta, deriv = 0){
   
-  if( is.matrix(y) ){ y <- as.vector(y) }
+  if( is.matrix(y) && min(dim(y)) > 1 ){
+    case <- "matrix"
+  } else {
+    case <- "vector"
+    y <- as.vector(y) 
+  }
   
   n <- nrow(X)
   n0 <- nrow(X0)
   d <- ncol(X0)
   p <- length(beta)
-  stopifnot( length(y) == n0 )
+  
+  if( case == "vector" ){
+   stopifnot( length(y) == n0 )
+  } else {
+   stopifnot( nrow(y) == n, ncol(y) == n0 )  
+  }
   
   # Under Gaussian log-kernel (x - x0)^2 / sigma^2 = (x - x0)^2 * w hence w = 1/sigma^2 
   w <- exp(2*beta)
@@ -109,8 +137,10 @@ mgks <- function(y, X, X0, beta, deriv = 0){
     }
   }
   
+  yii <- y
   for( ii in 1:n ){
     
+    if( case == "matrix" ) { yii <- y[ii, ] }
     xi <- X[ii, ]
     
     # dist[j, k] = (X0[j, k] - xi[k])^2 * w[k] for j = 1, ..., n0 and k = 1, ..., d
@@ -123,7 +153,7 @@ mgks <- function(y, X, X0, beta, deriv = 0){
     mx <- max(logK)
     al <- exp(logK-mx) / sum(exp(logK-mx))
     
-    d0[ii] <- sum(al * y)
+    d0[ii] <- sum(al * yii)
     
     # Derivatives of g w.r.t. beta
     if( deriv ){
@@ -136,7 +166,7 @@ mgks <- function(y, X, X0, beta, deriv = 0){
       # DaDb[i,j] = Dalpha[i] / D beta[j]
       for(jj in 1:p){
         DaDbJJ <- al * DlkDb_c[ , jj]
-        d1[ii, jj] <- sum(y * DaDbJJ)
+        d1[ii, jj] <- sum(yii * DaDbJJ)
         # Store stuff needed for higher derivs
         if(deriv > 1){ DaDb[ , jj] <- DaDbJJ }
       }
@@ -154,7 +184,7 @@ mgks <- function(y, X, X0, beta, deriv = 0){
             }
             # Store stuff needed for higher derivs
             if( deriv > 2 ){ DaDbKK_DlkDb_c[ , zz] <- DaDbKK_DlkDb_cJJ }
-            d2[ii, zz] <- sum(y * D2alD2b[ , zz])
+            d2[ii, zz] <- sum(yii * D2alD2b[ , zz])
             zz <- zz + 1
           }
         }
@@ -180,7 +210,7 @@ mgks <- function(y, X, X0, beta, deriv = 0){
                     D3alD3b[ , zz] <- D3alD3b[ , zz] + al * 4 * DlkDb_c[ , jj]
                   }
                 }
-                d3[ii, zz] <- sum(y * D3alD3b[ , zz])
+                d3[ii, zz] <- sum(yii * D3alD3b[ , zz])
                 zz <- zz + 1
               }
             }

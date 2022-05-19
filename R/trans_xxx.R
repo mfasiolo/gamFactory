@@ -5,9 +5,9 @@
 #' @rdname trans_xxx
 #' @export trans_mgks
 #'
-trans_mgks <- function(n0, alpha){
+trans_mgks <- function(X0, y0, alpha){
  
-  if( missing(n0) ){ stop("Argument \"n0\" is missing but a value is required") }
+  if( missing(X0) ){ stop("Argument \"X0\" is missing but a value is required") }
    
   out <- as.list(match.call())[-1]
   out$type <- "mgks"

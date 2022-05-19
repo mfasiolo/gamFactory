@@ -19,13 +19,30 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
 { 
   si <- object$xt$si
   
+  X0 <- si$X0
+  y0 <- si$y0
   Xi <- data[[object$term]]
-  di <- (ncol(Xi)-1)/2 + 1
-  n <- nrow( Xi )
-  n0 <- si$n0
-  si$x <- x <- Xi[1:n0, 1]
-  si$X0 <- X0 <- Xi[1:n0, 2:di, drop = FALSE]
-  si$X <- Xi <- Xi[ , -(1:di), drop = FALSE]
+  d <- ncol(X0)
+  n <- nrow(Xi)
+  n0 <- nrow(X0)
+  
+  # If TRUE then first n0 columns of Xi contain data y0 to be kernel smoother and
+  # remaining "d" columns give the location at which we evaluate the kernel smooth.
+  # If FALSE we only have the "d" columns and y0 was defined via "y0" argument in trans_mgks
+  if( ncol(Xi) > d ){
+    if( !is.null(y0) ){ stop(paste(object$term, "should have", d, "columns")) }
+    y0 <- Xi[ , 1:(ncol(Xi)-d)]
+    Xi <- Xi[ , -(1:(ncol(Xi)-d))]
+    if(ncol(y0) != n0){
+      stop(paste(object$term, "should have", n, "rows and", n0+d, "columns"))
+    }
+  } else {
+    if( is.null("y0") ){ stop("Argument y0 missing in trans_mgks.") }
+  }
+  
+  si$x <- x <- y0
+  
+  si$X <- Xi
   
   # Need to initialize inner coefficients?
   alpha <- si$alpha

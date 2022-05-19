@@ -6,7 +6,7 @@
 \alias{trans_linear}
 \title{Specifying a MGKS transformation}
 \usage{
-trans_mgks(n0, alpha)
+trans_mgks(X0, y0, alpha)
 
 trans_nexpsm(S, alpha)
 

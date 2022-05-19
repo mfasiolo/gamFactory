@@ -74,4 +74,22 @@ for(ii in 1:3){
  abline(h = 0)
 }
 
+# Test case where we have a different y vector for each location
+# at which we want to evaluate the smooth
+
+y <- do.call("rbind", lapply(1:nrow(X), function(nouse) y))
+y <- y + rnorm(ncol(y) * nrow(y))
+
+# Check derivatives up to order 3
+beta <- c(log(10), log(5), log(5))
+(tmp <- check_deriv(obj = obj, param = beta, ord = 1:3))
+
+par(mfrow = c(2, 2))
+for(ii in 1:3){
+ plot(tmp[[ii]][ , 2], tmp[[ii]][ , 1] - tmp[[ii]][ , 2],
+      main = paste0("mgks deriv ", ii), ylab = "Error",
+      xlab = "Deriv value")
+ abline(h = 0)
+}
+
 }
