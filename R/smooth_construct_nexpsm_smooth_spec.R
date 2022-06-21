@@ -15,7 +15,7 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   # Inner model matrix and penalty (used to model exponential smoothing coefficient) 
   Xi <- data[[object$term]]
   x <- Xi[ , 1]
-  Xi <- Xi[ , -1]
+  Xi <- Xi[ , -1, drop = FALSE]
   n <- length( x )
   Si <- si$S
   di <- ncol(Xi) + 1
