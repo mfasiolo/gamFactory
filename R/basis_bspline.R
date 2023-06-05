@@ -18,36 +18,55 @@
 #' library(gamFactory)
 #' 
 #' xseq <- seq(-6, 6, 0.01)
-#' k <- 10
-#' m <- 2
+#' k <- 10             
+#' m <- 4
 #' ko <- k + m + 2
-#' knots <- 2 * qt((1:ko)/(ko+1), df = 3)
-#' tmp <- basis_bspline(knots = knots, 
-#'                      m = m)$evalX(x = xseq, deriv = 3)
+#' knots <- seq(xseq[1], tail(xseq,1), length.out = ko)
+#' tmp <- basis_bspline(knots = knots, m = m)$evalX(x = xseq, deriv = 4)
 #' 
-#' par(mfrow = c(2, 2)) 
+#' par(mfrow = c(3, 2)) 
 #' matplot(xseq, tmp$X0, type = 'l') # Design matrix
 #' matplot(xseq, tmp$X1, type = 'l') # 1st derivative w.r.t. x 
 #' matplot(xseq, tmp$X2, type = 'l') # 2nd derivative w.r.t. x 
 #' matplot(xseq, tmp$X3, type = 'l') # 3rd derivative w.r.t. x
+#' matplot(xseq, tmp$X4, type = 'l') # 4rd derivative w.r.t. x
 #' rug(knots)
-#'
+#' 
+#' # Checking if derivatives are right by finite differences: it seems so
+#' l0 <- basis_bspline(knots = knots, m = m)$evalX(x = xseq, deriv = 4)
+#' lm <- basis_bspline(knots = knots, m = m)$evalX(x = xseq-1e-5, deriv = 4)
+#' lp <- basis_bspline(knots = knots, m = m)$evalX(x = xseq+1e-5, deriv = 4)
+#' par(mfrow = c(2, 2))
+#' plot(l0$X1, (lp$X0 - lm$X0) / 2e-5)
+#' abline(0, 1, col = 2)
+#' plot(l0$X2, (lp$X1 - lm$X1) / 2e-5)
+#' abline(0, 1, col = 2)
+#' plot(l0$X3, (lp$X2 - lm$X2) / 2e-5)
+#' abline(0, 1, col = 2)
+#' plot(l0$X4, (lp$X3 - lm$X3) / 2e-5)
+#' abline(0, 1, col = 2)
+#' 
 basis_bspline <- function(knots, m){
   
-  force(knots); force(m); 
+  force(knots); force(m);
+  
+  # Numer of total, outer and inner knots
+  k <- length(knots)
+  ko <- 2 * (m + 1) 
+  ki <- k - ko
   
   # Number of interior knots is kint
-  k <- length(knots)
-  kint <- k - m - 2
-  if(kint <= 0) stop("Basis dimension too small for b-spline order")
+  if(ki <= 0) stop("Basis dimension too small for b-spline order")
   
-  out <- list()
-  
+  # Range of inner knots
+  krange <- range(knots[ko/2 + 1:ki])
+
   evalX <- function(x, deriv = 0){
     gamFactory:::.basis_bspline(x = x, knots = knots, m = m, deriv = deriv)
   }
   
-  out <- structure(list("evalX" = evalX), class = c("B-spline", "basis"))
+  out <- structure(list("evalX" = evalX, "krange" = krange), 
+                   class = c("B-spline", "basis"))
   
   return(out)
 }
@@ -61,19 +80,12 @@ basis_bspline <- function(knots, m){
   n <- length(x)
   k <- length(knots)
   
-  # Get full design matrix using also data outside knots: need to call this to get X1, X2 and X3 
-  X0 <- splines::spline.des(knots, x = x, ord = m + 2, outer.ok = T)$design
-
-  X1 <- X2 <- X3 <- NULL
-  if(deriv > 0){
-    X1 <- splines::spline.des(knots, x = x, ord = m + 2, outer.ok = T, derivs = x*0 + 1)$design
-    if(deriv > 1){
-      X2 <- splines::spline.des(knots, x = x, ord = m + 2, outer.ok = T, derivs = x*0 + 2)$design
-    }
-    if(deriv > 2){
-      X3 <- splines::spline.des(knots, x = x, ord = m + 2, outer.ok = T, derivs = x*0 + 3)$design
-    }
+  out <- list()
+  for(ii in 1:(1+deriv)){
+    de <- ii-1
+    out[[paste0("X", de)]] <- splines::spline.des(knots, x = x, ord = m + 2, 
+                                                  outer.ok = T, derivs = x*0 + de)$design
   }
   
-  return( list("X0" = X0, "X1" = X1, "X2" = X2, "X3" = X3) )
+  return( out )
 }

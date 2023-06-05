@@ -25,18 +25,32 @@ Get B-spline design matrix constructor
 library(gamFactory)
 
 xseq <- seq(-6, 6, 0.01)
-k <- 10
-m <- 2
+k <- 10             
+m <- 4
 ko <- k + m + 2
-knots <- 2 * qt((1:ko)/(ko+1), df = 3)
-tmp <- basis_bspline(knots = knots, 
-                     m = m)$evalX(x = xseq, deriv = 3)
+knots <- seq(xseq[1], tail(xseq,1), length.out = ko)
+tmp <- basis_bspline(knots = knots, m = m)$evalX(x = xseq, deriv = 4)
 
-par(mfrow = c(2, 2)) 
+par(mfrow = c(3, 2)) 
 matplot(xseq, tmp$X0, type = 'l') # Design matrix
 matplot(xseq, tmp$X1, type = 'l') # 1st derivative w.r.t. x 
 matplot(xseq, tmp$X2, type = 'l') # 2nd derivative w.r.t. x 
 matplot(xseq, tmp$X3, type = 'l') # 3rd derivative w.r.t. x
+matplot(xseq, tmp$X4, type = 'l') # 4rd derivative w.r.t. x
 rug(knots)
+
+# Checking if derivatives are right by finite differences: it seems so
+l0 <- basis_bspline(knots = knots, m = m)$evalX(x = xseq, deriv = 4)
+lm <- basis_bspline(knots = knots, m = m)$evalX(x = xseq-1e-5, deriv = 4)
+lp <- basis_bspline(knots = knots, m = m)$evalX(x = xseq+1e-5, deriv = 4)
+par(mfrow = c(2, 2))
+plot(l0$X1, (lp$X0 - lm$X0) / 2e-5)
+abline(0, 1, col = 2)
+plot(l0$X2, (lp$X1 - lm$X1) / 2e-5)
+abline(0, 1, col = 2)
+plot(l0$X3, (lp$X2 - lm$X2) / 2e-5)
+abline(0, 1, col = 2)
+plot(l0$X4, (lp$X3 - lm$X3) / 2e-5)
+abline(0, 1, col = 2)
 
 }

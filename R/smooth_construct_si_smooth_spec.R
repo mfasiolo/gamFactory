@@ -8,22 +8,21 @@
 #'
 smooth.construct.si.smooth.spec <- function(object, data, knots){
   
+  # Most information on single index matrix and penalty is inside "si" list.
   si <- object$xt$si
   if( is.null(si) ){ si <- object$xt$si <- list() }
   
   # Inner model matrix (to be projected via single index)
   Xi <- data[[object$term]]
   
-  # Need to center Xi and save colMeans because we need to subtract is when using new data
+  # Need to center Xi and save colMeans because we need to subtract it when predicting using new data
   Xi <- scale(Xi, scale = FALSE)
   si$xm <- attr(Xi, "scaled:center")
   
   di <- ncol( Xi )
   n <- nrow( Xi )
   
-  # Information on single index matrix and penalty is in "si"
-  # Reparametrise Xi so that the penalty on the single index vector is diagonal
-  
+  # If Si is NULL, we use a difference penalty of order pord
   Si <- si$S
   if( is.null(Si) ){ 
     if( is.null(si$pord) ){ si$pord <- 1 }
@@ -33,18 +32,22 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
     rankSi <- rankMatrix(Si)
   }
   
+  # Reparametrise Xi so that the penalty on the single index vector is diagonal
   si <- append(si, gamFactory:::.diagPen(X = Xi, S = Si, r = rankSi))
   
-  # Need to initialize inner coefficient? If so, alpha chosen so that var(X %*% alpha) = 1 
+  # Alpha is vector of inner coefficients, si$alpha is a vector of initial values for it.
+  # If no initialisation if provided, alpha is a constant vector chosen so that var(X %*% alpha) = 1 
   alpha <- si$alpha
   if( is.null(alpha) ){ alpha <- si$alpha <- rep(1, di) / sd(rowSums(si$X)) }
   
+  # Compute single index vector and store it in the data
   ax <- drop( si$X %*% alpha )
   data[[object$term]] <- ax
   
+  # Construct the B-splines corresponding to the outer smooth effect 
   out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
   
-  # Add inner penalty matrix
+  # Add inner penalty matrix (diagonalised and padded with zeros corresponding to the outer coefficients)
   dsmo <- out$bs.dim - di
   si <- out$xt$si
   out$S[[2]] <- rbind(cbind(si$S, matrix(0, di, dsmo)),

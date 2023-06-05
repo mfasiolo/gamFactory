@@ -11,18 +11,19 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   si <- object$xt$si
   if( is.null(si) ){ si <- object$xt$si <- list() }
   
-  # Covariate to be exponentially smoothed
-  # Inner model matrix and penalty (used to model exponential smoothing coefficient) 
+  # Covariate to be exponentially smoothed is first column of Xi
+  # Remaining columns are inner model matrix and penalty (used to model exponential smoothing coefficient) 
   Xi <- data[[object$term]]
   x <- Xi[ , 1]
   Xi <- Xi[ , -1, drop = FALSE]
   n <- length( x )
   Si <- si$S
-  di <- ncol(Xi) + 1
+  di <- ncol(Xi) + 1 # + 1 because we have extra scaling parameter multiplying output of the exp smooth.
+                     # Note that this extra parameter should NOT be penalised by Si
   
   if( !is.null(Si) ){ # Reparametrise Xi so that the penalty on alpha is diagonal
     si <- append(si, gamFactory:::.diagPen(X = Xi, S = Si, r = rankMatrix(Si)))
-  } else {
+  } else { # No inner penalty 
     si$X <- Xi
     si$B <- diag(nrow = ncol(Xi))
     si$rank <- 0 
@@ -38,14 +39,15 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
     g <- expsmooth(y = x, Xi = si$X, beta = alpha[-1])$d0
   }
   
-  # Center and scale the initialiized inner linear preditor
+  # Center and scale the initialized inner linear preditor
   data[[object$term]] <- exp(alpha[1]) * (g - mean(g))
   
   si$x <- x
   
   out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
   
-  # Add inner penalty matrix
+  # Add inner penalty matrix: rbind(0, cbind(0, si$S) makes so first element of alpha (inner parameters)
+  # is unpenalised (this is the scaling parameter)
   if( !is.null(Si) ){
     dsmo <- out$bs.dim - di
     si <- out$xt$si

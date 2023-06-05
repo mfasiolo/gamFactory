@@ -1,7 +1,13 @@
 ########
-# Diagonalise penalty
+# Diagonalise a penalty
 ########
+# INPUT
+# X is the model matrix
+# S is the penalty matrix on the coefficients
 # r is rank of penalty matrix S
+#
+# OUTPUT
+# Reparametrised versions of B and S, and reparametrisation matrix B
 #
 .diagPen <- function(X, S, r)
 {

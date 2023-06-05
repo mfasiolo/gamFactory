@@ -2,6 +2,17 @@
 #' Defining nested smooths in GAM formulae
 #' 
 #' @name s_nest
+#' 
+#' @description Function used to defined nested smooth effects. It works similarly to 
+#'              \link{mgcv::s}.
+#'              
+#' @param ... a list of variables that are used to defined the nested smooth effect.
+#' @param trans the type of covariate transformation to use (see, e.g., \link{trans_mgks}).
+#' @param k the number of basis functions used to construct the outer smooth effect. 
+#' @param m a vector of two positive integers. The first indicates the order of the 
+#'          outer B-spline basis (see \link{basis_bspline}), the second is the order of the corresponding P-spline
+#'          penalty. 
+#' @param sarg a list of further arguments to be passed to the effect constructor. 
 #' @rdname s_nest
 #' @export
 #'

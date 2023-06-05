@@ -1,19 +1,18 @@
 .my.smooth.construct.bs.smooth.spec <- function(object,data,knots) {
-  ## a B-spline constructor method function
+  # a B-spline constructor method function
+  # Here m[1] is as in Wood's 2016 book section 5.3.3 (i.e., m = 2 for cubic)
+  # but we need to increase it by 1 to make Predict.matrix.Bspline.smooth happy later on....
   m <- object$p.order  # m[1] - basis order, m[2] - penalty order
-  m[1] <- m[1] + 1
-  object$m <- object$p.order <- m
-  
-  nk <- object$bs.dim - m[1] + 1  # number of interior knots
-  if (nk<=0) stop("basis dimension too small for b-spline order")
+  m[1] <- m[1] + 1     
+  object$m <- object$p.order <- m # NOTE object$m and $p.order modified, will fix at the end
   
   x <- data[[object$term]]  
   k <- knots[[object$term]]
   
-  if (length(k)!=nk+2*m[1]){
-      stop(paste("there should be ",nk+2*m[1]," supplied knots"))
-  }
-  
+  # Total number of knots, number of interior knots
+  nk <- length(k)
+  nkin <- nk - 2 * m[1]
+
   object$X <- splines::spline.des(k, x, m[1]+1, x*0, outer.ok = TRUE)$design # get model matrix
   
   if (length(unique(x)) < object$bs.dim) warning("basis dimension is larger than number of unique covariates")
@@ -23,7 +22,7 @@
   ## cubic case...
   object$knots <- k; 
   class(object) <- "Bspline.smooth"  # Give object a class
-  k0 <- k# [m[1]+1:nk] ## the interior knots
+  k0 <- k[m[1] + 1:nkin] ## the interior knots
   object$D <- object$S <- list()
   m2 <- m[2:length(m)] ## penalty orders
   if (length(unique(m2))<length(m2)) stop("multiple penalties of the same order is silly")
@@ -33,7 +32,7 @@
     if (pord<0) stop("requested non-existent derivative in B-spline penalty") 
     h <- diff(k0) ## the difference sequence...
     ## now create the sequence at which to obtain derivatives
-    if (pord==0) k1 <- (k0[2:nk]+k0[1:(nk-1)])/2 else {
+    if (pord==0) k1 <- (k0[2:nkin]+k0[1:(nkin-1)])/2 else {
       h1 <- rep(h/pord,each=pord)
       k1 <- cumsum(c(k0[1],h1)) 
     } 
@@ -76,6 +75,9 @@
   }
   object$rank <- object$bs.dim-m2  # penalty rank 
   object$null.space.dim <- min(m2)    # dimension of unpenalized space 
-  
-  object
+  object$interior.knots.bound <- k0[c(1, length(k0))]
+  object$m[1] <- object$m[1] - 1 ###### Need to reset these, See above
+  object$p.order[1] <- object$p.order[1] - 1 
+
+  return( object )
 } ### end of B-spline constructor

@@ -12,7 +12,7 @@ gam_nl <- function(formula, family = gaulss(), data = list(), fit = TRUE, ...){
   ddd <- match.call(expand.dots = FALSE)$`...`
   
   out <- ddd$G
-  if( is.null(out) ){ # Do not build is G already provided
+  if( is.null(out) ){ # Do not build if G already provided
     formula <- .compile_formula(formula)
     
     out <- gam(formula = formula, family = family, data = data, fit = FALSE, ...)

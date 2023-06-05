@@ -19,6 +19,7 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
 { 
   si <- object$xt$si
   
+  # We have n0 original locations (one on each row of X0) and corresponding observations in y0
   X0 <- si$X0
   y0 <- si$y0
   Xi <- data[[object$term]]
@@ -26,7 +27,7 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   n <- nrow(Xi)
   n0 <- nrow(X0)
   
-  # If TRUE then first n0 columns of Xi contain data y0 to be kernel smoother and
+  # If TRUE then first n0 columns of Xi contain data y0 to be kernel smoothed and
   # remaining "d" columns give the location at which we evaluate the kernel smooth.
   # If FALSE we only have the "d" columns and y0 was defined via "y0" argument in trans_mgks
   if( ncol(Xi) > d ){
@@ -40,24 +41,22 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
     if( is.null("y0") ){ stop("Argument y0 missing in trans_mgks.") }
   }
   
-  si$x <- x <- y0
-  
+  si$x <- y0
   si$X <- Xi
   
   # Need to initialize inner coefficients?
-  alpha <- si$alpha
-  if( is.null(alpha) ){ 
+  if( is.null(si$alpha) ){ 
     # alpha[1] s.t. sd(inner_lin_pred) = 1 (target variance)
     # Other elements of alpha set to the negative marginal standard deviations / 10.
     # Dividing by 10 seems a good compromise between under- and over-smoothing.
-    g <- mgks(y = x, X = Xi, X0 = X0, beta = -log(colSds(X0)/10))$d0
-    alpha <- si$alpha <- c(log(1/sd(g)), -log(colSds(X0)/10)) 
+    g <- mgks(y = si$x, X = Xi, X0 = X0, beta = -log(colSds(X0)/10))$d0
+    si$alpha <- c(log(1/sd(g)), -log(colSds(X0)/10)) 
   } else {
-    g <- mgks(y = x, X = Xi, X0 = X0, beta = alpha[-1])$d0
+    g <- mgks(y = si$x, X = Xi, X0 = X0, beta = si$alpha[-1])$d0
   }
   
   # Center and scale the initialiized inner linear preditor
-  data[[object$term]] <- exp(alpha[1]) * (g - mean(g))
+  data[[object$term]] <- exp(si$alpha[1]) * (g - mean(g))
   
   out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
 

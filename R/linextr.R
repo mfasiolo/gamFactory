@@ -6,17 +6,17 @@
 #'          \code{b[[2]]} the matrix of first derivatives (w.r.t. x) and so on.
 #' @param th the two boundaries beyond which the linear extrapolation occurs.
 #' @param Xbo a 2 x p matrix, where p is the number of basis functions. It contains
-#'            the basis function evaluated at \code{th[1]} and \code{th[2]}.
+#'            the basis functions evaluated at \code{th[1]} and \code{th[2]}.
 #' @param Xbo1 same as \code{Xbo} but this is the first derivative of the 
-#'             basis function.
-#' @param method if set to \code{"simple"} higher derivatives are set to 0 beyond 
+#'             basis functions.
+#' @param method if set to \code{"simple"}, derivatives of order >= 2 are set to 0 outside of 
 #'              \code{range(th)}. If set to \code{"smooth"} higher derivatives 
-#'              decay to zero at rate r as we move away from 
+#'              decay to zero exponentially at rate r, as we move away from 
 #'              (\code{th[1]},\code{th[2]}).
 #'
 #' @return A list where \code{b[[1]]} contains the linearly extrapolated 
 #'         basis functions evaluated at \code{x}, \code{b[[2]]} the matrix of 
-#'         first derivatives (w.r.t. x) and so on.
+#'         first derivatives (w.r.t. x) evaluated at \code{x}, and so on.
 #' 
 #' @name linextr
 #' @rdname linextr
@@ -54,6 +54,8 @@
 #' plot(xseq, X_ext1$X0%*%betas, type = 'l', col = 1) # Linearly extrapolated
 #' lines(xseq, X_ext2$X0%*%betas, type = 'l', col = 4)# Smoothly linearly extrap
 #' lines(xseq, X$X0%*%betas, col = 2)                 # Original
+#' abline(v = krange[1], lty = 2)
+#' abline(v = krange[2], lty = 2)
 #' 
 #' # Above we see some small bumps just beyond krange (look at discrepancy
 #' # between blue and red, you might to run this a few times to see it).
@@ -70,7 +72,7 @@
 #' X_con$X2 <- X$X2 %*% NS
 #' X_con$X3 <- X$X3 %*% NS
 #' 
-#' # Linearise reparametrisd basis beyond krange
+#' # Linearise reparametrised basis beyond krange
 #' X_ext1 <- linextr(x = xseq, b = X_con, th = krange, 
 #'                   Xbo = X_th$X0%*%NS, Xbo1 = X_th$X1%*%NS, method = "simple")
 #' 
@@ -112,8 +114,11 @@
 #' plot(l0$X3, (lp$X2 - lm$X2) / 2e-5)
 #' abline(0, 1, col = 2)
 #' 
-#' # Note that with smooth extrapolation, derivative up to order 3 are continuous
-#' # (assuming that the derivative of the original basis are continuous!)
+#' # Note that with "smooth" extrapolation, derivative up to order 4 are continuous
+#' # (assuming that the derivative of the original basis are continuous!) whether or not
+#' # we reparametrise as above. With "simple" extrapolation derivative up to order K >= 2
+#' # are continuous only if we impose the constraints that the derivatives of order 2, ..., K are zero.
+#' # Here we check the continuity of derivatives of up to order 3:
 #' xseq <- seq(-4, 4, length.out = 1e3) 
 #' l0 <- wrap_basis(x = xseq)
 #' 
@@ -159,7 +164,6 @@ linextr <- function(x, b, th, Xbo, Xbo1, method = "smooth", r = NULL){
       Xth <- rbind(Xth, matrix(Xbo[2, ], length(ku), d, byrow = TRUE))
       Xth1 <- rbind(Xth1, matrix(Xbo1[2, ], length(ku), d, byrow = TRUE))
     }
-    D
     # Simple method: compute value of 1st order Taylor expansion evaluatated at each point.
     # Further derivatives are set to zero.
     if(method == "simple"){
@@ -209,8 +213,5 @@ linextr <- function(x, b, th, Xbo, Xbo1, method = "smooth", r = NULL){
       }
     }
   }
-  
-  
   return(b)
-  
 }
