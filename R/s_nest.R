@@ -33,8 +33,8 @@ s_nest <- function(..., trans, k, m, sarg){
   }
   sarg$k <- k 
   
-  if( missing(m) ){ m <- c(4, 1) }
-  if( length(m) == 1 ){ m <- c(m, 1) }
+  if( missing(m) ){ m <- c(4, 2) }
+  if( length(m) == 1 ){ m <- c(m, 2) }
   if( m[1] < 4 ){ message("m[1] should be >= 4, lower values might lead to convergence issues.") }
   sarg$m <- m
   

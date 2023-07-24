@@ -62,7 +62,7 @@
   
   # Linearly extrapolate outer B-spline basis beyond inner knots (those at which we imposed the constraints above)
   out$X <- linextr(x = x, b = list(X0 = out$X), th = basis$krange, 
-                   Xbo = Xth$X0%*%NS, Xbo1 = Xth$X1%*%NS, method = "simple")$X0
+                   Xbo = Xth$X0%*%NS, Xbo1 = Xth$X1%*%NS, method = "simple")$X0 # If you change "simple" here, you need to do it also elsewhere!!
   
   # Reparametrise the outer smooth so that penalty is diagonal (we need diagonal penalty otherwise mgcv will
   # reparametrise again with Sl.repara)

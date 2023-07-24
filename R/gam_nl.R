@@ -1,5 +1,5 @@
 #'
-#' Fit GAM model with non-linear effects
+#' Fit GAM models with non-linear effects
 #' 
 #' @param formula,family,data same arguments as in [mgcv::gam].
 #' @param ... further arguments to be passed to [mgcv::gam].
