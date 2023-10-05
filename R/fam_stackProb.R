@@ -243,7 +243,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
     if (is.null(start)) {
       
       jj <- attr(x,"lpi")
-
+      
       # Objective function is penalized likelihood, 
       # mult is the multiplier of ( logP[ , k + 1] - logP[ , 1] )
       objFun <- function(mult) {
@@ -282,7 +282,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
             if (!is.null(ridgePen)) {
               sqrt(ridgePen)
               e1rp <- matrix(0, nrow = nrow(E[,jj[[k]],drop=FALSE]),
-                     ncol = ncol(E[,jj[[k]],drop=FALSE]))
+                             ncol = ncol(E[,jj[[k]],drop=FALSE]))
               diag(e1rp) <- sqrt(ridgePen)
               e1 <- e1 + e1rp
             }
@@ -291,7 +291,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
               x1 <- rbind(x1,e1)
               startji <- qr.coef(qr(x1),c(yt1,rep(0,nrow(E))))
               startji[!is.finite(startji)] <- 0
-            } else startji <- penReg(x1,e1,yt1)
+            } else startji <- penreg(x1,e1,yt1)
             start[jj[[k]]] <- startji ## copy coefficients back into overall start coef vector
           } ## lp loop
         }
@@ -315,7 +315,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
         
         # Set -Inf to lowest finite logLik value
         logLik[!is.finite(logLik) & logLik < 0] <- min( logLik[is.finite(logLik)] )
-
+        
         return( - sum(logLik) + sum( (E%*%start) ^ 2 ) )
         
       }
@@ -367,7 +367,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
             x1 <- rbind(x1,e1)
             startji <- qr.coef(qr(x1),c(yt1,rep(0,nrow(E))))
             startji[!is.finite(startji)] <- 0
-          } else startji <- penReg(x1,e1,yt1)
+          } else startji <- penreg(x1,e1,yt1)
           start[jj[[k]]] <- startji ## copy coefficients back into overall start coef vector
         } ## lp loop
       }
@@ -408,11 +408,11 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
                      rowSums(exp(nu + X[, - 1, drop = FALSE]))))
     
     logLik <- sum(log(rowSums(a * P)))
-
+    
     if (deriv > 0) { ## grad and Hess
       ## the gradient...
       ln <- w - a[, - 1, drop = FALSE]
-
+      
       ## the Hessian...
       lnn <- list()
       # lnn_rr <- list()
@@ -476,7 +476,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
     ## contains any family specific extra information. 
     ## if se = FALSE returns one item list containing matrix otherwise 
     ## list of two matrices "fit" and "se.fit"... 
-
+    
     if (is.null(eta)) {
       discrete <- is.list(X)
       lpi <- attr(X,"lpi") 
@@ -538,8 +538,19 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
     list(fit=gamma)
   } ## multinom predict
   
+  jacobian <- function(eta, jj){
+    alpha <- cbind(1, exp(eta)) / rowSums(cbind(1, exp(eta)))
+    K <- ncol(alpha)
+    # D alpha / D eta
+    DaDe <- sapply(1:(K - 1), function(.kk) {
+      alpha[, jj] * (as.numeric(jj == .kk + 1) - alpha[, .kk + 1])
+    })
+    if(nrow(alpha) == 1) { DaDe <- matrix(DaDe, nrow = 1) }
+    return(DaDe)
+  }
+  
   #rd <- function(mu,wt,scale) {
-    
+  
   #} ## rd
   
   # dev.resids <- function(a, b, c, d) y # MAYBE IT'S NEEDED IN gam.fit5
@@ -563,6 +574,7 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
                  linkinv = stats$linkinv, # MAYBE IT'S NEEDED IN gam.fit5
                  d2link=1,d3link=1,d4link=1, ## signals to fix.family.link that all done, 
                  predict = predict,
+                 jacobian = jacobian,
                  ls=1, ## signals that ls not needed here
                  available.derivs = 1, ## signal only first derivatives available...
                  discrete.ok = TRUE
