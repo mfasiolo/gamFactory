@@ -31,7 +31,7 @@
 #'
 trans_linear <- function(pord, S, alpha){
   
-  out <- lapply(as.list(match.call())[-1], eval)
+  out <- lapply(as.list(match.call())[-1], eval, envir = parent.frame())
   out$type <- "si"
   
   return(out)
@@ -48,7 +48,7 @@ trans_mgks <- function(X0, y0, alpha){
  
   if( missing(X0) ){ stop("Argument \"X0\" is missing but a value is required") }
    
-  out <- lapply(as.list(match.call())[-1], eval)
+  out <- lapply(as.list(match.call())[-1], eval, envir = parent.frame())
   out$type <- "mgks"
  
   return(out)
@@ -63,7 +63,7 @@ trans_mgks <- function(X0, y0, alpha){
 #'
 trans_nexpsm <- function(S, alpha){
   
-  out <- lapply(as.list(match.call())[-1], eval)
+  out <- lapply(as.list(match.call())[-1], eval, envir = parent.frame())
   out$type <- "nexpsm"
   
   return(out)

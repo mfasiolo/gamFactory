@@ -2,7 +2,7 @@
 % Please edit documentation in R/gam_nl.R
 \name{gam_nl}
 \alias{gam_nl}
-\title{Fit GAM model with non-linear effects}
+\title{Fit GAM models with non-linear effects}
 \usage{
 gam_nl(formula, family = gaulss(), data = list(), fit = TRUE, ...)
 }
@@ -12,5 +12,5 @@ gam_nl(formula, family = gaulss(), data = list(), fit = TRUE, ...)
 \item{...}{further arguments to be passed to \link[mgcv:gam]{mgcv::gam}.}
 }
 \description{
-Fit GAM model with non-linear effects
+Fit GAM models with non-linear effects
 }

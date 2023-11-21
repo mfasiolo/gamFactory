@@ -4,6 +4,7 @@
     form <- lapply(form, .compile_formula)
   } else{
     # Decompose formula into terms
+    env <- environment(form)
     dec <- terms(form, keep.order = TRUE)
     ter <- attr(dec, "term.labels")
     
@@ -22,7 +23,7 @@
     if(length(ine)){
       for(ii in ine){
         tmp <- ter[ii]
-        ter[ii] <- eval(parse(text=tmp))$form_term
+        ter[ii] <- eval(parse(text=tmp), envir = env)$form_term
       }
       # Rebuild model formula with modified terms
       form <- as.formula(paste0(all.vars(form)[1], "~ ", paste0(ter, collapse = " + ")))

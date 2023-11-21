@@ -13,9 +13,9 @@ gam_nl <- function(formula, family = gaulss(), data = list(), fit = TRUE, ...){
   
   out <- ddd$G
   if( is.null(out) ){ # Do not build if G already provided
-    formula <- .compile_formula(formula)
+    form_comp <- .compile_formula(formula)
     
-    out <- gam(formula = formula, family = family, data = data, fit = FALSE, ...)
+    out <- gam(formula = form_comp, family = family, data = data, fit = FALSE, ...)
     
     info <- prep_info(o = out)
     
@@ -28,6 +28,8 @@ gam_nl <- function(formula, family = gaulss(), data = list(), fit = TRUE, ...){
     out <- gam(G = out, ...)
 
     out <- postproc_gam_nl(o = out, info = info)
+    
+    out$formula <- formula # because form_comp evaluates all the arguments
   }
   
   return( out )
