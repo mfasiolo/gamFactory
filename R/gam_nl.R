@@ -29,8 +29,12 @@ gam_nl <- function(formula, family = gaulss(), data = list(), fit = TRUE, ...){
 
     out <- postproc_gam_nl(o = out, info = info)
     
-    out$formula <- formula # because form_comp evaluates all the arguments
+    for(ii in 1:length(formula)){ # because form_comp evaluates all the arguments
+      out$formula[[ii]] <- formula[[ii]]
+    }
   }
+  
+  class(out) <- c("gamnl", class(out))
   
   return( out )
   
