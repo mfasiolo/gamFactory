@@ -21,7 +21,7 @@
   # predict.gam will multiply the latter by alpha, which will have no effect (this is a trick).
   Xtot <- cbind(matrix(0, nrow(X0), length(alpha)), X0) 
   
-  attr(Xtot, "inner_linpred") <- xa
+  attr(Xtot, "inner_linpred_unscaled") <- xa
 
   return(Xtot)
 }

@@ -20,7 +20,7 @@ postproc_gam_nl <- function(o, info){
       
       # Inner smooth must be centered using original data
       if(is.null(sii$xt$si$xm)){
-        sii$xt$si$xm <- mean(attr(Predict.matrix.nested(sii, data = o$model), "inner_linpred"))
+        sii$xt$si$xm <- mean(attr(Predict.matrix.nested(sii, data = o$model), "inner_linpred_unscaled"))
       }
       
       o$smooth[[ism]] <- sii

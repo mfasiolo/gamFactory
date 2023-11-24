@@ -55,7 +55,7 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
     g <- mgks(y = si$x, X = Xi, X0 = X0, beta = si$alpha[-1])$d0
   }
   
-  # Center and scale the initialiized inner linear preditor
+  # Center and scale the initialized inner linear preditor
   data[[object$term]] <- exp(si$alpha[1]) * (g - mean(g))
   
   out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)

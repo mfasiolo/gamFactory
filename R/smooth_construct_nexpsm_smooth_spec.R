@@ -39,7 +39,7 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
     g <- expsmooth(y = x, Xi = si$X, beta = alpha[-1])$d0
   }
   
-  # Center and scale the initialized inner linear preditor
+  # Center and scale the initialized inner linear predictor
   data[[object$term]] <- exp(alpha[1]) * (g - mean(g))
   
   si$x <- x

@@ -35,16 +35,18 @@
   alpha <- si$alpha
   a0 <- alpha[1]
   a1 <- alpha[-1]
-  xsm <- exp(a0) * mgks(y = y0, X = Xi, X0 = X0, beta = a1)$d0 
+  
+  xsm_unscaled <- mgks(y = y0, X = Xi, X0 = X0, beta = a1)$d0 - si$xm
+  xsm <- exp(a0) * xsm_unscaled 
   
   # Compute outer model matrix
-  X1 <- object$xt$basis$evalX(x = xsm - si$xm, deriv = 0)$X0
+  X1 <- object$xt$basis$evalX(x = xsm, deriv = 0)$X0
   
   # Total model matrix is X0 preceded my matrix of zeros. 
   # predict.gam will multiply the latter by alpha, which will have no effect (this is a trick).
   Xtot <- cbind(matrix(0, nrow(X1), length(alpha)), X1) 
   
-  attr(Xtot, "inner_linpred") <- xsm
+  attr(Xtot, "inner_linpred_unscaled") <- xsm_unscaled
   
   return(Xtot)
   
