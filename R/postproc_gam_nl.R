@@ -8,20 +8,28 @@ postproc_gam_nl <- function(o, info){
   
   sms <- o$smooth
   ne <- length( info$type )
+  
   for(ii in 1:ne){
     
     # Coefficients of nested smooth must be saved in smooth object
-    if( ("si.smooth" %in%  info$type[ii]) || 
-        ("nexpsm.smooth" %in%  info$type[ii]) ||
-        ("mgks.smooth" %in%  info$type[ii]) ){
+    if( "nested" %in%  info$type[[ii]] ){
+      
       ism <- info$extra[[ii]]$ism
-      sms[[ism]]$xt$si$alpha <- coef(o)[ info$iec[[ii]][1:length(sms[[ism]]$xt$si$alpha)] ]
-    }
+      sii <- o$smooth[[ism]]
+      sii$xt$si$alpha <- coef(o)[ info$iec[[ii]][1:length(sii$xt$si$alpha)] ]
+      
+      # Inner smooth must be centered using original data
+      if(is.null(sii$xt$si$xm)){
+        sii$xt$si$xm <- mean(attr(Predict.matrix.nested(sii, data = o$model), "inner_linpred"))
+      }
+      
+      o$smooth[[ism]] <- sii
+      
+   }
     
   }
   
-  o$smooth <- sms
-  
+  o$linear.predictors <- predict(o, type = "link")
   o$fitted.values <- predict(o, type = "response")
   
   return( o )

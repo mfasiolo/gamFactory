@@ -1,14 +1,15 @@
 #'
 #' Predict using MGKS smooth effects
 #' 
-#' @name Predict.matrix.mgks.smooth
-#' @rdname Predict.matrix.mgks.smooth
-#' @export
-#'
-Predict.matrix.mgks.smooth <- function(object, data){
+#' @noRd
+.predict.matrix.mgks <- function(object, data){
   
   # Need to compute single index vector by projecting inner model matrix on alpha
   si <- object$xt$si
+  
+  if( is.null(si$xm) ){
+    si$xm <- 0
+  }
   
   X0 <- si$X0
   y0 <- si$y0
@@ -37,11 +38,13 @@ Predict.matrix.mgks.smooth <- function(object, data){
   xsm <- exp(a0) * mgks(y = y0, X = Xi, X0 = X0, beta = a1)$d0 
   
   # Compute outer model matrix
-  X1 <- object$xt$basis$evalX(x = xsm, deriv = 0)$X0
+  X1 <- object$xt$basis$evalX(x = xsm - si$xm, deriv = 0)$X0
   
   # Total model matrix is X0 preceded my matrix of zeros. 
   # predict.gam will multiply the latter by alpha, which will have no effect (this is a trick).
   Xtot <- cbind(matrix(0, nrow(X1), length(alpha)), X1) 
+  
+  attr(Xtot, "inner_linpred") <- xsm
   
   return(Xtot)
   

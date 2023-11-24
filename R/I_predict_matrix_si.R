@@ -1,11 +1,8 @@
 #'
 #' Predict using single index effects
 #' 
-#' @name Predict.matrix.si.smooth
-#' @rdname Predict.matrix.si.smooth
-#' @export
-#'
-Predict.matrix.si.smooth <- function(object, data){
+#' @noRd
+.predict.matrix.si <- function(object, data){
   
   # Need to compute single index vector by projecting inner model matrix on alpha
   si <- object$xt$si
@@ -23,6 +20,8 @@ Predict.matrix.si.smooth <- function(object, data){
   # Total model matrix is X0 preceded my matrix of zeros. 
   # predict.gam will multiply the latter by alpha, which will have no effect (this is a trick).
   Xtot <- cbind(matrix(0, nrow(X0), length(alpha)), X0) 
+  
+  attr(Xtot, "inner_linpred") <- xa
 
   return(Xtot)
 }
