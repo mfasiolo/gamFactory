@@ -55,6 +55,6 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   out$null.space.dim <- c(out$null.space.dim, out$bs.dim - si$rank)
   out$rank <- c(out$rank, si$rank)
   
-  class(out) <- "si.smooth"
+  class(out) <- c("si", "nested")
   return( out )
 } 

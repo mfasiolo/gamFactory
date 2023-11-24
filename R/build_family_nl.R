@@ -30,7 +30,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5){
     unscaled <- attr(E,"use.unscaled")
     lpi <- attr(x, "lpi")
     
-    si <- which( info$type != "stand" )
+    si <- which( sapply(info$type, paste0, collapse = '') != "stand" )
     nsi <- length( si )
 
     start <- numeric( ncol(x) )
@@ -101,8 +101,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5){
       derLev <- switch(as.character(deriv), "0" = 0, "1" = 2, "2" = 3, "3" = 3, "4" = 4)
       outDer <- deriv > 1
       
-      effType <- info$type
-      ne <- length( effType )
+      ne <- length( info$type )
       
       # Build list of effect and penalties
       eff <- .build_effects(X = X, info = info, outer = outDer)

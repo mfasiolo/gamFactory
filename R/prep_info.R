@@ -19,7 +19,7 @@ prep_info <- function(o){
   
   out <- list("iec" = lpi, 
               "iel" = c(1:nlp, rep(NA, nsp)), 
-              "type" = c(rep("stand", nlp), rep(NA, nsp)), 
+              "type" = as.list(c(rep("stand", nlp), rep(NA, nsp))), 
               "extra" = rep( list(list()), nlp + nsp ))
   
   if( nsp ){
@@ -29,7 +29,7 @@ prep_info <- function(o){
       out$iec[[kk]] <- out$iec[[kk]][ !(out$iec[[kk]] %in% spCo[[ii]]) ]  
       out$iec[[nlp+ii]] <- spCo[[ii]]
       out$iel[nlp+ii] <- kk
-      out$type[nlp+ii] <- cls[[ sp[ii] ]][1]
+      out$type[[nlp+ii]] <- cls[[ sp[ii] ]][1:2]
       out$extra[[nlp+ii]] <- sms[[ sp[ii] ]]$xt
       out$extra[[nlp+ii]]$ism <- sp[[ ii ]] 
     }

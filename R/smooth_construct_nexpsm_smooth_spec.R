@@ -57,6 +57,6 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
     out$rank <- c(out$rank, si$rank)
   }
   
-  class(out) <- "nexpsm.smooth"
+  class(out) <- c("nexpsm", "nested")
   return( out )
 } 

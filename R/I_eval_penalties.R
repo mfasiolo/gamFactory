@@ -2,8 +2,8 @@
 # Evaluate additional penalties and their derivatives
 #
 .eval_penalties <- function(eff, info, d1b, deriv, outer){
-  effType <- info$type
-  nstand <- which(info$type != "stand")
+  effType <- sapply(info$type, paste0, collapse = '')
+  nstand <- which(effType != "stand")
   pen <- vector(mode = "list", length = length(nstand))
   kk <- 1
   for(ii in nstand){

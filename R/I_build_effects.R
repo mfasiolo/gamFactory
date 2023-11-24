@@ -3,7 +3,7 @@
 # Returns list of effects 
 #
 .build_effects <- function(X, info, outer){
-  effType <- info$type
+  effType <- sapply(info$type, paste0, collapse = '.')
   ne <- length( effType )
   eff <- list( )
   for(ii in 1:ne){
@@ -13,13 +13,13 @@
     } else {
       extra <- info$extra[[ii]]
       Xi <- extra$si$X
-      if( effType[ii] == "si.smooth" ){
+      if( effType[ii] == "si.nested" ){
         eff[[ii]] <- eff_si(Xi = Xi, basis = extra$basis) 
       } else {
-        if( effType[ii] == "nexpsm.smooth" ){
+        if( effType[ii] == "nexpsm.nested" ){
           eff[[ii]] <- eff_nexpsm(y = extra$si$x, Xi = Xi, basis = extra$basis) 
         } else {
-          if( effType[ii] == "mgks.smooth" ){
+          if( effType[ii] == "mgks.nested" ){
             eff[[ii]] <- eff_mgks(y = extra$si$x, X = Xi, Xi = extra$si$X0, 
                                   basis = extra$basis)
           } else {

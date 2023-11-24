@@ -60,6 +60,6 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   
   out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
 
-  class(out) <- "mgks.smooth"
+  class(out) <- c("mgks", "nested")
   return( out )
 } 
