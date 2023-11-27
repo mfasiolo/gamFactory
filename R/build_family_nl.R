@@ -5,7 +5,7 @@
 #' @rdname build_family_nl
 #' @export build_family_nl
 #' 
-build_family_nl <- function(bundle, info, lamVar = 1e5){
+build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
   
   available_deriv <- min(bundle$available_deriv, 3)
   cdf <- bundle$cdf
@@ -112,6 +112,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5){
       
       # Evaluate effect-specifit (not ridge) penalties and their derivatives
       pen <- .eval_penalties(eff = olp$eff, info = info, d1b = d1b, deriv = derLev, outer = outDer)
+      pen_ridge <- .eval_ridge_penalties(eff = olp$eff, info = info, deriv = derLev)
       
       # Evaluate eta and mu
       etas <- olp$f
@@ -126,7 +127,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5){
       npen <- length(pen) 
       if( npen ){
         for(ii in 1:npen){
-          ret$l <- ret$l - lamVar * pen[[ii]]$d0
+          ret$l <- ret$l - lamVar * pen[[ii]]$d0 - lamRidge * pen_ridge[[ii]]$d0
         }
       }
       
@@ -144,8 +145,8 @@ build_family_nl <- function(bundle, info, lamVar = 1e5){
         if( npen ){
           for(ii in 1:npen){
             zz <- pen[[ii]]$iec
-            ret$lb[zz] <- ret$lb[zz] - lamVar * pen[[ii]]$d1
-            ret$lbb[zz, zz] <- ret$lbb[zz, zz] - lamVar * pen[[ii]]$d2
+            ret$lb[zz] <- ret$lb[zz] - lamVar * pen[[ii]]$d1 - lamRidge * pen_ridge[[ii]]$d1
+            ret$lbb[zz, zz] <- ret$lbb[zz, zz] - lamVar * pen[[ii]]$d2 - lamRidge * pen_ridge[[ii]]$d2
           }
         }
         
