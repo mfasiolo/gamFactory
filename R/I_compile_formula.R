@@ -26,7 +26,8 @@
         ter[ii] <- eval(parse(text=tmp), envir = env)$form_term
       }
       # Rebuild model formula with modified terms
-      form <- as.formula(paste0(all.vars(form)[1], "~ ", paste0(ter, collapse = " + ")))
+      lhs <- ifelse(length(form) == 2, "", all.vars(form)[1])
+      form <- as.formula(paste0(lhs, "~ ", paste0(ter, collapse = " + ")))
     }
   }
   return(form)
