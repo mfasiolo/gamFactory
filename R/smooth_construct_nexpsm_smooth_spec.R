@@ -36,7 +36,9 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
     g <- expsmooth(y = x, Xi = si$X, beta = rep(0, di-1))$d0
     alpha <- si$alpha <- c(log(1/sd(g)), rep(0, di-1))
   } else {
-    g <- expsmooth(y = x, Xi = si$X, beta = alpha[-1])$d0
+    alpha <- solve(si$B) %*% alpha
+    g <- expsmooth(y = x, Xi = si$X, beta = alpha)$d0
+    alpha <- si$alpha <- c(log(1/sd(g)), alpha)
   }
   
   # Center and scale the initialized inner linear predictor
