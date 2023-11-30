@@ -1,7 +1,7 @@
 Package: gamFactory
 Title: Tools for building new GAM models in mgcv
 Version: 0.0.1
-Authors@R: c(person("Matteo", "Fasiolo", email = "matteo.fasiolo@gmail.com", role = c("aut", "cre")), person("Christian", "Capezza", role = c("aut")), person("Simon", "N. Wood", role = c("ctb")))
+Authors@R: c(person("Matteo", "Fasiolo", email = "matteo.fasiolo@gmail.com", role = c("aut", "cre")), person("Claudia", "Collarin", role = c("aut")), person("Christian", "Capezza", role = c("aut")), person("Simon", "N. Wood", role = c("ctb")))
 Description: Tools for building new families and smooth effects in mgcv.
 License: GPL-3
 Encoding: UTF-8
