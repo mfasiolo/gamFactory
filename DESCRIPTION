@@ -18,6 +18,7 @@ Suggests:
     knitr,
     rmarkdown,
     qgam, 
-    mgcViz
+    mgcViz,
+LinkingTo: Rcpp, RcppArmadillo
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr

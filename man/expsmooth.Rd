@@ -38,6 +38,6 @@ d3 = function(param){
   as.list(tmp)
 })
 
-checkDeriv(obj = obj, param = beta, ord = 1:3)
+check_deriv(obj = obj, param = beta, ord = 1:3)
 
 }
