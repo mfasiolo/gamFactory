@@ -16,7 +16,7 @@ colvec invlogit(colvec x) {
 
 // [[Rcpp::export(.expsmooth_cpp)]]
 List expsmooth(NumericVector y, NumericMatrix Xi, NumericVector beta, 
-                   NumericVector x0, int deriv) {
+               NumericVector x0, int deriv) {
   
   int n = y.length();
   int p = beta.length();

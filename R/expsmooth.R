@@ -4,6 +4,7 @@
 #' @name expsmooth
 #' @rdname expsmooth
 #' @export expsmooth
+#' @importFrom Rcpp evalCpp
 #' @examples
 #' n <- 1000
 #' xseq <- seq(-4, 4, length.out = n)
