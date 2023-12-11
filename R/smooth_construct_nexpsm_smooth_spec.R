@@ -11,12 +11,27 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   si <- object$xt$si
   if( is.null(si) ){ si <- object$xt$si <- list() }
   
-  # Covariate to be exponentially smoothed is first column of Xi
-  # Remaining columns are inner model matrix and penalty (used to model exponential smoothing coefficient) 
+  # Extract variables from data frame:
+  # - "y" is variable to be exponentially smoothed (stored in vector or matrix)
+  # - "x" is model matrix used to model the exp smoothing rate
+  # - "times" is the vector of times that at which the response variable of the 
+  #           GAM is observed (hence not the same at the GAM above). 
   Xi <- data[[object$term]]
-  x <- Xi[ , 1]
-  Xi <- Xi[ , -1, drop = FALSE]
-  n <- length( x )
+  n <- nrow( Xi )
+  nms <- colnames(Xi)
+  x <- as.vector( Xi[ , which(nms == "y")] )
+  times <- NULL
+  tmp <- which(nms == "times")
+  if( length(tmp) ){
+   times <- Xi[ , tmp]
+  }
+  Xi <- Xi[ , which(nms == "x"), drop = FALSE]
+  nrep <- ceiling( length(x)/n )
+  Xi <- lapply(0:(nrep-1), function(ii){
+    dXi <- ncol(Xi) / nrep
+    Xi[ , (ii*dXi + 1):(dXi*(ii+1))]
+  })
+  Xi <- do.call("rbind", Xi)
   Si <- si$S
   di <- ncol(Xi) + 1 # + 1 because we have extra scaling parameter multiplying output of the exp smooth.
                      # Note that this extra parameter should NOT be penalised by Si
@@ -28,16 +43,16 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
     si$B <- diag(nrow = ncol(Xi))
     si$rank <- 0 
   }
-
+  
   # Need to initialize inner coefficients?
   alpha <- si$alpha
   if( is.null(alpha) ){ 
     # alpha[1] s.t. sd(inner_lin_pred) = 1 (target variance)
-    g <- expsmooth(y = x, Xi = si$X, beta = rep(0, di-1))$d0
+    g <- expsmooth(y = x, Xi = si$X, beta = rep(0, di-1), times = times)$d0
     alpha <- si$alpha <- c(log(1/sd(g)), rep(0, di-1))
   } else {
     alpha <- solve(si$B) %*% alpha
-    g <- expsmooth(y = x, Xi = si$X, beta = alpha)$d0
+    g <- expsmooth(y = x, Xi = si$X, beta = alpha, times = times)$d0
     alpha <- si$alpha <- c(log(1/sd(g)), alpha)
   }
   
@@ -45,6 +60,7 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   data[[object$term]] <- exp(alpha[1]) * (g - mean(g))
   
   si$x <- x
+  si$times <- times
   
   out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
   

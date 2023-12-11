@@ -16,10 +16,32 @@
     si$xm <- 0
   }
   
-  # Need to rescale using B
-  Xi <- data[[object$term]][ , -1, drop = FALSE]  %*% si$B
+  # Extract variables from data frame:
+  # - "y" is variable to be exponentially smoothed (stored in vector or matrix)
+  # - "x" is model matrix used to model the exp smoothing rate
+  # - "times" is the vector of times that at which the response variable of the 
+  #           GAM is observed (hence not the same at the GAM above). 
+  Xi <- data[[object$term]]
+  n <- nrow( Xi )
+  nms <- colnames(Xi)
+  x <- as.vector( Xi[ , which(nms == "y")] )
+  times <- NULL
+  tmp <- which(nms == "times")
+  if( length(tmp) ){
+    times <- Xi[ , tmp]
+  }
+  Xi <- Xi[ , which(nms == "x"), drop = FALSE]
+  nrep <- ceiling( length(x)/n )
+  Xi <- lapply(0:(nrep-1), function(ii){
+    dXi <- ncol(Xi) / nrep
+    Xi[ , (ii*dXi + 1):(dXi*(ii+1))]
+  })
+  Xi <- do.call("rbind", Xi)
   
-  xsm_unscaled <- expsmooth(y = data[[object$term]][ , 1], Xi = Xi, beta = a1)$d0 - si$xm
+  # Need to rescale using B
+  Xi <- Xi  %*% si$B
+  
+  xsm_unscaled <- expsmooth(y = x, Xi = Xi, beta = a1, times = times)$d0 - si$xm
   xsm <-  exp(a0) * xsm_unscaled
   
   # Compute outer model matrix

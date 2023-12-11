@@ -4,7 +4,7 @@
 \alias{eff_nexpsm}
 \title{Build nested adaptive exponential smooth effect}
 \usage{
-eff_nexpsm(y, Xi, basis, x0 = NULL)
+eff_nexpsm(y, Xi, basis, x0 = NULL, times = NULL)
 }
 \description{
 Build nested adaptive exponential smooth effect

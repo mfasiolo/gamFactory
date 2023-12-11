@@ -17,7 +17,7 @@
         eff[[ii]] <- eff_si(Xi = Xi, basis = extra$basis) 
       } else {
         if( effType[ii] == "nexpsm.nested" ){
-          eff[[ii]] <- eff_nexpsm(y = extra$si$x, Xi = Xi, basis = extra$basis) 
+          eff[[ii]] <- eff_nexpsm(y = extra$si$x, Xi = Xi, basis = extra$basis, times = extra$si$times) 
         } else {
           if( effType[ii] == "mgks.nested" ){
             eff[[ii]] <- eff_mgks(y = extra$si$x, X = Xi, Xi = extra$si$X0, 

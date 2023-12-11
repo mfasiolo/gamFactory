@@ -4,7 +4,7 @@
 \alias{expsmooth}
 \title{Exponential smooth and its derivatives}
 \usage{
-expsmooth(y, Xi, beta, x0 = NULL, deriv = 0)
+expsmooth(y, Xi, beta, x0 = NULL, times = NULL, deriv = 0)
 }
 \description{
 Exponential smooth and its derivatives
@@ -22,22 +22,34 @@ xsm <- expsmooth(y = y, Xi = Xi, beta = beta, deriv = 3)
 
 lines(xseq, xsm$d0, col = 2, lwd = 2)
 
-obj <- list(d0 = function(param){ 
+obj <- list(d0 = function(param){
   sum(expsmooth(y = y, Xi = Xi, beta = param, deriv = 0)$d0)
-}, 
+},
 d1 = function(param){
   tmp <- colSums(expsmooth(y = y, Xi = Xi, beta = param, deriv = 1)$d1)
   as.list(tmp)
-}, 
+},
 d2 = function(param){
   tmp <- colSums(expsmooth(y = y, Xi = Xi, beta = param, deriv = 2)$d2)
   as.list(tmp)
-}, 
+},
 d3 = function(param){
   tmp <- colSums(expsmooth(y = y, Xi = Xi, beta = param, deriv = 3)$d3)
   as.list(tmp)
 })
 
 check_deriv(obj = obj, param = beta, ord = 1:3)
+
+# We can also get the exponential smooth at selected time points only
+time_seq <- sort(sample(1:n, 25))
+
+xsm_2 <- expsmooth(y = y, Xi = Xi, beta = beta, times = time_seq, deriv = 3)
+
+points(xseq[time_seq], xsm_2$d0)
+
+stopifnot(identical(xsm$d0[time_seq], xsm_2$d0))
+stopifnot(identical(xsm$d1[time_seq, ], xsm_2$d1))
+stopifnot(identical(xsm$d2[time_seq, ], xsm_2$d2))
+stopifnot(identical(xsm$d3[time_seq, ], xsm_2$d3))
 
 }
