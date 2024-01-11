@@ -34,7 +34,7 @@
   nrep <- ceiling( length(x)/n )
   Xi <- lapply(0:(nrep-1), function(ii){
     dXi <- ncol(Xi) / nrep
-    Xi[ , (ii*dXi + 1):(dXi*(ii+1))]
+    as.matrix(Xi[ , (ii*dXi + 1):(dXi*(ii+1))])
   })
   Xi <- do.call("rbind", Xi)
   
