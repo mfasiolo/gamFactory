@@ -85,7 +85,7 @@ llk_gaussian <- function(y, param, deriv = 0, ...) {
           d1111 <- d1112 <- d1222 <- zeros
           d1122 <- rep(-2, n)
           d2222 <- -6 / tau2^2
-          out[["d3"]] <- list(d1111, d1112, d1122, d1222, d2222)
+          out[["d4"]] <- list(d1111, d1112, d1122, d1222, d2222)
         }
       }
     }

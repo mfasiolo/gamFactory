@@ -36,7 +36,7 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   si <- append(si, gamFactory:::.diagPen(X = Xi, S = Si, r = rankSi))
   
   # Alpha is vector of inner coefficients, si$alpha is a vector of initial values for it.
-  # If no initialisation if provided, alpha is a constant vector chosen so that var(X %*% alpha) = 1 
+  # If no initialisation is provided, alpha is a constant vector chosen so that var(X %*% alpha) = 1 
   alpha <- si$alpha
   if( is.null(alpha) ){ alpha <- si$alpha <- rep(1, di) / sd(rowSums(si$X)) }
   
@@ -52,7 +52,7 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   si <- out$xt$si
   out$S[[2]] <- rbind(cbind(si$S, matrix(0, di, dsmo)),
                       cbind(matrix(0, dsmo, di), matrix(0, dsmo, dsmo)))
-  out$null.space.dim <- c(out$null.space.dim, out$bs.dim - si$rank)
+  out$null.space.dim <- out$null.space.dim + (out$bs.dim - si$rank)
   out$rank <- c(out$rank, si$rank)
   
   class(out) <- c("si", "nested")

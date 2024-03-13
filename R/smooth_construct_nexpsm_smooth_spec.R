@@ -71,7 +71,7 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
     si <- out$xt$si
     out$S[[2]] <- rbind(cbind(rbind(0, cbind(0, si$S)), matrix(0, di, dsmo)),
                         cbind(matrix(0, dsmo, di), matrix(0, dsmo, dsmo)))
-    out$null.space.dim <- c(out$null.space.dim, out$bs.dim - si$rank)
+    out$null.space.dim <- out$null.space.dim + (out$bs.dim - si$rank)
     out$rank <- c(out$rank, si$rank)
   }
   

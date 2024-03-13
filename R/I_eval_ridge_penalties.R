@@ -30,7 +30,7 @@ pen_ridge_var <- function(o, extra, ipc, deriv){
   
   a <- o$param[ipc]
   a_init <- extra$si$alpha[ipc]
-  
+
   l0 <- .5 * sum((a-a_init)^2)
   
   l1 <- l2 <- NULL
@@ -40,7 +40,7 @@ pen_ridge_var <- function(o, extra, ipc, deriv){
     
     if(deriv > 1){
       l2 <- matrix(0, o$na, o$na)
-      l2[ipc,ipc] <- 1
+      diag(l2)[ipc] <- 1
     }
   }
   return(list("d0" = l0, "d1" = l1, "d2" = l2))
