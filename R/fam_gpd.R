@@ -1,0 +1,44 @@
+#'
+#' The GPD family
+#' 
+#' @name fam_gpd
+#' @rdname fam_gpd
+#' @export
+#' @examples 
+#' library(gamFactory)
+#' 
+#' n <- 2000
+#' myDat <- data.frame(x = runif(n, -1, 1))
+#' myDat$y <-  rexp(n, 1 / (0.3 + abs(myDat$x)^2))
+#' plot(myDat)
+#' 
+#' # Create GPD family and fit it
+#' fit <- gam_nl(list(y ~ s(x), ~ s(x)), data = myDat, family = fam_gpd())
+#' plot(fit, pages = 1, scale = FALSE)
+#' 
+#' # Compare true (black) and estimated (red) quantiles
+#' qu <- 0.95
+#' xseq <- seq(-1, 1, length.out = 1000)
+#' plot(myDat, col = "grey")
+#' lines(xseq, qexp(qu, 1 / (0.3 + abs(xseq)^2)), col = 2)
+#' lines(xseq, fit$family$qf(qu,
+#'                           mu = predict(fit, newdata = data.frame(x = xseq),
+#'                                        type = "response")),
+#'       col = 3)
+#' 
+#' fit_2 <- gam(list(y ~ s(x), ~ s(x)), data = myDat, family = fam_gpd())
+#' 
+#' err <- max(abs(fit$fitted.values - fit_2$fitted.values))
+#' if(err > 1e-3){
+#'   stop("Discrepancy between gam and gam_nl")
+#' }
+#' 
+fam_gpd <- function(){
+  
+  bundle <- bundle_gpd()
+  
+  fam <- build_family(bundle)()
+  
+  return(fam)
+  
+}

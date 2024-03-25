@@ -7,7 +7,7 @@
 #' @rdname gam_nl
 #' @export
 #'
-gam_nl <- function(formula, family = gaulss(), data = list(), fit = TRUE, ...){
+gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE, ...){
   
   ddd <- match.call(expand.dots = FALSE)$`...`
   
@@ -19,7 +19,7 @@ gam_nl <- function(formula, family = gaulss(), data = list(), fit = TRUE, ...){
     
     info <- prep_info(o = out)
     
-    fam <- build_family_nl(bundle = bundle_gaussian(), info = info)
+    fam <- build_family_nl(bundle = do.call(family$bundle_nam, list()), info = info)
     
     out$family <- fam()
   }

@@ -12,6 +12,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
   rd <- bundle$rd
   qf <- bundle$qf
   residuals <- bundle$residuals
+  bundle_nam <- bundle$bundle_nam
   nam <- paste0(bundle$nam, "_nl")
   np <- bundle$np
   postproc <- bundle$postproc
@@ -110,7 +111,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
       olp <- linpreds(eff = eff, iel = info$iel, iec = info$iec)
       olp <- olp$eval(param = coef, deriv = derLev)
       
-      # Evaluate effect-specifit (not ridge) penalties and their derivatives
+      # Evaluate effect-specific (not smoothing) penalties and their derivatives
       pen <- .eval_penalties(eff = olp$eff, info = info, d1b = d1b, deriv = derLev, outer = outDer)
       pen_ridge <- .eval_ridge_penalties(eff = olp$eff, info = info, deriv = derLev)
       
@@ -191,6 +192,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
     # } ## predict
     
     structure(list(family = nam, 
+                   bundle_nam = bundle_nam,
                    ll = ll, 
                    link = paste(link), 
                    nlp = np,

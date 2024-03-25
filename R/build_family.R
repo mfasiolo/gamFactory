@@ -6,6 +6,13 @@
 #' @name build_family
 #' @rdname build_family
 #' @export build_family
+#' 
+#' fam <- build_family(bundle_gaussian())
+#' library(MASS)
+#' b <- gam(list(accel~s(times,k=20,bs="ad"),~s(times)),
+#'          data=mcycle,family=fam)
+#' summary(b) 
+#' plot(b,pages=1,scale=0)
 #'
 build_family <- function(bundle){
   
@@ -14,37 +21,42 @@ build_family <- function(bundle){
   rd <- bundle$rd
   qf <- bundle$qf
   residuals <- bundle$residuals
-  llk <- bundle$llk  
-  nam <- bundle$nam
+  bundle_nam <- bundle$bundle_nam
+  nam <- paste0(bundle$nam, "_lss")
   np <- bundle$np
   postproc <- bundle$postproc
-  okLinks <- bundle$links
+  oklinks <- bundle$links
   
-  checkExtra <- bundle$checkExtra
-  if( is.null(checkExtra) ){ checkExtra <- function(.ex) NULL }
+  llkFam <- bundle$llk
   
-  initFun <- bundle$initialize
+  check_extra <- bundle$check_extra
+  if( is.null(check_extra) ){ check_extra <- function(.ex) NULL }
+  
+  initialize_internal <- bundle$initialize
+  
   initialize <- expression({
-    if ( is.null(start) ) { start <- family$initFun(y = y, nobs = nobs, E = E, x = x, family = family) }
+    if ( is.null(start) ) { 
+      start <- family$initialize_internal(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset) 
+    }
   }) 
   
-  defLinks <- lapply(okLinks, "[[", 1)
-
+  defLinks <- lapply(oklinks, "[[", 1) # Default link function(s)
+  
   outFam <- function(link = defLinks, extra = bundle$extra){
     
     # Saving extra parameters in .GlobalEnv environment
     assign(".extra", extra, envir = environment())
     
-    getExtra <- function( ) get(".extra")
-    putExtra <- function(extra) assign(".extra", extra, envir = environment(sys.function()))
+    get_extra <- function( ) get(".extra")
+    put_extra <- function(extra) assign(".extra", extra, envir = environment(sys.function()))
     
-    if( !is.null(checkExtra) ){ checkExtra( extra ) }
+    if( !is.null(check_extra) ){ check_extra( extra ) }
     
     # Preparing link function
-    stats <- getStats(link = link, 
-                      okLinks = okLinks, 
-                      np = np, 
-                      nam = nam)
+    stats <- prepare_link(link = link, 
+                          oklinks = oklinks, 
+                          np = np, 
+                          nam = nam)
     
     ll <- function(y, X, coef, wt, family, offset=NULL, deriv=0, d1b=0, d2b=0, Hp=NULL, rank=0, fh=NULL, D=NULL) {
       ## function defining a gamlss model log lik. 
@@ -65,74 +77,43 @@ build_family <- function(bundle){
           offset[[jj]] <- 0
         }
       }
-
+      
+      derLev <- switch(as.character(deriv), "0" = 0, "1" = 2, "2" = 3, "3" = 3, "4" = 4)
+      outDer <- deriv > 1
+      
+      
       etas <- lapply(1:np, function(.kk) drop(X[ , lpi[[.kk]], drop=FALSE] %*% coef[ lpi[[.kk]] ]) + offset[[.kk]])
       mus <- lapply(1:np, function(.kk) family$linfo[[.kk]]$linkinv( etas[[.kk]] ))
       
-      llkDer <- llk(y = y, 
-                    param = do.call("cbind", mus), 
-                    deriv = switch(as.character(deriv), "0" = 0, "1" = 2, "2" = 3, "3" = 3, "4" = 4), 
-                    extra = extra)  
+      # Derivatives of llk w.r.t. mu
+      DllkDmu <- llkFam(y = y, param = mus, deriv = derLev)
       
-      l0  <- drop(crossprod(wt, llkDer$d0(SUM = FALSE)))
-      
-      if (deriv > 0) {
+      ret <- list()
+      if( deriv ){
         
-        l1 <- wt  * do.call("cbind", llkDer$d1(SUM = FALSE))
-        l2 <- wt  * do.call("cbind", llkDer$d2(SUM = FALSE))
-
-        ig1 <- do.call("cbind", lapply(1:np, function(.kk) family$linfo[[.kk]]$mu.eta( etas[[.kk]])))
-        g2  <- do.call("cbind", lapply(1:np, function(.kk) family$linfo[[.kk]]$d2link( mus[[.kk]])))
+        # Derivatives of llk w.r.t. etas (linear predictors) 
+        DllkDeta <- DllkDMu_to_DllkDeta(DllkDMu = DllkDmu, etas = etas, mus = mus, family = family, wt = wt, deriv = derLev)
         
+        # We want also derivatives w.r.t. beta and rho (smoothing parameters)
+        ret <- gamlss.gH(X,lpi,DllkDeta$l1,DllkDeta$l2,family$tri$i2,l3=DllkDeta$l3,i3=family$tri$i3,l4=DllkDeta$l4,i4=family$tri$i4,
+                           d1b=d1b,d2b=d2b,deriv=deriv-1,fh=fh,D=D) 
+  
       }
-      
-      l3 <- l4 <- g3 <- g4 <- 0 ## defaults
-      
-      if (deriv>1) {
-        ## the third derivatives
-        ## order mmm mmr mmx mrr mrx mxx rrr rrx rxx xxx
-        l3 <- wt  * do.call("cbind", llkDer$d3(SUM = FALSE)) 
-
-        g3  <- do.call("cbind", lapply(1:np, function(.kk) family$linfo[[.kk]]$d3link( mus[[.kk]])))
-
-      }
-      
-      if (deriv>3) {
-        ## the fourth derivatives
-        ## mmmm mmmr mmmx mmrr mmrx mmxx mrrr mrrx mrxx mxxx
-        ## rrrr rrrx rrxx rxxx xxxx
-        l4 <- wt  * do.call("cbind", llkDer$d4()) 
-        
-        g4  <- do.call("cbind", lapply(1:np, function(.kk) family$linfo[[.kk]]$d4link( mus[[.kk]])))
-        
-      }
-      if (deriv) {
-        i2 <- family$tri$i2 
-        i3 <- family$tri$i3
-        i4 <- family$tri$i4
-        
-        ## transform derivates w.r.t. mu to derivatives w.r.t. eta...
-        de <- gamlss.etamu(l1,l2,l3,l4,ig1,g2,g3,g4,i2,i3,i4,deriv-1)
-        
-        ## get the gradient and Hessian...
-        ret <- gamlss.gH(X,lpi,de$l1,de$l2,i2,l3=de$l3,i3=i3,l4=de$l4,i4=i4,
-                         d1b=d1b,d2b=d2b,deriv=deriv-1,fh=fh,D=D) 
-      } else { 
-        ret <- list()
-      }
-      
-      ret$l <- l0; 
+      ret$l0 <- wt * DllkDmu$d0
+      ret$l <- sum(ret$l0) 
       
       return( ret )
+      
     } ## end ll 
     
     structure(list(family = nam, 
+                   bundle_nam = bundle_nam,
                    ll = ll, 
                    link = paste(link), 
                    nlp = np,
                    tri = trind.generator( np ), ## symmetric indices for accessing derivative arrays
                    initialize = initialize, 
-                   initFun = initFun,
+                   initialize_internal = initialize_internal,
                    postproc = postproc, 
                    residuals = residuals,
                    qf = qf,
@@ -142,15 +123,15 @@ build_family <- function(bundle){
                    d2link=1,  ## signals to fix.family.link that all done 
                    d3link=1,
                    d4link=1, 
-                   putExtra = putExtra, 
-                   getExtra = getExtra,
+                   put_extra = put_extra, 
+                   get_extra = get_extra,
                    ls = 1, ## signals that ls not needed here
                    available.derivs = available_deriv - 2,
-                   discrete.ok = TRUE
+                   discrete.ok = FALSE
     ), class = c("general.family","extended.family","family"))
-  
+    
   }
   
+  return(outFam)
+  
 }
-
-
