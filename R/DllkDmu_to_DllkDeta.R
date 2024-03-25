@@ -29,7 +29,7 @@ DllkDMu_to_DllkDeta <- function(DllkDMu, etas, mus, family, wt, deriv){
         if( deriv >= 4 ){
           
           l4 <- wt  * do.call("cbind", DllkDMu$d4) 
-          g4 <- do.call("cbind", lapply(1:np, function(.kk) linfo$linfo[[.kk]]$d4link( mus[[.kk]])))
+          g4 <- do.call("cbind", lapply(1:np, function(.kk) linfo[[.kk]]$d4link( mus[[.kk]])))
           i4 <- family$tri$i4
           
         }
