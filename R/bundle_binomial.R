@@ -1,16 +1,21 @@
 #'
 #' Bundle for Gaussian regression model
 #' 
-#' @name bundle_poisson
-#' @rdname bundle_poisson
-#' @export bundle_poisson
+#' @name bundle_binomial
+#' @rdname bundle_binomial
+#' @export
 #'
-bundle_poisson <- function(){
+bundle_binomial <- function(n){
+  force(n)
+  .llk_wrap <- function(...){
+    llk_binomial(n = n, ...)
+  }
   out <- list(np = 1,
               available_deriv = 4,
-              llk = gamFactory::llk_poisson,
-              links = list(c("log", "sqrt")), 
-              nam = "poisson",
+              llk = .llk_wrap,
+              links = list(c("logit", "probit")), 
+              nam = "binomial",
+              store = list("n" = n),
               bundle_nam = as.character(match.call()[[1]]),
               residuals = function(object, type=c("deviance", "pearson", "response")) {
                 type <- match.arg(type)
@@ -23,7 +28,7 @@ bundle_poisson <- function(){
               # },
               initialize = function(y, nobs, E, x, family, offset, jj, unscaled){
                 
-                n <- rep(1, nobs)
+                n <- family$store$n
                 
                 ## should E be used unscaled or not?..
                 use.unscaled <- if (!is.null(attr(E, "use.unscaled"))){ TRUE } else { FALSE }
@@ -31,11 +36,10 @@ bundle_poisson <- function(){
                 lpi <- attr(x,"lpi")
                 start <- rep(0, ncol(x))
                 
-                #### Get scale phi = sigma = E(y) (if xi == 0)
                 yt1 <- if (family$link[[1]]=="identity"){ 
                   y 
                 } else {
-                  family$linfo[[1]]$linkfun(as.double(y) + 1e-3)
+                  family$linfo[[1]]$linkfun(pmax(pmin(y/n, 1-1e-3), 1e-3))
                 }
                 x1 <- x[ , lpi[[1]], drop=FALSE]
                 e1 <- E[ , lpi[[1]], drop=FALSE] ## square root of total penalty

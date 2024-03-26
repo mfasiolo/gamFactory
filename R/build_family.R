@@ -26,6 +26,7 @@ build_family <- function(bundle){
   np <- bundle$np
   postproc <- bundle$postproc
   oklinks <- bundle$links
+  store <- bundle$store
   
   llkFam <- bundle$llk
   
@@ -117,6 +118,7 @@ build_family <- function(bundle){
                    initialize_internal = initialize_internal,
                    postproc = postproc, 
                    residuals = residuals,
+                   store = store,
                    qf = qf,
                    linfo = stats,
                    rd = rd, 

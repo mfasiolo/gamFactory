@@ -3,7 +3,7 @@
 #' 
 #' @name fam_gaussian
 #' @rdname fam_gaussian
-#' @export
+#' @export fam_gaussian
 #' @examples 
 #' library(gamFactory)
 #' 

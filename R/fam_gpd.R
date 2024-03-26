@@ -3,7 +3,7 @@
 #' 
 #' @name fam_gpd
 #' @rdname fam_gpd
-#' @export
+#' @export fam_gpd
 #' @examples 
 #' library(gamFactory)
 #' 

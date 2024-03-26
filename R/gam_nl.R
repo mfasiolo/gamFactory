@@ -19,7 +19,7 @@ gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE, 
     
     info <- prep_info(o = out)
     
-    fam <- build_family_nl(bundle = do.call(family$bundle_nam, list()), info = info)
+    fam <- build_family_nl(bundle = do.call(family$bundle_nam, as.list(family$store)), info = info)
     
     out$family <- fam()
   }

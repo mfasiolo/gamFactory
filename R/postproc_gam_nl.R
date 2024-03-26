@@ -25,7 +25,7 @@ postproc_gam_nl <- function(o, info){
       
       o$smooth[[ism]] <- sii
       
-   }
+    }
     
   }
   

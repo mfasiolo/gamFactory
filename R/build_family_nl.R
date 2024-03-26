@@ -11,6 +11,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
   cdf <- bundle$cdf
   rd <- bundle$rd
   qf <- bundle$qf
+  store <- bundle$store
   residuals <- bundle$residuals
   bundle_nam <- bundle$bundle_nam
   nam <- paste0(bundle$nam, "_nl")
@@ -203,6 +204,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
                    initialize_internal = initialize_internal,
                    postproc = postproc, 
                    residuals = residuals,
+                   store = store,
                    #predict = predict,
                    qf = qf,
                    linfo = stats,
