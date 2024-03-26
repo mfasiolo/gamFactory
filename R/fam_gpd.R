@@ -26,10 +26,11 @@
 #'                                        type = "response")),
 #'       col = 3)
 #' 
-#' fit_2 <- gam(list(y ~ s(x), ~ s(x)), data = myDat, family = fam_gpd())
+#' fit_2 <- gam(list(y ~ s(x), ~ s(x)), data = myDat, family = fam_gpd(),
+#'              optimizer = c("outer", "bfgs"))
 #' 
 #' err <- max(abs(fit$fitted.values - fit_2$fitted.values))
-#' if(err > 1e-3){
+#' if(err > 1e-6){
 #'   stop("Discrepancy between gam and gam_nl")
 #' }
 #' 

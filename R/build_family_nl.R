@@ -195,6 +195,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
                    bundle_nam = bundle_nam,
                    ll = ll, 
                    link = paste(link), 
+                   linkinv = if(np == 1){ stats[[1]]$linkinv } else { NULL },
                    nlp = np,
                    tri = trind.generator( np ), ## symmetric indices for accessing derivative arrays
                    initialize = initialize, 

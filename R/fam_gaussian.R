@@ -21,10 +21,11 @@
 #' lines(mcycle$times, fit$family$qf(qu, mu = fit$fitted.values), col = 4)
 #' 
 #' fit_2 <- gam(list(accel ~ s(times,k=20,bs="ad"),
-#'                   ~ s(times)), data = mcycle, family = fam_gaussian())
+#'                   ~ s(times)), data = mcycle, family = fam_gaussian(),
+#'              optimizer = c("outer", "bfgs"))
 #' 
 #' err <- max(abs(fit$fitted.values - fit_2$fitted.values))
-#' if(err > 1e-3){
+#' if(err > 1e-6){
 #'   stop("Discrepancy between gam and gam_nl")
 #' }
 fam_gaussian <- function(){

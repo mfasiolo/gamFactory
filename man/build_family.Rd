@@ -12,3 +12,12 @@ build_family(bundle)
 \description{
 XXX.
 }
+\examples{
+fam <- build_family(bundle_gaussian())
+library(MASS)
+b <- gam(list(accel~s(times,k=20,bs="ad"),~s(times)),
+         data=mcycle,family=fam)
+summary(b) 
+plot(b,pages=1,scale=0)
+
+}

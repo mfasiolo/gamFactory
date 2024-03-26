@@ -6,7 +6,7 @@
 #' @name build_family
 #' @rdname build_family
 #' @export build_family
-#' 
+#' @examples
 #' fam <- build_family(bundle_gaussian())
 #' library(MASS)
 #' b <- gam(list(accel~s(times,k=20,bs="ad"),~s(times)),
@@ -110,6 +110,7 @@ build_family <- function(bundle){
                    bundle_nam = bundle_nam,
                    ll = ll, 
                    link = paste(link), 
+                   linkinv = if(np == 1){ stats[[1]]$linkinv } else { NULL },
                    nlp = np,
                    tri = trind.generator( np ), ## symmetric indices for accessing derivative arrays
                    initialize = initialize, 

@@ -4,7 +4,7 @@
 \alias{gam_nl}
 \title{Fit GAM models with non-linear effects}
 \usage{
-gam_nl(formula, family = gaulss(), data = list(), fit = TRUE, ...)
+gam_nl(formula, family = fam_gaussian(), data = list(), fit = TRUE, ...)
 }
 \arguments{
 \item{formula, family, data}{same arguments as in \link[mgcv:gam]{mgcv::gam}.}
