@@ -7,6 +7,11 @@
   # Need to compute single index vector by projecting inner model matrix on alpha
   si <- object$xt$si
   
+  # Do NOT remove this! We need it in postproc_gam_nl.
+  if( is.null(si$xm) ){
+    si$xm <- 0
+  }
+  
   # We have n0 original locations and corresponding observations in y0
   Xi <- data[[object$term]]
   n <- nrow( Xi )

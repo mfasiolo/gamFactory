@@ -8,6 +8,11 @@
   # Need to compute single index vector by projecting inner model matrix on alpha
   si <- object$xt$si
   
+  # Do NOT remove this! We need it in postproc_gam_nl.
+  if( is.null(si$xm) ){
+    si$xm <- 0
+  }
+  
   alpha <- si$alpha
   a0 <- alpha[1]
   a1 <- alpha[-1]
