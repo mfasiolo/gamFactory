@@ -9,6 +9,8 @@ eff_nexpsm <- function(y, Xi, basis, x0 = NULL, times = NULL){
   
   force(y); force(Xi); force(basis); force(x0); force(times);
   
+  na <- ncol(Xi) + 1
+  
   incall <- as.expression(quote(do.call("expsmooth", list("y" = y, "Xi" = Xi, "beta" = alpha, "times" = times, "deriv" = deriv), quote = TRUE)))
   efcall <- as.expression(quote(do.call("eff_nexpsm", list("y" = y, "Xi" = Xi, "basis" = basis, "x0" = x0, "times" = times), quote = TRUE)))
   

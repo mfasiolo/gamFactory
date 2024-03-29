@@ -8,7 +8,7 @@
 \usage{
 trans_linear(pord, S, alpha)
 
-trans_mgks(X0, y0, alpha)
+trans_mgks(y0, alpha)
 
 trans_nexpsm(S, alpha)
 }
@@ -25,10 +25,10 @@ between parameters are penalised, see the \code{pord} argument.}
 \item{alpha}{vector containing the initial values for the parameters of the transformation. If provided they can be used
 by the optimiser.}
 
+\item{y0}{vector of n observations corresponding to the rows of \code{X0}.}
+
 \item{X0}{an \eqn{(n x p)} matrix, each row indicating the p-dimensional location vector of the corresponding observation in
 \code{y0}.}
-
-\item{y0}{vector of n observations corresponding to the rows of \code{X0}.}
 }
 \description{
 Functions to specify nested covariate transformations, to be used

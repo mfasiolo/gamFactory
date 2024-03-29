@@ -12,10 +12,6 @@
   a0 <- alpha[1]
   a1 <- alpha[-1]
   
-  if( is.null(si$xm) ){
-    si$xm <- 0
-  }
-  
   # Extract variables from data frame:
   # - "y" is variable to be exponentially smoothed (stored in vector or matrix)
   # - "x" is model matrix used to model the exp smoothing rate

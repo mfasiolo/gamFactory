@@ -44,16 +44,24 @@ trans_linear <- function(pord, S, alpha){
 #' @rdname trans_xxx
 #' @export trans_mgks
 #'
-trans_mgks <- function(X0, y0, alpha){
- 
-  if( missing(X0) ){ stop("Argument \"X0\" is missing but a value is required") }
-   
+trans_mgks <- function(y0, alpha){
+  
   out <- lapply(as.list(match.call())[-1], eval, envir = parent.frame())
   out$type <- "mgks"
- 
+  
   return(out)
   
 } 
+# trans_mgks <- function(X0, y0, alpha){
+#  
+#   if( missing(X0) ){ stop("Argument \"X0\" is missing but a value is required") }
+#    
+#   out <- lapply(as.list(match.call())[-1], eval, envir = parent.frame())
+#   out$type <- "mgks"
+#  
+#   return(out)
+#   
+# } 
 
 #
 # Specifying exponential smooth transformation 

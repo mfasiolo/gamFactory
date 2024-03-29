@@ -20,7 +20,9 @@
 #' 
 #' # Here beta[j] is log(1 / sigma[j]) where sigma is standard deviation
 #' beta <- c(log(20), log(5))
-#' fit <- mgks(y = y, X = X, X0 = X0, beta = beta, deriv = 0)
+#' dist <- lapply(1:ncol(X), function(dd) 
+#'                t(sapply(1:nrow(X), function(ii) (X[ii, dd] - X0[ , dd])^2 )))
+#' fit <- mgks(y = y, dist = dist, beta = beta, deriv = 3)
 #' 
 #' par(mfrow = c(2, 1))
 #' image(x = xseq1, y = xseq2, z = matrix(fit$d0, ngr, ngr), main = "Estimated")
@@ -40,20 +42,23 @@
 #' xseq3 <- seq(-2, 2, length.out = ngr)
 #' X <- as.matrix(expand.grid(xseq1, xseq2, xseq3))
 #' 
+#' dist <- lapply(1:ncol(X), function(dd) 
+#'                t(sapply(1:nrow(X), function(ii) (X[ii, dd] - X0[ , dd])^2 )))
+#' 
 #' # Wrap derivatives for compatibility with gamFactory::checkDeriv
 #' obj <- list(d0 = function(param){
-#'   sum(mgks(y = y, X = X, X0 = X0, beta = param, deriv = 0)$d0)
+#'   sum(mgks(y = y, dist = dist, beta = param, deriv = 0)$d0)
 #' },
 #' d1 = function(param){
-#'   tmp <- colSums(mgks(y = y, X = X, X0 = X0, beta = param, deriv = 1)$d1)
+#'   tmp <- colSums(mgks(y = y, dist = dist, beta = param, deriv = 1)$d1)
 #'   as.list(tmp)
 #' },
 #' d2 = function(param){
-#'   tmp <- colSums(mgks(y = y, X = X, X0 = X0, beta = param, deriv = 2)$d2)
+#'   tmp <- colSums(mgks(y = y, dist = dist, beta = param, deriv = 2)$d2)
 #'   as.list(tmp)
 #' },
 #' d3 = function(param){
-#'   tmp <- colSums(mgks(y = y, X = X, X0 = X0, beta = param, deriv = 3)$d3)
+#'   tmp <- colSums(mgks(y = y, dist = dist, beta = param, deriv = 3)$d3)
 #'   as.list(tmp)
 #' })
 #' 
@@ -87,24 +92,171 @@
 #'  abline(h = 0)
 #' }
 #' 
-mgks <- function(y, X, X0, beta, deriv = 0){
-  
+mgks <- function(y, dist, beta, deriv = 0){
+
   if( is.matrix(y) && ncol(y) > 1 ){
     case <- "matrix"
   } else {
     case <- "vector"
     y <- as.matrix(y)
   }
+  
+  n <- nrow(dist[[1]])
+  p <- length(beta)
+  n0 <- ncol(dist[[1]])
 
   if( case == "vector" ){
-   stopifnot( nrow(y) == nrow(X0) )
+    stopifnot( length(y) == n0 )
   } else {
-   stopifnot( nrow(y) == nrow(X), ncol(y) == nrow(X0) )
+    stopifnot( nrow(y) == n, ncol(y) == n0 )
+  }
+
+  return( .mgks_cpp(y = y, dist = dist, beta = beta, deriv = deriv) )
+
+}
+
+.mgks_2 <- function(y, dist, beta, deriv = 0){
+  if( is.matrix(y) && min(dim(y)) > 1 ){
+    case <- "matrix"
+  } else {
+    case <- "vector"
+    y <- as.vector(y)
   }
   
-  return( .mgks_cpp(y = y, X = X, X0 = X0, beta = beta, deriv = deriv) )
+  n <- nrow(dist[[1]])
+  p <- length(beta)
+  n0 <- ncol(dist[[1]])
+  
+  if( case == "vector" ){
+    stopifnot( length(y) == n0 )
+  } else {
+    stopifnot( nrow(y) == n, ncol(y) == n0 )
+  }
+  
+  # Under Gaussian log-kernel (x - x0)^2 / sigma^2 = (x - x0)^2 * w hence w = 1/sigma^2
+  w <- exp(2*beta)
+  
+  d0 <- numeric(n)
+  d1 <- d2 <- d3 <- NULL
+  if(deriv){ # Allocate storage
+    d1 <- matrix(nrow = n, ncol = p)
+    if(deriv>1){
+      DaDb <- matrix(nrow = n0, ncol = p)
+      D2alD2b <- matrix(nrow = n0, ncol = p*(p+1)/2)
+      DaDb_DlkDb <- numeric(p*(p+1)/2)
+      d2 <- matrix(nrow = n, ncol = p*(p+1)/2)
+      if(deriv>2){
+        ind2 <- matrix(nrow = p, ncol = p)
+        zz <- 1
+        for(ir in 1:p){
+          for (ic in ir:p){
+            ind2[ir, ic] <- zz
+            zz <- zz + 1
+          }
+        }
+        DaDbKK_DlkDb_c <- matrix(nrow = n0, ncol = choose(p + 2, p-1))
+        D3alD3b <- matrix(nrow = n0, ncol = choose(p + 2, p-1))
+        d3 <- matrix(nrow = n, ncol = choose(p + 2, p-1))
+      }
+    }
+  }
+  
+  dist_ii <- matrix(NA, p, n0)
+  yii <- y
+  for( ii in 1:n ){
+    
+    if( case == "matrix" ) { yii <- y[ii, ] }
+    #xi <- X[ii, ]
+    for(kk in 1:p){
+      dist_ii[kk, ] <- dist[[kk]][ii, ]
+    }
+    
+    # w_dist[j, k] = (X0[j, k] - xi[k])^2 * w[k] for j = 1, ..., n0 and k = 1, ..., p
+    w_dist <- - t(dist_ii * w) # t((tX0 - xi)^2 * w)
+    
+    # Vector of log-kernels logK[j] = sum_k (X0[j, k] - xi[k])^2 * w[k] for j = 1, ..., n0
+    logK <- rowSums( w_dist )
+    
+    # sum exp trick
+    mx <- max(logK)
+    al <- exp(logK-mx) / sum(exp(logK-mx))
+    
+    d0[ii] <- sum(al * yii)
+    
+    # Derivatives of g w.r.t. beta
+    if( deriv ){
+      
+      DlkDb <- 2 * w_dist    # 2 * w_dist[kk, jj] = D logK[kk] / D beta[jj]
+      
+      sum_al_DlkDb <- colSums(al * DlkDb)
+      DlkDb_c <- t(t(DlkDb) - sum_al_DlkDb)
+      
+      # DaDb[i,j] = Dalpha[i] / D beta[j]
+      for(jj in 1:p){
+        DaDbJJ <- al * DlkDb_c[ , jj]
+        d1[ii, jj] <- sum(yii * DaDbJJ)
+        # Store stuff needed for higher derivs
+        if(deriv > 1){ DaDb[ , jj] <- DaDbJJ }
+      }
+      
+      if( deriv > 1){
+        
+        zz <- 1
+        for(jj in 1:p){
+          for(kk in jj:p){
+            DaDb_DlkDb[zz] <- sum(DaDb[ , kk] * DlkDb[ , jj])
+            DaDbKK_DlkDb_cJJ <- DaDb[ , kk] * DlkDb_c[ , jj]
+            D2alD2b[ , zz] <- DaDbKK_DlkDb_cJJ - al * DaDb_DlkDb[zz]
+            if(jj == kk){ # Diagonal entries need extra term
+              D2alD2b[ , zz] <- D2alD2b[ , zz] + al * 2 * DlkDb_c[ , jj]
+            }
+            # Store stuff needed for higher derivs
+            if( deriv > 2 ){ DaDbKK_DlkDb_c[ , zz] <- DaDbKK_DlkDb_cJJ }
+            d2[ii, zz] <- sum(yii * D2alD2b[ , zz])
+            zz <- zz + 1
+          }
+        }
+        
+        if( deriv > 2){
+          
+          zz <- 1
+          for(jj in 1:p){
+            for(kk in jj:p){
+              for(ll in kk:p){
+                D3alD3b[ , zz] <- D2alD2b[ , ind2[kk, ll]] * DlkDb_c[ , jj] -
+                  DaDb[ , kk] * DaDb_DlkDb[ind2[jj, ll]] -
+                  DaDb[ , ll] * DaDb_DlkDb[ind2[jj, kk]] -
+                  al * sum(D2alD2b[ , ind2[kk, ll]] * DlkDb[ , jj])
+                if(jj == kk){
+                  D3alD3b[ , zz] <- D3alD3b[ , zz] + 2 * DaDbKK_DlkDb_c[ , ind2[jj, ll]] -
+                    al * 2 * DaDb_DlkDb[ind2[jj, ll]]
+                }
+                if(jj == ll){
+                  D3alD3b[ , zz] <- D3alD3b[ , zz] + 2 * DaDbKK_DlkDb_c[ , ind2[jj, kk]] -
+                    al * 2 * DaDb_DlkDb[ind2[jj, kk]]
+                  if(jj == kk){
+                    D3alD3b[ , zz] <- D3alD3b[ , zz] + al * 4 * DlkDb_c[ , jj]
+                  }
+                }
+                d3[ii, zz] <- sum(yii * D3alD3b[ , zz])
+                zz <- zz + 1
+              }
+            }
+          }
+          
+        }
+      }
+      
+    }
+    
+  }
+  
+  return( list("d0" = d0, "d1" = d1, "d2" = d2, "d3" = d3) )
   
 }
+
+
+
 
 ####### OLD Version in R
 

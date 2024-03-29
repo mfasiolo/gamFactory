@@ -4,7 +4,7 @@
 \alias{mgks}
 \title{Multivariate Gaussian kernel smoother and its derivatives}
 \usage{
-mgks(y, X, X0, beta, deriv = 0)
+mgks(y, dist, beta, deriv = 0)
 }
 \description{
 Multivariate Gaussian kernel smoother and its derivatives
@@ -25,7 +25,9 @@ X <- as.matrix(expand.grid(xseq1, xseq2))
 
 # Here beta[j] is log(1 / sigma[j]) where sigma is standard deviation
 beta <- c(log(20), log(5))
-fit <- mgks(y = y, X = X, X0 = X0, beta = beta, deriv = 0)
+dist <- lapply(1:ncol(X), function(dd) 
+               t(sapply(1:nrow(X), function(ii) (X[ii, dd] - X0[ , dd])^2 )))
+fit <- mgks(y = y, dist = dist, beta = beta, deriv = 3)
 
 par(mfrow = c(2, 1))
 image(x = xseq1, y = xseq2, z = matrix(fit$d0, ngr, ngr), main = "Estimated")
@@ -45,20 +47,23 @@ xseq2 <- seq(-4, 4, length.out = ngr)
 xseq3 <- seq(-2, 2, length.out = ngr)
 X <- as.matrix(expand.grid(xseq1, xseq2, xseq3))
 
+dist <- lapply(1:ncol(X), function(dd) 
+               t(sapply(1:nrow(X), function(ii) (X[ii, dd] - X0[ , dd])^2 )))
+
 # Wrap derivatives for compatibility with gamFactory::checkDeriv
 obj <- list(d0 = function(param){
-  sum(mgks(y = y, X = X, X0 = X0, beta = param, deriv = 0)$d0)
+  sum(mgks(y = y, dist = dist, beta = param, deriv = 0)$d0)
 },
 d1 = function(param){
-  tmp <- colSums(mgks(y = y, X = X, X0 = X0, beta = param, deriv = 1)$d1)
+  tmp <- colSums(mgks(y = y, dist = dist, beta = param, deriv = 1)$d1)
   as.list(tmp)
 },
 d2 = function(param){
-  tmp <- colSums(mgks(y = y, X = X, X0 = X0, beta = param, deriv = 2)$d2)
+  tmp <- colSums(mgks(y = y, dist = dist, beta = param, deriv = 2)$d2)
   as.list(tmp)
 },
 d3 = function(param){
-  tmp <- colSums(mgks(y = y, X = X, X0 = X0, beta = param, deriv = 3)$d3)
+  tmp <- colSums(mgks(y = y, dist = dist, beta = param, deriv = 3)$d3)
   as.list(tmp)
 })
 

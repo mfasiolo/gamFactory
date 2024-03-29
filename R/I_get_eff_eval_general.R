@@ -2,7 +2,6 @@
   
   .eval <- function(param, deriv = 0){
     
-    na <- ncol( Xi ) + 1
     nb <- length(param) - na 
     
     # Scale, inner and outer coefficients

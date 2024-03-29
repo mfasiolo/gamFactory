@@ -27,24 +27,23 @@ BEGIN_RCPP
 END_RCPP
 }
 // mgks
-List mgks(NumericMatrix y, NumericMatrix X, NumericMatrix X0, NumericVector beta, int deriv);
-RcppExport SEXP _gamFactory_mgks(SEXP ySEXP, SEXP XSEXP, SEXP X0SEXP, SEXP betaSEXP, SEXP derivSEXP) {
+List mgks(NumericMatrix y, arma::field<arma::mat> dist, NumericVector beta, int deriv);
+RcppExport SEXP _gamFactory_mgks(SEXP ySEXP, SEXP distSEXP, SEXP betaSEXP, SEXP derivSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix >::type y(ySEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type X(XSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type X0(X0SEXP);
+    Rcpp::traits::input_parameter< arma::field<arma::mat> >::type dist(distSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< int >::type deriv(derivSEXP);
-    rcpp_result_gen = Rcpp::wrap(mgks(y, X, X0, beta, deriv));
+    rcpp_result_gen = Rcpp::wrap(mgks(y, dist, beta, deriv));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_gamFactory_expsmooth", (DL_FUNC) &_gamFactory_expsmooth, 5},
-    {"_gamFactory_mgks", (DL_FUNC) &_gamFactory_mgks, 5},
+    {"_gamFactory_mgks", (DL_FUNC) &_gamFactory_mgks, 4},
     {NULL, NULL, 0}
 };
 

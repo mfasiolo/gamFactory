@@ -5,7 +5,7 @@
     .Call(`_gamFactory_expsmooth`, y, Xi, beta, x0, deriv)
 }
 
-.mgks_cpp <- function(y, X, X0, beta, deriv) {
-    .Call(`_gamFactory_mgks`, y, X, X0, beta, deriv)
+.mgks_cpp <- function(y, dist, beta, deriv) {
+    .Call(`_gamFactory_mgks`, y, dist, beta, deriv)
 }
 

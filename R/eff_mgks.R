@@ -5,12 +5,15 @@
 #' @rdname eff_mgks
 #' @export eff_mgks
 #'
-eff_mgks <- function(y, X, Xi, basis){
+eff_mgks <- function(y, dist, basis){
   
-  force(y); force(X); force(Xi); force(basis);
+  force(y); force(dist); force(basis);
   
-  incall <- as.expression(quote(do.call("mgks", list("y" = y, "X" = X, "X0" = Xi, "beta" = alpha, "deriv" = deriv), quote = TRUE)))
-  efcall <- as.expression(quote(do.call("eff_mgks", list("y" = y, "X" = X, "Xi" = Xi, "basis" = basis), quote = TRUE)))
+  na <- length(dist) + 1
+  Xi <- NULL
+  
+  incall <- as.expression(quote(do.call("mgks", list("y" = y, "dist" = dist, "beta" = alpha, "deriv" = deriv), quote = TRUE)))
+  efcall <- as.expression(quote(do.call("eff_mgks", list("y" = y, "dist" = dist, "basis" = basis), quote = TRUE)))
   
   .eval <- .get_eff_eval_general()
   

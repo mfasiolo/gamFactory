@@ -5,17 +5,15 @@ using namespace arma;
 // [[Rcpp::depends(RcppArmadillo)]]
 
 // [[Rcpp::export(.mgks_cpp)]]
-List mgks(NumericMatrix y, NumericMatrix X, NumericMatrix X0, NumericVector beta, int deriv) {
-  
-  int n = X.nrow();
-  int n0 = X0.nrow();
-  int p = beta.length();
+List mgks(NumericMatrix y, arma::field<arma::mat> dist, NumericVector beta, int deriv) {
   
   mat yA = as<mat>(y);
-  mat XMat = as<mat>(X);
-  mat X0Mat = as<mat>(X0);
   colvec betaA = as<colvec>(beta);
   rowvec w = exp(2 * beta);
+  
+  int n = dist(0).n_rows;
+  int n0 = dist(0).n_cols;
+  int p = beta.length();
   
   std::string case_type;
   colvec d0(n);
@@ -46,21 +44,23 @@ List mgks(NumericMatrix y, NumericMatrix X, NumericMatrix X0, NumericVector beta
   }
   
   colvec yii = yA.col(0);
+  mat dist_ii(n0, p);
   for (int ii = 0; ii < n; ++ii) {
     
     if (yA.n_cols > 1) {
       yii = yA.row(ii).t();
     } 
     
-    rowvec xi = XMat.row(ii);
+    for(int kk = 0; kk < p; ++kk){
+     dist_ii.col(kk) = dist(kk).row(ii).t();
+    }
     
     // dist[j, k] = (X0[j, k] - xi[k])^2 * w[k] for j = 1, ..., n0 and k = 1, ..., d
     // dist <- - t((tX0 - xi)^2 * w)
-    mat dist = square(X0Mat.each_row() - xi);
-    dist.each_row() %= -w;
+    dist_ii.each_row() %= -w;
     
     // Vector of log-kernels logK[j] = sum_k (X0[j, k] - xi[k])^2 * w[k] for j = 1, ..., n0 
-    colvec logK = sum(dist, 1);
+    colvec logK = sum(dist_ii, 1);
     
     // sum exp trick
     double mx = max(logK);
@@ -70,7 +70,7 @@ List mgks(NumericMatrix y, NumericMatrix X, NumericMatrix X0, NumericVector beta
     
     // Derivatives of g w.r.t. beta
     if (deriv) {
-      mat DlkDb = 2 * dist;  // 2 * dist[kk, jj] = D logK[kk] / D beta[jj]  
+      mat DlkDb = 2 * dist_ii;  // 2 * dist[kk, jj] = D logK[kk] / D beta[jj]  
       colvec sum_al_DlkDb = sum(DlkDb.each_col() % al, 0).t();
       mat DlkDb_c = DlkDb.each_row() - sum_al_DlkDb.t();
       
