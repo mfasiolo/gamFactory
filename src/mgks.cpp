@@ -55,11 +55,9 @@ List mgks(NumericMatrix y, arma::field<arma::mat> dist, NumericVector beta, int 
      dist_ii.col(kk) = dist(kk).row(ii).t();
     }
     
-    // dist[j, k] = (X0[j, k] - xi[k])^2 * w[k] for j = 1, ..., n0 and k = 1, ..., d
-    // dist <- - t((tX0 - xi)^2 * w)
     dist_ii.each_row() %= -w;
     
-    // Vector of log-kernels logK[j] = sum_k (X0[j, k] - xi[k])^2 * w[k] for j = 1, ..., n0 
+    // Vector of log-kernels logK[j] = sum_k distance(X0[j, k], xi[k]) * w[k] for j = 1, ..., n0 
     colvec logK = sum(dist_ii, 1);
     
     // sum exp trick

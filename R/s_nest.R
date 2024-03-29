@@ -30,6 +30,8 @@ s_nest <- function(..., trans, k, m, sarg){
   
   if( missing(k) ){
     k <- 10 + 7 # Because we impose 7 constraints
+  } else {
+    k <- k + 7
   }
   sarg$k <- k 
   
