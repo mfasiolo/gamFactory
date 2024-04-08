@@ -8,11 +8,12 @@
   si <- object$xt$si
   
   alpha <- si$alpha
+  a0 <- si$a0
   
   # Need to subtract colMeans of original data "xm" and rescale using B
   Xi <- t(t(data[[object$term]]) - si$xm)  %*% si$B
   
-  xa <- Xi %*% alpha 
+  xa <- Xi %*% (alpha + a0)
   
   # Compute outer model matrix
   X0 <- object$xt$basis$evalX(x = xa, deriv = 0)$X0

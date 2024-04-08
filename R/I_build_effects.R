@@ -14,7 +14,7 @@
       extra <- info$extra[[ii]]
       Xi <- extra$si$X
       if( effType[ii] == "si.nested" ){
-        eff[[ii]] <- eff_si(Xi = Xi, basis = extra$basis) 
+        eff[[ii]] <- eff_si(Xi = Xi, basis = extra$basis, a0 = extra$si$a0)
       } else {
         if( effType[ii] == "nexpsm.nested" ){
           eff[[ii]] <- eff_nexpsm(y = extra$si$x, Xi = Xi, basis = extra$basis, times = extra$si$times) 

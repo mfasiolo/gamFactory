@@ -6,7 +6,7 @@
 \alias{trans_nexpsm}
 \title{Specifying inner transformations}
 \usage{
-trans_linear(pord, S, alpha)
+trans_linear(pord, S, alpha, a0)
 
 trans_mgks(y0, alpha)
 

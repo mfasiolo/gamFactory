@@ -4,7 +4,7 @@
 \alias{eff_si}
 \title{Build single index effect}
 \usage{
-eff_si(Xi, basis)
+eff_si(Xi, basis, a0 = NULL)
 }
 \arguments{
 \item{Xi}{matrix to be projected via single index vector \code{alpha}.}

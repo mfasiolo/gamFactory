@@ -8,9 +8,9 @@
 #' @rdname eff_si
 #' @export eff_si
 #'
-eff_si <- function(Xi, basis){
+eff_si <- function(Xi, basis, a0 = NULL){
   
-  force(Xi); force(basis)
+  force(Xi); force(basis); force(a0)
 
   eval <- function(param, deriv = 0){
     
@@ -21,8 +21,12 @@ eff_si <- function(Xi, basis){
     alpha <- param[ 1:na ]
     beta <- param[ -(1:na) ]
     
+    if( is.null(a0) ){
+      a0 <- alpha * 0
+    }
+
     # Project covariates on single index vector 
-    ax <- drop( Xi %*% alpha )
+    ax <- drop( Xi %*% (alpha + a0) )
     
     # Build P-spline basis and its derivatives
     # The error is probably due to the fact that no observations falls within range
@@ -42,6 +46,7 @@ eff_si <- function(Xi, basis){
     o <- eff_si(Xi = Xi, basis = basis)
     o$f <- drop( store$X0 %*% beta )
     o$param <- param
+    o$a0 <- a0
     o$na <- na
     o$store <- store
     o$deriv <- deriv

@@ -4,7 +4,7 @@
 .pen_var_si <- function(o, v, deriv = 0){
   
   na <- o$na
-  a <- o$param[1:na]
+  a <- o$param[1:na] + o$a0
   x <- o$store$Xi
   
   p <- length(a)
@@ -50,7 +50,7 @@
 .pen_var_si_outer <- function(o, v, DaDr){
   
   na <- o$na
-  a <- o$param[1:na]
+  a <- o$param[1:na] + o$a0
   x <- o$store$Xi
   
   m <- ncol(DaDr)
