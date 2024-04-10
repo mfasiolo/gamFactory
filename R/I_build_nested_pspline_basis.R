@@ -92,12 +92,12 @@
                    Xbo = Xth$X0%*%NS, Xbo1 = Xth$X1%*%NS, method = "simple")$X0 # If you change "simple" here, you need to do it also elsewhere!!
   
   # To aid identifiability we make penalty on the outer smooth full rank
-  if(out$rank < dsmo){
-    eig <- eigen(out$S[[1]])
-    eig$values[-(1:out$rank)] <- pmin(eig$values[1] * 1e-5, eig$values[out$rank])
-    out$S[[1]] <- eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
-    out$rank <- ncol(out$X)
-  }
+  # if(out$rank < dsmo){
+  #   eig <- eigen(out$S[[1]])
+  #   eig$values[-(1:out$rank)] <- pmin(eig$values[1] * 1e-5, eig$values[out$rank])
+  #   out$S[[1]] <- eig$vectors %*% diag(eig$values) %*% t(eig$vectors)
+  #   out$rank <- ncol(out$X)
+  # }
   
   # Reparametrise the outer smooth so that penalty is diagonal (we need diagonal penalty otherwise mgcv will
   # reparametrise again with Sl.repara)

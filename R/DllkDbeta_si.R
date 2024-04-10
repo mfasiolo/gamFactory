@@ -33,9 +33,6 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
   
   f <- o$f
   
-  # Project covariates on single index vector 
-  ax <- drop( Xi %*% alpha )
-  
   der1 <- der2 <- der3 <- der4 <- NULL
   
   f1 <- drop( X1 %*% beta )
