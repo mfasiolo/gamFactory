@@ -34,6 +34,14 @@ bundle_gaussian <- function(){
                 return( start )
               }
   )
+  
+  # Fixing the environment of all functions
+  for(ii in 1:length(out)){
+    if( class(out[[ii]]) == "function" ){
+      environment(out[[ii]]) <- environment()
+    }
+  }
+  
   return( out )
 }
 

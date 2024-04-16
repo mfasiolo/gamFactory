@@ -9,6 +9,10 @@
 #'
 gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE, ...){
   
+  if( !is.list(formula) ){
+    formula <- list(formula)
+  }
+  
   ddd <- match.call(expand.dots = FALSE)$`...`
   
   out <- ddd$G

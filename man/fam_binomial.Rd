@@ -58,4 +58,8 @@ fit <- getViz(fit)
 plot(fit) + l_fitLine()
 plot(fit, inner = TRUE)
 
+fit <- getViz(fit, nsim = 50)
+check(fit)
+check0D(fit, type = "deviance")
+
 }

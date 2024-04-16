@@ -43,9 +43,18 @@ llk_binomial <- function(y, param, n, deriv = 0, ...) {
   if (is.vector(param)) param <- matrix(param, ncol = 1)
   if (ncol(param) != 1) stop("Wrong number of parameters provided")
   
+  
   p <- ncol( param )
   mu <- param[ , 1, drop = TRUE] # rate
   nobs <- length(y)
+  
+  if(length(n) != nobs){
+    if(length(n) == 1){
+      n <- rep(n, nobs)
+    } else {
+      stop("length(n) != length(y)")
+    }
+  }
   
   if (length(mu) == 1) {
     mu <- rep(mu, nobs)

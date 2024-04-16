@@ -53,6 +53,10 @@
 #' plot(fit) + l_fitLine()
 #' plot(fit, inner = TRUE)
 #' 
+#' fit <- getViz(fit, nsim = 50)
+#' check(fit)
+#' check0D(fit, type = "deviance")
+#' 
 fam_binomial <- function(n){
   
   bundle <- bundle_binomial(n)

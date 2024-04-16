@@ -14,13 +14,13 @@ bundle_poisson <- function(){
               bundle_nam = as.character(match.call()[[1]]),
               residuals = function(object, type=c("deviance", "pearson", "response")) {
                 type <- match.arg(type)
-                rsd <- object$y-object$fitted[,1]
-                #    if (type=="response") return(rsd) else
-                #      return((rsd*object$fitted[,2])) ## (y-mu)/sigma 
+                fam <- do.call("poisson", list())
+                r <- .resid_exp_fam(object = object, type = type, fam = fam)
+                return( r )
               },
-              # rd = function(mu, wt, scale) {
-              #   return( rnorm(nrow(mu), mu[ , 1], sqrt(scale/wt)/mu[ , 2]) )
-              # },
+              rd = function(mu, wt, scale) {
+                return( rpois(nrow(mu), mu) )
+              },
               initialize = function(y, nobs, E, x, family, offset, jj, unscaled){
                 
                 n <- rep(1, nobs)
@@ -53,6 +53,14 @@ bundle_poisson <- function(){
                 return( start )
               }
   )
+  
+  # Fixing the environment of all functions
+  for(ii in 1:length(out)){
+    if( class(out[[ii]]) == "function" ){
+      environment(out[[ii]]) <- environment()
+    }
+  }
+  
   return( out )
 }
 

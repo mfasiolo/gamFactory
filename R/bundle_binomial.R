@@ -7,6 +7,7 @@
 #'
 bundle_binomial <- function(n){
   force(n)
+  # We want to fix n (the "size" of the binomial) at this stage
   .llk_wrap <- function(...){
     llk_binomial(n = n, ...)
   }
@@ -19,13 +20,35 @@ bundle_binomial <- function(n){
               bundle_nam = as.character(match.call()[[1]]),
               residuals = function(object, type=c("deviance", "pearson", "response")) {
                 type <- match.arg(type)
-                rsd <- object$y-object$fitted[,1]
-                #    if (type=="response") return(rsd) else
-                #      return((rsd*object$fitted[,2])) ## (y-mu)/sigma 
+                fam_nam <- "binomial"
+                y <- drop(object$y)
+                if(length(n) != length(y)){
+                  if(length(n) == 1){
+                    n <- rep(n, length(y))
+                  } else {
+                    stop("length(n) != length(y)")
+                  }
+                }
+                # We need to do something special here to deal with n
+                poi_fam <- fam <- do.call(fam_nam, list())
+                fam$dev.resid <- function(y, mu, wt){
+                 wt * poi_fam$dev.resid(y/n, mu, n)
+                }
+                fam$var <- function(mu){
+                 n * poi_fam$var(mu) 
+                }
+                fam$exp_val <- function(mu){
+                  n * mu
+                }
+                # Make sure these function use "n" from the current environment
+                environment(fam$dev.resid) <- environment(fam$var) <- 
+                  environment(fam$exp_val) <- environment()
+                r <- .resid_exp_fam(object = object, type = type, fam = fam)
+                return( r )
               },
-              # rd = function(mu, wt, scale) {
-              #   return( rnorm(nrow(mu), mu[ , 1], sqrt(scale/wt)/mu[ , 2]) )
-              # },
+              rd = function(mu, wt, scale) {
+                return( rbinom(nrow(mu), n, mu) )
+              },
               initialize = function(y, nobs, E, x, family, offset, jj, unscaled){
                 
                 n <- family$store$n
@@ -57,6 +80,14 @@ bundle_binomial <- function(n){
                 return( start )
               }
   )
+  
+  # Fixing the environment of all functions
+  for(ii in 1:length(out)){
+    if( class(out[[ii]]) == "function" ){
+      environment(out[[ii]]) <- environment()
+    }
+  }
+  
   return( out )
 }
 
