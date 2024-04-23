@@ -4,7 +4,7 @@
 \alias{Predict.matrix.nested}
 \title{Predict using nested effects}
 \usage{
-\method{Predict.matrix}{nested}(object, data)
+\method{Predict.matrix}{nested}(object, data, ...)
 }
 \description{
 Predict using nested effects

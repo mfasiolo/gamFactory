@@ -3,7 +3,7 @@
 #' 
 #'
 #' @noRd
-.predict.matrix.nexpsm <- function(object, data){
+.predict.matrix.nexpsm <- function(object, data, get.xa = FALSE){
   
   # Need to compute single index vector by projecting inner model matrix on alpha
   si <- object$xt$si
@@ -42,8 +42,14 @@
   # Need to rescale using B
   Xi <- Xi  %*% si$B
   
-  xsm_unscaled <- expsmooth(y = x, Xi = Xi, beta = a1, times = times)$d0 - si$xm
+  xsm_list <- expsmooth(y = x, Xi = Xi, beta = a1, times = times, deriv = get.xa)
+  xsm_unscaled <- xsm_list$d0 - si$xm
   xsm <-  exp(a0) * xsm_unscaled
+  
+  if(get.xa){ 
+    return(list(xa = xsm,
+                xa_da = exp(a0)*xsm_list$d1))
+  }
   
   # Compute outer model matrix
   X0 <- object$xt$basis$evalX(x = xsm, deriv = 0)$X0

@@ -2,7 +2,7 @@
 #' Predict using MGKS smooth effects
 #' 
 #' @noRd
-.predict.matrix.mgks <- function(object, data){
+.predict.matrix.mgks <- function(object, data, get.xa = FALSE){
   
   # Need to compute single index vector by projecting inner model matrix on alpha
   si <- object$xt$si
@@ -35,8 +35,13 @@
   a0 <- alpha[1]
   a1 <- alpha[-1]
   
-  xsm_unscaled <- mgks(y = y0, dist = Dist, beta = a1)$d0 - si$xm
+  xsm_list <- mgks(y = y0, dist = Dist, beta = a1, deriv = get.xa)
+  xsm_unscaled <- xsm_list$d0 - si$xm
   xsm <- exp(a0) * xsm_unscaled 
+  
+  if(get.xa){
+    return(list(xa = xsm, xa_da = exp(a0)*xsm_list$d1))
+  }
   
   # Compute outer model matrix
   X1 <- object$xt$basis$evalX(x = xsm, deriv = 0)$X0

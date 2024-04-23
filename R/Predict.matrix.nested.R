@@ -5,18 +5,18 @@
 #' @rdname Predict.matrix.nested
 #' @export
 #'
-Predict.matrix.nested <- function(object, data){
+Predict.matrix.nested <- function(object, data, ...){
   
   if(class(object)[1] == "si"){
-    return( .predict.matrix.si(object, data) ) 
+    return( .predict.matrix.si(object, data, ...) ) 
   }
   if(class(object)[1] == "nexpsm"){
-    return( .predict.matrix.nexpsm(object, data) ) 
+    return( .predict.matrix.nexpsm(object, data, ...) ) 
   }
   if(class(object)[1] == "mgks"){
-    return( .predict.matrix.mgks(object, data) ) 
+    return( .predict.matrix.mgks(object, data, ...) ) 
   }
   
   stop("I do not know this effect type")
-
+  
 }

@@ -6,7 +6,6 @@
 #'
 postproc_gam_nl <- function(o, info){
   
-  sms <- o$smooth
   ne <- length( info$type )
   
   for(ii in 1:ne){
@@ -22,6 +21,8 @@ postproc_gam_nl <- function(o, info){
       if(is.null(sii$xt$si$xm)){
         sii$xt$si$xm <- mean(attr(Predict.matrix.nested(sii, data = o$model), "inner_linpred_unscaled"))
       }
+      
+      sii$xt$jacobian <- .get_jacobian.nested(sii, data = o$model, param = coef(o)[info$iec[[ii]]])
       
       o$smooth[[ism]] <- sii
       
