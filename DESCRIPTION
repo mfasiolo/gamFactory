@@ -13,7 +13,10 @@ Depends:
 Imports:
     stats, 
     gsubfn,
-    numDeriv
+    numDeriv,
+    MASS, 
+    Matrix, 
+    Rcpp
 Suggests: 
     knitr,
     rmarkdown,
