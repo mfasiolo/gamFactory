@@ -26,13 +26,22 @@ make_link <- function(link){
       
     } 
       
-    # Get limit (a, \infinity) of loga link
-    if( grepl("loga", link, fixed=TRUE) ){
+    # Get limit (a, \infinity) on 1/mu of loginva link
+    if( grepl("loginva", link, fixed=TRUE) ){
         
         tmp <- sort( as.numeric(strapplyc(link, "[-+.e0-9]*\\d")[[1]]) )
         l1 <- tmp[1]
-        link <- "loga"
+        link <- "loginva"
         
+    }
+    
+    # Get limit (a, \infinity) on exp(mu) logea link
+    if( grepl("logea", link, fixed=TRUE) ){
+      
+      tmp <- sort( as.numeric(strapplyc(link, "[-+.e0-9]*\\d")[[1]]) )
+      l1 <- tmp[1]
+      link <- "logea"
+      
     }
     
     switch(link, 
@@ -44,12 +53,18 @@ make_link <- function(link){
                                               l2 - l1, " + ", l1, sep='')))
              valideta <- function(eta) all( is.finite(eta) )
            }, 
-           loga = {
+           loginva = {
              linkfun <-  eval(parse(text=paste("function(mu) log(1/mu -",l1,")")))
              mu.eta <- eval(parse(text=paste("function(eta) { ee <- exp(eta); -ee/(ee +",l1,")^2 }")))
              linkinv <- eval(parse(text=paste("function(eta) 1/(exp(eta) +",l1,")")))
              valideta <- function(eta) all( is.finite(eta) )
            }, 
+           logea = {
+             linkfun <-  eval(parse(text=paste("function(mu) log(exp(mu) - ",l1,")", sep='')))
+             mu.eta <-  eval(parse(text=paste("function(eta) { ee <- exp(eta); ee/(ee +",l1,") }")))
+             linkinv <- eval(parse(text=paste("function(eta) log(exp(eta) +",l1,")", sep='')))
+             valideta <- function(eta) all( is.finite(eta) )
+           },
            stop(gettextf("%s link not recognised", sQuote(link)), domain = NA))
     
     environment(linkfun) <- environment(linkinv) <- environment(mu.eta) <- 

@@ -15,6 +15,6 @@ XXX.
 \examples{
 library(gamFactory)
 prepare_link(link = "logitab(1.2, 4)", "logitab(3, 5)", 1, "gaussian")
-prepare_link(link = "loga(1.2)", "loga", 1, "gaussian")
+prepare_link(link = "loginva(1.2)", "loginva", 1, "gaussian")
 
 }

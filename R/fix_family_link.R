@@ -30,12 +30,21 @@ fix_family_link <- function(fam){
       
     }
     
-    # Get limit (a, \infinity) of loga link
-    if( grepl("loga", link, fixed=TRUE) ){
+    # Get limit (a, \infinity) on 1/mu of loginva link
+    if( grepl("loginva", link, fixed=TRUE) ){
       
       tmp <- sort( as.numeric(strapplyc(link, "[-+.e0-9]*\\d")[[1]]) )
       l1 <- tmp[1]
-      link <- "loga"
+      link <- "loginva"
+      
+    }
+    
+    # Get limit (a, \infinity) on exp(mu) of logea link
+    if( grepl("logea", link, fixed=TRUE) ){
+      
+      tmp <- sort( as.numeric(strapplyc(link, "[-+.e0-9]*\\d")[[1]]) )
+      l1 <- tmp[1]
+      link <- "logea"
       
     }
   
@@ -51,13 +60,21 @@ fix_family_link <- function(fam){
                                                  l1, ") / ", l2 - l1, "; (6/(1 - mu)^4 - 6/mu^4) / ", 
                                                  (l2 - l1)^4, " }", sep='')))
            }, 
-           loga = {
+           loginva = {
              fam$d2link <- eval(parse(text=
                                         paste("function(mu) { mub <- pmax(1 - mu *",l1,",.Machine$double.eps);(2*mub-1)/(mub*mu)^2}" )))
              fam$d3link <- eval(parse(text=
                                         paste("function(mu) { mub <-  pmax(1 - mu *",l1,",.Machine$double.eps);((1-mub)*mub*6-2)/(mub*mu)^3}" )))
              fam$d4link <- eval(parse(text=
                                         paste("function(mu) { mub <- pmax(1 - mu *",l1,",.Machine$double.eps);(((24*mub-36)*mub+24)*mub-6)/(mub*mu)^4}")))
+           },
+           logea = {
+             fam$d2link <-  eval(parse(text=
+                                         paste("function(mu) { em<-exp(mu); fr<-em/(em-",l1,"); fr*(1-fr) }",sep='')))
+             fam$d3link <- eval(parse(text=
+                                        paste("function(mu) { em<-exp(mu); fr<-em/(em-",l1,"); oo<-fr*(1-fr); oo-2*oo*fr }",sep='')))
+             fam$d4link <- eval(parse(text=
+                                        paste("function(mu) { em<-exp(mu); b<-",l1,"; -b*em*(b^2+4*b*em+em^2)/(em-b)^4 }",sep='')))
            },
            stop(gettextf("%s link not recognised", sQuote(link)), domain = NA))
     

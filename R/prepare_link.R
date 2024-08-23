@@ -9,7 +9,7 @@
 #' @examples
 #' library(gamFactory)
 #' prepare_link(link = "logitab(1.2, 4)", "logitab(3, 5)", 1, "gaussian")
-#' prepare_link(link = "loga(1.2)", "loga", 1, "gaussian")
+#' prepare_link(link = "loginva(1.2)", "loginva", 1, "gaussian")
 #' 
 prepare_link <- function(link, oklinks, np, nam){
   
@@ -19,9 +19,12 @@ prepare_link <- function(link, oklinks, np, nam){
   for (ii in 1:np) {
     lnam <- link[[ii]]
     if( grepl("logitab", link[[ii]], fixed=TRUE) ) { lnam <- "logitab" }
-    if( grepl("loga", link[[ii]], fixed=TRUE) ) { lnam <- "loga" }
-    if (lnam %in% oklinks[[ii]] || (lnam == "logitab" && grepl("logitab", oklinks[[ii]], fixed=TRUE)) || 
-        (lnam == "loga" && grepl("loga", oklinks[[ii]], fixed=TRUE))     ){
+    if( grepl("loginva", link[[ii]], fixed=TRUE) ) { lnam <- "loginva" }
+    if( grepl("logea", link[[ii]], fixed=TRUE) ) { lnam <- "logea" }
+    if (lnam %in% oklinks[[ii]] || 
+        (lnam == "logitab" && grepl("logitab", oklinks[[ii]], fixed=TRUE)) || 
+        (lnam == "loginva" && grepl("loginva", oklinks[[ii]], fixed=TRUE)) || 
+        (lnam == "logea" && grepl("logea", oklinks[[ii]], fixed=TRUE))     ){
       stats[[ii]] <- make_link(link[[ii]])
     } else {
       stop(lnam, paste0(" link not available for ", ii, "-th parameter of ", nam, " family"))

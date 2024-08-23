@@ -9,7 +9,7 @@ bundle_gaussian <- function(){
   out <- list(np = 2,
               available_deriv = 4,
               llk = gamFactory::llk_gaussian,
-              links = list(c("identity", "inverse", "log", "sqrt"), "loga(0.01)"), 
+              links = list(c("identity", "inverse", "log", "sqrt"), "loginva(0.01)"), 
               nam = "gaussian",
               bundle_nam = as.character(match.call()[[1]]),
               residuals = function(object, type=c("deviance", "pearson", "response")) {
