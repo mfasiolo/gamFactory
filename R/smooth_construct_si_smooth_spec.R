@@ -31,7 +31,6 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
     si$rank <- 0 
   } else {
     if( is.null(Si) ){ # Case [b] "P-splines" penalty
-      if( is.null(si$pord) ){ si$pord <- 0 }
       Si <- .psp(d = di, ord = si$pord)
       rankSi <- ncol(Xi) - si$pord
     } else { # Case [c] custom penalty Si
