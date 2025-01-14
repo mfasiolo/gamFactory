@@ -25,7 +25,7 @@
   Xi <- data[[object$term]]
   n <- nrow( Xi )
   nms <- colnames(Xi)
-  x <- as.vector( Xi[ , which(nms == "y")] )
+  x <- as.vector( t(Xi[ , which(nms == "y")]) )
   times <- NULL
   tmp <- which(nms == "times")
   if( length(tmp) ){
@@ -33,11 +33,12 @@
   }
   Xi <- Xi[ , which(nms == "x"), drop = FALSE]
   nrep <- ceiling( length(x)/n )
-  Xi <- lapply(0:(nrep-1), function(ii){
-    dXi <- ncol(Xi) / nrep
-    as.matrix(Xi[ , (ii*dXi + 1):(dXi*(ii+1))])
-  })
-  Xi <- do.call("rbind", Xi)
+  dXi <- ncol(Xi)/nrep
+  if(nrep > 1){
+    tmp <- rep(1:dXi, nrep)
+    Xi <- apply(Xi, 1, function(x) do.call("cbind", tapply(x, tmp, I)), simplify = FALSE)
+    Xi <- do.call("rbind", Xi)
+  }
   
   # Need to rescale using B
   Xi <- Xi  %*% si$B
