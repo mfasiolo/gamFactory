@@ -45,11 +45,15 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
       alpha <- do.call("c", lapply(info$extra[si], function(.x) .x$si$alpha))
       start[ kk ] <- alpha
       # c) modify lpi so that family$initialize_bundle will initialize only the remaining coefficients
-      #    (in the output initialize_bundle, the values corresponding to the alphas will be set to zero)
+      #    (excluding the columns of x and E related to the inner coefficients alpha)
       lpi <- lapply(lpi, function(.x) .x[ !(.x %in% kk) ])
+      lpi <- lapply(lpi, function(.x) sapply(.x, function(.x1) .x1 - sum(kk < .x1)))
+      E <- E[ , -kk, drop = FALSE]
+      x <- x[ , -kk, drop = FALSE]
+      attr(x, "lpi") <- lpi
     }
     
-    start <- start + family$initialize_bundle(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset, 
+    start[-kk] <- family$initialize_bundle(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset, 
                                             jj = lpi, unscaled = unscaled)
     
     return( start )
