@@ -35,6 +35,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
     si <- which( sapply(info$type, paste0, collapse = '') != "stand" )
     nsi <- length( si )
 
+    nkk <- 1:ncol(x)
     start <- numeric( ncol(x) )
     if( nsi ){ # If there are nested effects we: 
       # a) Identify coefficients of inner vector (alpha)
@@ -51,9 +52,10 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
       E <- E[ , -kk, drop = FALSE]
       x <- x[ , -kk, drop = FALSE]
       attr(x, "lpi") <- lpi
+      nkk <- nkk[ -kk ]
     }
     
-    start[-kk] <- family$initialize_bundle(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset, 
+    start[nkk] <- family$initialize_bundle(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset, 
                                             jj = lpi, unscaled = unscaled)
     
     return( start )
