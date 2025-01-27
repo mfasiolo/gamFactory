@@ -5,7 +5,6 @@
 #' @rdname fam_shash
 #' @export fam_shash
 #' @examples 
-#' @examples
 #' ###############
 #' # [1] Example with standard effects 
 #' ###############
