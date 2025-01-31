@@ -5,6 +5,7 @@
 #' @param ... further arguments to be passed to [mgcv::gam].
 #' @name predict.gamnl
 #' @rdname predict.gamnl
+#' @importFrom mgcv Predict.matrix
 #' @export
 #'
 predict.gamnl <- function(object, newdata, type="link", se.fit=FALSE, ...){
