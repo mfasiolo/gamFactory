@@ -3,18 +3,19 @@
 #' 
 #' @name smooth.construct.mgks.smooth.spec
 #' @rdname smooth.construct.mgks.smooth.spec
-#' @importFrom mgcv smooth.construct
+#' @importFrom mgcv smooth.construct Predict.matrix.Bspline.smooth sdiag bandchol psum.chisq
+#' @importFrom stats cov 
 #' @examples 
-#' n <- 100
-#' n0 <- 50
-#' p <- 5
-#' dat <- data.frame(y = rnorm(n))
-#' dat$Xi <- matrix(rnorm(n*p), n, p)
-#' X0 <- matrix(rnorm(n0*p), n0, p)
-#' x <- rnorm(n0)
-#' aaa <- smoothCon(s(Xi, bs = "mgks", m = c(3, 2),
-#'             xt = list(si = list(X0 = X0, x = x), sumConv = FALSE)),
-#'           data = dat)
+#' #n <- 100
+#' #n0 <- 50
+#' #p <- 5
+#' #dat <- data.frame(y = rnorm(n))
+#' #dat$Xi <- matrix(rnorm(n*p), n, p)
+#' #X0 <- matrix(rnorm(n0*p), n0, p)
+#' #x <- rnorm(n0)
+#' #aaa <- smoothCon(s(Xi, bs = "mgks", m = c(3, 2),
+#' #            xt = list(si = list(X0 = X0, x = x), sumConv = FALSE)),
+#' #          data = dat)
 #' @export
 smooth.construct.mgks.smooth.spec <- function(object, data, knots)
 { 

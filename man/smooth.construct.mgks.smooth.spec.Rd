@@ -10,14 +10,14 @@
 Nested MGKS effects for mgcv
 }
 \examples{
-n <- 100
-n0 <- 50
-p <- 5
-dat <- data.frame(y = rnorm(n))
-dat$Xi <- matrix(rnorm(n*p), n, p)
-X0 <- matrix(rnorm(n0*p), n0, p)
-x <- rnorm(n0)
-aaa <- smoothCon(s(Xi, bs = "mgks", m = c(3, 2),
-            xt = list(si = list(X0 = X0, x = x), sumConv = FALSE)),
-          data = dat)
+#n <- 100
+#n0 <- 50
+#p <- 5
+#dat <- data.frame(y = rnorm(n))
+#dat$Xi <- matrix(rnorm(n*p), n, p)
+#X0 <- matrix(rnorm(n0*p), n0, p)
+#x <- rnorm(n0)
+#aaa <- smoothCon(s(Xi, bs = "mgks", m = c(3, 2),
+#            xt = list(si = list(X0 = X0, x = x), sumConv = FALSE)),
+#          data = dat)
 }
