@@ -43,9 +43,6 @@ export(fam_gpd)
 export(fam_poisson)
 export(fam_shash)
 export(fam_stackProb)
-<<<<<<< HEAD
-export(penreg)
-=======
 export(fix_family_link)
 export(gam_nl)
 export(linextr)
@@ -75,7 +72,6 @@ importFrom(MASS,Null)
 importFrom(Matrix,rankMatrix)
 importFrom(Rcpp,evalCpp)
 importFrom(gsubfn,strapplyc)
->>>>>>> dev
 importFrom(matrixStats,rowMaxs)
 importFrom(mgcv,Rrank)
 importFrom(mgcv,Xbd)
