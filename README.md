@@ -1,10 +1,187 @@
 
-[![Build Status](https://travis-ci.org/mfasiolo/gamFactory.svg?branch=master)](https://travis-ci.org/mfasiolo/gamFactory)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/mfasiolo/gamFactory?branch=master&svg=true)](https://ci.appveyor.com/project/mfasiolo/gamFactory)
+``` r
+library(devtools)
 
-At the moment this package simply offers a new family for performing
-additive stacking in `mgcv`, but in the future it will be expanded to
-provide tools for building more general GAM models.
+install_github("mfasiolo/gamFactory")
+
+install_github("mfasiolo/mgcViz")      
+```
+
+## Loading the processed data
+
+``` r
+library(gamFactory)
+dat <- chicago_data() # Assumes "gamair" package is installed
+
+head(dat[ , c("death", "time", "X")])
+```
+
+    ##    death    time   X.pm10     X.o3    X.so2
+    ## 57   119 -2500.5 5.643834 4.174303 3.836722
+    ## 58   100 -2499.5 7.276165 3.964401 4.224386
+    ## 59   119 -2498.5 5.286074 2.891765 2.679323
+    ## 60   123 -2497.5 3.455803 4.088069 2.164990
+    ## 61   125 -2496.5 5.739562 4.706801 3.262747
+    ## 62   124 -2495.5 5.379830 4.590277 2.402710
+
+``` r
+dim(dat$X)
+```
+
+    ## [1] 4791    3
+
+## Fitting a Poisson GAMs with a single index effect
+
+Fit the model (should take around 2 minutes):
+
+``` r
+fit <- gam_nl(death ~ s(time, k = 200) + 
+                      s_nest(X, trans = trans_linear()), 
+              family = fam_poisson(), 
+              data = dat, 
+              method = "efs") # Faster fitting with Extended Fellner-Schall
+```
+
+``` r
+library(mgcViz)
+
+fit <- getViz(fit)
+
+print(plot(fit), pages = 1)
+```
+
+<img src="chicago_example_files/figure-markdown_github/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
+
+``` r
+plot(fit, select = 2, inner = TRUE)
+```
+
+<img src="chicago_example_files/figure-markdown_github/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
+
+## Adding effects of exponentially smoothed pm10 and o3
+
+``` r
+dim(dat$pm_10_lag)
+```
+
+    ## [1] 4791    3
+
+``` r
+head(dat$pm_10_lag)
+```
+
+    ##           y x x
+    ## 56 6.703922 1 1
+    ## 57 5.643834 1 1
+    ## 58 7.276165 1 1
+    ## 59 5.286074 1 1
+    ## 60 3.455803 1 1
+    ## 61 5.739562 1 1
+
+``` r
+table(dat$pm_10_lag[ , 3])
+```
+
+    ## 
+    ##    1    2    3    4    5    6 
+    ## 4595  150   31    8    4    3
+
+Fit the model (should take around 2 minutes):
+
+``` r
+fit_exp <- gam_nl(death ~ s(time, k = 200) + 
+                    s_nest(X, trans = trans_linear()) + 
+                    s_nest(pm_10_lag, trans = trans_nexpsm()) + # expsmooth
+                    s_nest(o3_lag, trans = trans_nexpsm()),     # expsmooth
+                  family = fam_poisson(),
+                  data = dat,
+                  optimizer = "efs")
+```
+
+``` r
+fit_exp <- getViz(fit_exp)
+print(plot(getViz(fit_exp)), pages = 1)
+```
+
+<img src="chicago_example_files/figure-markdown_github/unnamed-chunk-10-1.png" style="display: block; margin: auto;" />
+
+``` r
+pl1 <- plot(sm(fit_exp, 3), inner = TRUE) + 
+  l_points(colour = "grey", shape = 16) + l_fitLine()
+
+pl2 <- plot(sm(fit_exp, 4), inner = TRUE) + 
+  l_points(colour = "grey", shape = 16) + l_fitLine()
+
+gridPrint(pl1, pl2)
+```
+
+<img src="chicago_example_files/figure-markdown_github/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
+
+## Using kernel rather than exponential smoothing
+
+``` r
+dim(dat$pm_10_lag_2)
+```
+
+    ## [1] 4791  100
+
+``` r
+colnames(dat$pm_10_lag_2)
+```
+
+    ##   [1] "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y" 
+    ##  [16] "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y" 
+    ##  [31] "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y" 
+    ##  [46] "y"  "y"  "y"  "y"  "y"  "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
+    ##  [61] "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
+    ##  [76] "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
+    ##  [91] "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
+
+``` r
+unname(dat$pm_10_lag_2[1, 1:50])
+```
+
+    ##  [1] 5.562605 6.127772 6.628920 6.703922 6.159754 5.739562 6.148552 4.352307
+    ##  [9] 4.789841 7.067006 6.320014 5.578539 3.992815 5.995213 5.379830 5.911225
+    ## [17] 5.848393 6.995897 7.207120 5.911225 8.242729 6.205175 6.628920 5.651776
+    ## [25] 7.479477 5.739562 6.730506 7.479477 5.941877 8.181844 7.742259 6.398639
+    ## [33] 4.606095 6.240399 5.739562 8.941061 8.996809 5.995213 5.234093 2.990414
+    ## [41] 3.307956 4.465711 4.893115 6.778095 8.590966 7.479477 6.553058 6.628920
+    ## [49] 6.703922 6.703922
+
+``` r
+unname(dat$pm_10_lag_2[1, 51:100])
+```
+
+    ##  [1] 56 54 53 51 50 49 48 46 45 44 43 42 41 39 38 37 36 35 34 33 31 30 29 28 27
+    ## [26] 26 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1
+
+Fit the model (takes around 2 minutes):
+
+``` r
+fit_mgks <- gam_nl(death ~ s(time, k = 200) + 
+                    s_nest(X, trans = trans_linear()) + 
+                    s_nest(pm_10_lag_2, trans = trans_mgks()) + # kernel smooth
+                    s_nest(o3_lag_2, trans = trans_mgks()),     # kernel smooth
+                  family = fam_poisson(), data = dat,
+                  optimizer = "efs")
+```
+
+    ##                df      AIC
+    ## fit      163.1043 37638.41
+    ## fit_exp  144.4842 37361.88
+    ## fit_mgks 136.3854 37464.76
+
+``` r
+fit_mgks <- getViz(fit_mgks)
+
+print(plot(getViz(fit_mgks)), pages = 1)
+```
+
+<img src="chicago_example_files/figure-markdown_github/unnamed-chunk-15-1.png" style="display: block; margin: auto;" />
+
+Comparing the smooth PM10 and O3 across models (code not shown):
+<img src="chicago_example_files/figure-markdown_github/unnamed-chunk-17-1.png" style="display: block; margin: auto;" />
 
 ### Probabilistic additive stacking
 

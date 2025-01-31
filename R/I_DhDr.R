@@ -55,6 +55,13 @@
   return( drop(Deta) )
 }
 
+#'
+#' Derivative of Hessian w.r.t smoothing parameters
+#' 
+#' @name DHessDrho.easy
+#' @rdname DHessDrho.easy
+#' @export 
+#'
 DHessDrho.easy <- function(o, llk, DbDr, index){
   
   type <- sapply(o, function(inp) class(inp)[1])

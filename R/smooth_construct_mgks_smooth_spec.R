@@ -3,6 +3,7 @@
 #' 
 #' @name smooth.construct.mgks.smooth.spec
 #' @rdname smooth.construct.mgks.smooth.spec
+#' @importFrom mgcv smooth.construct
 #' @examples 
 #' n <- 100
 #' n0 <- 50
