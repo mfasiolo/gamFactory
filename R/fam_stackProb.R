@@ -537,6 +537,17 @@ fam_stackProb <- function(logP, ridgePen = 1e-5) {
     } ## if se
     list(fit=gamma)
   } ## multinom predict
+
+  jacobian <- function(eta, jj){
+    alpha <- cbind(1, exp(eta)) / rowSums(cbind(1, exp(eta)))
+    K <- ncol(alpha)
+    # D alpha / D eta
+    DaDe <- sapply(1:(K - 1), function(.kk) {
+      alpha[, jj] * (as.numeric(jj == .kk + 1) - alpha[, .kk + 1])
+    })
+    if(nrow(alpha) == 1) { DaDe <- matrix(DaDe, nrow = 1) }
+    return(DaDe)
+  }
   
   jacobian <- function(eta, jj){
     alpha <- cbind(1, exp(eta)) / rowSums(cbind(1, exp(eta)))
