@@ -7,10 +7,51 @@
 gam_nl(formula, family = fam_gaussian(), data = list(), fit = TRUE, ...)
 }
 \arguments{
-\item{formula, family, data}{same arguments as in \link[mgcv:gam]{mgcv::gam}.}
+\item{formula}{A GAM formula, or a list of formulae. See ?mgcv::gam details.}
+
+\item{family}{A family object specifying the distribution and link to use in fitting.
+Available families are Gaussian (\link{fam_gaussian}), binomial (\link{fam_binomial}),
+generalised Pareto distribution (\link{fam_gpd}), Poisson (\link{fam_poisson}) and
+Sinh-Arsinh (\link{fam_shash}).}
+
+\item{data}{A data frame or list that includes the model's response variable along with the covariates specified in the formula.
+For the structure required by the \link{s_nest} effects, refer to \link{trans_linear}, \link{trans_mgks}, or \link{trans_nexpsm}}
+
+\item{fit}{Same argument as in \link[mgcv:gam]{mgcv::gam}. If this argument is \code{TRUE} then \code{gam_nl} sets up the
+model and fits it, but if it is \code{FALSE} then the model is set up and an object containing what would be
+required to fit is returned.}
 
 \item{...}{further arguments to be passed to \link[mgcv:gam]{mgcv::gam}.}
 }
+\value{
+A \code{gamnl} and \code{gamObject}. See \code{?gamObject}.
+}
 \description{
-Fit GAM models with non-linear effects
+This function fits a generalized additive model for location scale and shape (GAMLSS)
+with non-linear effects using \link[mgcv:gam]{mgcv::gam}
+}
+\examples{
+#####
+# Single index example
+####
+library(gamFactory);library(mgcViz)
+set.seed(6436)
+n <- 1000; p <- 3; b <- 1:p
+
+X <- matrix(runif(p * n), ncol = p)
+x1 <- rnorm(n)
+y <- 2 * sin(X \%*\% b) + x1^2 + rnorm(n)
+dat <- data.frame(y = y, x1 = x1)
+dat$X <- X # single-index predictors
+
+# Fit the model
+fit <- gam_nl(list(y~s_nest(X, trans = trans_linear()) + s(x1), ~1), 
+              data = dat, family = fam_gaussian(), control=list(trace=TRUE))
+
+# Plot the fit
+fit <- getViz(fit)
+print(plot(fit), pages = 1) # plot smooth effects
+print(plot(fit, inner = TRUE), pages = 1) # plot inner components
+
+
 }

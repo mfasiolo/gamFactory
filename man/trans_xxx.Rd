@@ -13,22 +13,19 @@ trans_mgks(y0, alpha)
 trans_nexpsm(S, alpha)
 }
 \arguments{
-\item{pord}{the order of the differences of the transformation parameters
+\item{pord}{The order of the differences of the transformation parameters
 that will be penalised. E.g., \code{pord = 1} corresponds to penalising the squared
 first order differences \eqn{(alpha_k - alpha_{k-1})^2}. Ignored if argument \code{S}
 is supplied.}
 
-\item{S}{positive semi-definite matrix used to specify a generalised ridge
+\item{S}{Positive semi-definite matrix used to specify a generalised ridge
 penalty on the transformation parameters. In \code{trans_linear}, if \code{S} is not supplied, the \code{pord}-order differences
 between parameters are penalised, see the \code{pord} argument.}
 
-\item{alpha}{vector containing the initial values for the parameters of the transformation. If provided they can be used
+\item{alpha}{Vector containing the initial values for the parameters of the transformation. If provided they can be used
 by the optimiser.}
 
-\item{y0}{vector of n observations corresponding to the rows of \code{X0}.}
-
-\item{X0}{an \eqn{(n x p)} matrix, each row indicating the p-dimensional location vector of the corresponding observation in
-\code{y0}.}
+\item{y0}{Vector of \eqn{n} observations corresponding to the rows of the variables in \code{s_nest}.}
 }
 \description{
 Functions to specify nested covariate transformations, to be used
@@ -37,10 +34,10 @@ within \link{s_nest}.
 \details{
 The types of transformations currently provided are:
 \itemize{
-\item{\code{trans_linear}{ a linear transformation, which can be used to specify, e.g, a single index vector (i.e. a projection) or
-                       or a linear effect.}}
+\item{\code{trans_linear}{ a linear transformation \eqn{X^\top \alpha}, which can be used to specify, e.g, a single index vector (i.e. a projection) or
+                      a linear effect.}}
 \item{\code{trans_mgks}{ a multivariate kernel smooth transformation based on the response variable observation 
-                         vector \code{y0} and corresponding locations matrix \code{X0}.}}
+                         vector \code{y0} and corresponding distance matrix.}}
 \item{\code{trans_nexpsm}{ an exponential smoothing transformation.}}
 }
 }
