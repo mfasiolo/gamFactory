@@ -56,13 +56,9 @@ These are smooth effects that take as argument a transformation of the covariate
 Then a smooth effect with a nested transformation is $s(\tilde{s}({\boldsymbol x}))$, where $s(\cdot)$ is a smooth effect built via a spline basis expansion.
 
 Nested effect can be used in standard or multi-parameter GAMs (the latter include the GAMLSS models of Rigby and Stasinopoulos, 2005). In particular, assume that the conditional distribution of the response $y$ given the covariates ${\boldsymbol x}$ is
-$$
-y|{\boldsymbol x} \sim \text{Distr}\{y|\theta_1({\boldsymbol x}_1), \theta_2({\boldsymbol x}_2), \dots, \theta_p({\boldsymbol x}_p) \},
-$$
+$$y|{\boldsymbol x} \sim \text{Distr}\{y|\theta_1({\boldsymbol x}_1), \theta_2({\boldsymbol x}_2), \dots, \theta_p({\boldsymbol x}_p) \},$$
 then the model for the $j$-th parameter of the distribution is
-$$
-g_j\{\theta_j({\boldsymbol x})\} = \sum_{k=1}^m f_k({\boldsymbol x}_k)  + \sum_{u=1}^l s_u(\tilde{s}_u({\boldsymbol x}_u)).
-$$ 
+$$g_j\{\theta_j({\boldsymbol x})\} = \sum_{k=1}^m f_k({\boldsymbol x}_k)  + \sum_{u=1}^l s_u(\tilde{s}_u({\boldsymbol x}_u)).$$ 
 where the $f_k$'s are standard smooth effects and the $s_u$'s are smooth effects with nested transformations (henceforth **nested effects**).
 
 ## Available types of nested effects
@@ -82,19 +78,13 @@ where $\boldsymbol a$ are the coefficients of the linear combination.
 
   - `trans = trans_nexpsm()` specifies an **(adaptive) exponential smoothing** transformation. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form $$s(\tilde{s}({x}_t)) = s(\omega\tilde{s}(x_{t-1}) + (1-\omega)x_{t}),$$
 with $\omega \in (0, 1)$. Adaptive smoothing is achieved by modelling the exponential smoothing coefficient via
-$$
-\omega_t = \phi(  {\boldsymbol a}^T {\boldsymbol z}_t ),
-$$
+$$\omega_t = \phi(  {\boldsymbol a}^T {\boldsymbol z}_t ),$$
 where $\phi(\cdot)$ is the standard logistic function, ${\boldsymbol z}_t$ is a vector of covariates and ${\boldsymbol a}$ is a vector of unknown parameters.
 
    - `trans = trans_mgks()` specifies an **multivariate kernel smoothing** transformation. For example, suppose that response variable $y_i$ (e.g., ozone concentration) corresponds to location $\boldsymbol z_i^0$ and that we think that it depends on air temperature. We have temperature measurements $\text{temp}_1, \dots, \text{temp}_L$ at locations $\boldsymbol z_1, \dots, \boldsymbol z_L$, but none corresponds to $\boldsymbol z_i^0$. Then we can use `trans_mgks()` to build an estimate of the temperature at $\boldsymbol z_i^0$ via kernel smoothing, that is
-$$
-\tilde{s}({\boldsymbol z}^0_i) = \frac{\sum_{l = 1}^L w_l \text{temp}_l}{\sum_{l = 1}^L w_l},
-$$
+$$\tilde{s}({\boldsymbol z}^0_i) = \frac{\sum_{l = 1}^L w_l \text{temp}_l}{\sum_{l = 1}^L w_l},$$
 and
-$$
-w_l = \text{exp}( - a \,\text{dist}({\boldsymbol z}^0_i, {\boldsymbol z}_l)  )
-$$
+$$w_l = \text{exp}( - a \,\text{dist}({\boldsymbol z}^0_i, {\boldsymbol z}_l)  )$$
 where $a > 0$ is the kernel smoothing parameter and $\text{dist}(\cdot, \cdot)$ is a distance function. The latter can be vector-valued, in which case $\boldsymbol a$ will be a vector of positive kernel smoothing coefficients.
 
 ## Building and fitting models with nested effects

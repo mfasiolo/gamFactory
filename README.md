@@ -1,31 +1,3 @@
----
-title: "gamFactory: tools for extending the mgcv R package"
-author: "Matteo Fasiolo, Claudia Collarin, Christian Capezza, Yannig Goude and Simon N. Wood"
-date: "2025-04-02"
-header-includes:
-  - \usepackage{bbm}
-output: 
-  pdf_document: 
-    toc: true
-    number_sections: true
-    keep_md: true
-  html_document: 
-    toc: true
-    number_sections: true
-    keep_md: true
-vignette: >
-  %\VignetteIndexEntry{gamFactory_vignette}
-  %\VignetteEncoding{UTF-8}
-  %\VignetteEngine{knitr::rmarkdown}
----
-
-<style>
-body {
-text-align: justify}
-</style>
-
-
-
 
 # GAMs with nested effects
 
