@@ -19,12 +19,6 @@ chicago_data <- function(){
   my_data <- data.frame(death = chicago$death, time = chicago$time)
   my_data$X <-  as.matrix(chicago[ , c("pm10median", "o3median", "so2median")])
   my_data$X <- t( t(my_data$X) + apply(my_data$X, 2, function(x) abs(min(x, na.rm = TRUE)))) 
-  my_data$X <- (1 + my_data$X)
-  colnames(my_data$X) <- c("pm10", "o3", "so2")
-  
-  my_data <- data.frame(death = chicago$death, time = chicago$time)
-  my_data$X <-  as.matrix(chicago[ , c("pm10median", "o3median", "so2median")])
-  my_data$X <- t( t(my_data$X) + apply(my_data$X, 2, function(x) abs(min(x, na.rm = TRUE)))) 
   my_data$X <- sqrt(1+my_data$X)
   colnames(my_data$X) <- c("pm10", "o3", "so2")
   

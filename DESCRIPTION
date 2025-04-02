@@ -21,6 +21,7 @@ Suggests:
     rmarkdown,
     qgam, 
     mgcViz,
+    gamair
 LinkingTo: Rcpp, RcppArmadillo
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
