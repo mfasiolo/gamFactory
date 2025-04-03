@@ -46,16 +46,15 @@ Here we list the transformations currently available:
 $$s(\tilde{s}({\boldsymbol x})) = s(\boldsymbol a^T \boldsymbol x),$$
 where $\boldsymbol a$ are the coefficients of the linear combination.
 
-  - `trans = trans_nexpsm()` specifies an **(adaptive) exponential smoothing** transformation. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form 
-  - <img src="https://latex.codecogs.com/svg.image?$s(\tilde{s}({x}_t))=s(\omega\tilde{s}(x_{t-1})&plus;(1-\omega)x_{t}),$/> 
+  - `trans = trans_nexpsm()` specifies an **(adaptive) exponential smoothing** transformation. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form ![Equation](https://latex.codecogs.com/png.latex?s(\tilde{s}({x}_t))%20=%20s(\omega\tilde{s}(x_{t-1})%20+%20(1-\omega)x_{t}))
 with $\omega \in (0, 1)$. Adaptive smoothing is achieved by modelling the exponential smoothing coefficient via
 $$\omega_t = \phi(  {\boldsymbol a}^T {\boldsymbol z}_t ),$$
 where $\phi(\cdot)$ is the standard logistic function, ${\boldsymbol z}_t$ is a vector of covariates and ${\boldsymbol a}$ is a vector of unknown parameters.
 
    - `trans = trans_mgks()` specifies an **multivariate kernel smoothing** transformation. For example, suppose that response variable $y_i$ (e.g., ozone concentration) corresponds to location $\boldsymbol z_i^0$ and that we think that it depends on air temperature. We have temperature measurements $\text{temp}_1, \dots, \text{temp}_L$ at locations $\boldsymbol z_1, \dots, \boldsymbol z_L$, but none corresponds to $\boldsymbol z_i^0$. Then we can use `trans_mgks()` to build an estimate of the temperature at $\boldsymbol z_i^0$ via kernel smoothing, that is
-$$\tilde{s}({\boldsymbol z}^0_i) = \frac{\sum_{l = 1}^L w_l \text{temp}_l}{\sum_{l = 1}^L w_l},$$
+![Equation](https://latex.codecogs.com/png.latex?\tilde{s}({\boldsymbol%20z}^0_i)%20=%20\frac{\sum_{l%20=%201}^L%20w_l%20\text{temp}_l}{\sum_{l%20=%201}^L%20w_l})
 and
-$$w_l = \text{exp}( - a \,\text{dist}({\boldsymbol z}^0_i, {\boldsymbol z}_l)  )$$
+![Equation](https://latex.codecogs.com/png.latex?w_l%20=%20\text{exp}(-%20a%20\,\text{dist}({\boldsymbol%20z}^0_i,%20{\boldsymbol%20z}_l)))
 where $a > 0$ is the kernel smoothing parameter and $\text{dist}(\cdot, \cdot)$ is a distance function. The latter can be vector-valued, in which case $\boldsymbol a$ will be a vector of positive kernel smoothing coefficients.
 
 ## Building and fitting models with nested effects
