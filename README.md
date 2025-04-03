@@ -42,16 +42,16 @@ where `...` should contain the name of the covariate to be transformed, `trans` 
 
 Here we list the transformations currently available:
 
-  - `trans = trans_linear()` uses a **linear combination** to create a **single index** smooth effect. In particular, if ${\boldsymbol x} = (x_1, x_2, \dots, x_d)$, then this specifies a nested effect of the form
+**Linear combinations**: use `trans = trans_linear()` a **single index** smooth effect. In particular, if ${\boldsymbol x} = (x_1, x_2, \dots, x_d)$, then this specifies a nested effect of the form
 $$s(\tilde{s}({\boldsymbol x})) = s(\boldsymbol a^T \boldsymbol x),$$
 where $\boldsymbol a$ are the coefficients of the linear combination.
 
-  - `trans = trans_nexpsm()` specifies an **(adaptive) exponential smoothing** transformation. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form ![Equation](https://latex.codecogs.com/png.latex?s(\tilde{s}({x}_t))%20=%20s(\omega\tilde{s}(x_{t-1})%20+%20(1-\omega)x_{t}))
+**(adaptive) exponential smoothing**: These are obtained with `trans = trans_nexpsm()`. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form ![Equation](https://latex.codecogs.com/png.latex?s(\tilde{s}({x}_t))%20=%20s(\omega\tilde{s}(x_{t-1})%20+%20(1-\omega)x_{t}))
 with $\omega \in (0, 1)$. Adaptive smoothing is achieved by modelling the exponential smoothing coefficient via
 $$\omega_t = \phi(  {\boldsymbol a}^T {\boldsymbol z}_t ),$$
 where $\phi(\cdot)$ is the standard logistic function, ${\boldsymbol z}_t$ is a vector of covariates and ${\boldsymbol a}$ is a vector of unknown parameters.
 
-   - `trans = trans_mgks()` specifies an **multivariate kernel smoothing** transformation. For example, suppose that response variable $y_i$ (e.g., ozone concentration) corresponds to location $\boldsymbol z_i^0$ and that we think that it depends on air temperature. We have temperature measurements $\text{temp}_1, \dots, \text{temp}_L$ at locations $\boldsymbol z_1, \dots, \boldsymbol z_L$, but none corresponds to $\boldsymbol z_i^0$. Then we can use `trans_mgks()` to build an estimate of the temperature at $\boldsymbol z_i^0$ via kernel smoothing, that is
+**multivariate kernel smoothing**: specified via `trans = trans_mgks()`. For example, suppose that response variable $y_i$ (e.g., ozone concentration) corresponds to location $\boldsymbol z_i^0$ and that we think that it depends on air temperature. We have temperature measurements $\text{temp}_1, \dots, \text{temp}_L$ at locations $\boldsymbol z_1, \dots, \boldsymbol z_L$, but none corresponds to $\boldsymbol z_i^0$. Then we can use `trans_mgks()` to build an estimate of the temperature at $\boldsymbol z_i^0$ via kernel smoothing, that is
 
 ![Equation](https://latex.codecogs.com/png.latex?\tilde{s}({\boldsymbol%20z}^0_i)%20=%20\frac{\sum_{l%20=%201}^L%20w_l%20\text{temp}_l}{\sum_{l%20=%201}^L%20w_l})
 
