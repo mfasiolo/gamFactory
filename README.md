@@ -26,7 +26,7 @@ Then a smooth effect with a nested transformation is $s(\tilde{s}({\boldsymbol x
 
 Nested effect can be used in standard or multi-parameter GAMs (the latter include the GAMLSS models of Rigby and Stasinopoulos, 2005). In particular, assume that the conditional distribution of the response $y$ given the covariates ${\boldsymbol x}$ is
 
-![Equation](https://latex.codecogs.com/png.latex?y|{\boldsymbol%20x}%20\sim%20\text{Distr}\{y|\theta_1({\boldsymbol%20x}_1),%20\theta_2({\boldsymbol%20x}_2),%20\dots,%20\theta_p({\boldsymbol%20x}_p)\})
+![Equation](https://latex.codecogs.com/png.latex?y|{\boldsymbol%20x}%20\sim%20\text{Distr}(y|\theta_1({\boldsymbol%20x}_1),%20\theta_2({\boldsymbol%20x}_2),%20\dots,%20\theta_p({\boldsymbol%20x}_p)))
 
 then the model for the $j$-th parameter of the distribution is
 
@@ -47,10 +47,15 @@ where `...` should contain the name of the covariate to be transformed, `trans` 
 Here we list the transformations currently available:
 
 **Linear combinations**: use `trans = trans_linear()` a **single index** smooth effect. In particular, if ${\boldsymbol x} = (x_1, x_2, \dots, x_d)$, then this specifies a nested effect of the form
+
 $$s(\tilde{s}({\boldsymbol x})) = s(\boldsymbol a^T \boldsymbol x),$$
+
 where $\boldsymbol a$ are the coefficients of the linear combination.
 
-**(adaptive) exponential smoothing**: These are obtained with `trans = trans_nexpsm()`. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form ![Equation](https://latex.codecogs.com/png.latex?s(\tilde{s}({x}_t))%20=%20s(\omega\tilde{s}(x_{t-1})%20+%20(1-\omega)x_{t}))
+**(adaptive) exponential smoothing**: These are obtained with `trans = trans_nexpsm()`. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form 
+
+![Equation](https://latex.codecogs.com/png.latex?s(\tilde{s}({x}_t))%20=%20s(\omega\tilde{s}(x_{t-1})%20+%20(1-\omega)x_{t}))
+
 with $\omega \in (0, 1)$. Adaptive smoothing is achieved by modelling the exponential smoothing coefficient via
 $$\omega_t = \phi(  {\boldsymbol a}^T {\boldsymbol z}_t ),$$
 where $\phi(\cdot)$ is the standard logistic function, ${\boldsymbol z}_t$ is a vector of covariates and ${\boldsymbol a}$ is a vector of unknown parameters.
@@ -61,7 +66,7 @@ where $\phi(\cdot)$ is the standard logistic function, ${\boldsymbol z}_t$ is a 
 
 and
 
-![Equation](https://latex.codecogs.com/png.latex?w_l%20=%20\text{exp}(-%20a%20\,\text{dist}({\boldsymbol%20z}^0_i,%20{\boldsymbol%20z}_l)))
+![Equation](https://latex.codecogs.com/png.latex?w_l%20=%20\text{exp}(-%20a%20\text{dist}({\boldsymbol%20z}^0_i,%20{\boldsymbol%20z}_l)))
 
 where $a > 0$ is the kernel smoothing parameter and $\text{dist}(\cdot, \cdot)$ is a distance function. The latter can be vector-valued, in which case $\boldsymbol a$ will be a vector of positive kernel smoothing coefficients.
 
