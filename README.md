@@ -25,9 +25,13 @@ These are smooth effects that take as argument a transformation of the covariate
 Then a smooth effect with a nested transformation is $s(\tilde{s}({\boldsymbol x}))$, where $s(\cdot)$ is a smooth effect built via a spline basis expansion.
 
 Nested effect can be used in standard or multi-parameter GAMs (the latter include the GAMLSS models of Rigby and Stasinopoulos, 2005). In particular, assume that the conditional distribution of the response $y$ given the covariates ${\boldsymbol x}$ is
-$$y|{\boldsymbol x} \sim \text{Distr}\{y|\theta_1({\boldsymbol x}_1), \theta_2({\boldsymbol x}_2), \dots, \theta_p({\boldsymbol x}_p) \},$$
+
+![Equation](https://latex.codecogs.com/png.latex?y|{\boldsymbol%20x}%20\sim%20\text{Distr}{y|\theta_1({\boldsymbol%20x}_1),%20\theta_2({\boldsymbol%20x}_2),%20\dots,%20\theta_p({\boldsymbol%20x}_p)})
+
 then the model for the $j$-th parameter of the distribution is
-$$g_j\{\theta_j({\boldsymbol x})\} = \sum_{k=1}^m f_k({\boldsymbol x}_k)  + \sum_{u=1}^l s_u(\tilde{s}_u({\boldsymbol x}_u)).$$ 
+
+![Equation](https://latex.codecogs.com/png.latex?g_j\{\theta_j({\boldsymbol%20x})\}%20=%20\sum_{k=1}^m%20f_k({\boldsymbol%20x}_k)%20%20+%20\sum_{u=1}^l%20s_u(\tilde{s}_u({\boldsymbol%20x}_u)))
+
 where the $f_k$'s are standard smooth effects and the $s_u$'s are smooth effects with nested transformations (henceforth **nested effects**).
 
 ## Available types of nested effects
