@@ -46,7 +46,8 @@ Here we list the transformations currently available:
 $$s(\tilde{s}({\boldsymbol x})) = s(\boldsymbol a^T \boldsymbol x),$$
 where $\boldsymbol a$ are the coefficients of the linear combination.
 
-  - `trans = trans_nexpsm()` specifies an **(adaptive) exponential smoothing** transformation. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form $$s(\tilde{s}({x}_t)) = s(\omega\tilde{s}(x_{t-1}) + (1-\omega)x_{t}),$$
+  - `trans = trans_nexpsm()` specifies an **(adaptive) exponential smoothing** transformation. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form 
+  - <img src="https://latex.codecogs.com/svg.image?$s(\tilde{s}({x}_t))=s(\omega\tilde{s}(x_{t-1})&plus;(1-\omega)x_{t}),$/> 
 with $\omega \in (0, 1)$. Adaptive smoothing is achieved by modelling the exponential smoothing coefficient via
 $$\omega_t = \phi(  {\boldsymbol a}^T {\boldsymbol z}_t ),$$
 where $\phi(\cdot)$ is the standard logistic function, ${\boldsymbol z}_t$ is a vector of covariates and ${\boldsymbol a}$ is a vector of unknown parameters.
