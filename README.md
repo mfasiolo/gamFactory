@@ -26,7 +26,7 @@ Then a smooth effect with a nested transformation is $s(\tilde{s}({\boldsymbol x
 
 Nested effect can be used in standard or multi-parameter GAMs (the latter include the GAMLSS models of Rigby and Stasinopoulos, 2005). In particular, assume that the conditional distribution of the response $y$ given the covariates ${\boldsymbol x}$ is
 
-![Equation](https://latex.codecogs.com/png.latex?y|{\boldsymbol%20x}%20\sim%20\text{Distr}{y|\theta_1({\boldsymbol%20x}_1),%20\theta_2({\boldsymbol%20x}_2),%20\dots,%20\theta_p({\boldsymbol%20x}_p)})
+![Equation](https://latex.codecogs.com/png.latex?y|{\boldsymbol%20x}%20\sim%20\text{Distr}\{y|\theta_1({\boldsymbol%20x}_1),%20\theta_2({\boldsymbol%20x}_2),%20\dots,%20\theta_p({\boldsymbol%20x}_p)\})
 
 then the model for the $j$-th parameter of the distribution is
 
