@@ -7,11 +7,7 @@
 library(devtools)
 install_github("mfasiolo/gamFactory")
 ```
-To visualise the effects of the models we will use a development version of the `mgcViz` package, which is also not on CRAN but can be installed via:
-
-```r
-install_github("mfasiolo/mgcViz")
-```
+To visualise the effects of the models we will use the `mgcViz` package (version >= 0.2.0 required), which is available on CRAN.
 
 ## Introduction to nested effects
 
