@@ -1,5 +1,5 @@
 
-# GAMs with nested effects
+# gamFactory: GAMs with nested effects
 
 **NOTE**: the `gamFactory` package is not on CRAN yet, and should be installed from GitHub via:
 
