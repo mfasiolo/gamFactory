@@ -1,8 +1,8 @@
 #'
-#' Fit GAM models with non-linear effects
+#' Fit GAM models with nested effects
 #' 
 #' @description This function fits a generalized additive model for location scale and shape (GAMLSS) 
-#'              with non-linear effects using [mgcv::gam]
+#'              with nested effects using [mgcv::gam]
 #' 
 #' 
 #' @param formula A GAM formula, or a list of formulae. See ?mgcv::gam details.
