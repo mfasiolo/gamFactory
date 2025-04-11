@@ -26,17 +26,17 @@ Then a smooth effect with a nested transformation is $s(\tilde{s}({\boldsymbol x
 
 Nested effect can be used in standard or multi-parameter GAMs (the latter include the GAMLSS models of Rigby and Stasinopoulos, 2005). In particular, assume that the conditional distribution of the response $y$ given the covariates ${\boldsymbol x}$ is
 
-![Equation](https://latex.codecogs.com/png.latex?y|{\boldsymbol%20x}%20\sim%20\text{Distr}(y|\theta_1({\boldsymbol%20x}_1),%20\theta_2({\boldsymbol%20x}_2),%20\dots,%20\theta_p({\boldsymbol%20x}_p)))
+![Equation](https://latex.codecogs.com/png.latex?y|{\boldsymbol%20x}%20\sim%20\text{Distr}(y|\theta_1({\boldsymbol%20x}),%20\theta_2({\boldsymbol%20x}),%20\dots,%20\theta_p({\boldsymbol%20x})))
 
 then the model for the $j$-th parameter of the distribution is
 
-![Equation](https://latex.codecogs.com/png.latex?g_j\{\theta_j({\boldsymbol%20x})\}%20=%20\sum_{k=1}^m%20f_k({\boldsymbol%20x}_k)%20%20+%20\sum_{u=1}^l%20s_u(\tilde{s}_u({\boldsymbol%20x}_u)))
+![Equation](https://latex.codecogs.com/png.latex?g_j(\theta_j({\boldsymbol%20x}))%20=%20\sum_{k=1}^m%20f_k({\boldsymbol%20x})%20%20+%20\sum_{u=1}^l%20s_u(\tilde{s}_u({\boldsymbol%20x})))
 
 where the $f_k$'s are standard smooth effects and the $s_u$'s are smooth effects with nested transformations (henceforth **nested effects**).
 
 ## Available types of nested effects
 
-The `gamFactory` packages provides several types of nested effects, each based on a different nested
+The `gamFactory` package provides several types of nested effects, each based on a different nested
 transformation. They can be specified via
 
 ```r
@@ -46,13 +46,13 @@ where `...` should contain the name of the covariate to be transformed, `trans` 
 
 Here we list the transformations currently available:
 
-**Linear combinations**: use `trans = trans_linear()` a **single index** smooth effect. In particular, if ${\boldsymbol x} = (x_1, x_2, \dots, x_d)$, then this specifies a nested effect of the form
+**Linear combinations**: use `trans = trans_linear()` a **single index** smooth effect. In particular, if ${\boldsymbol x} = (x_1, x_2, \dots, x_d)^T$, then this specifies a nested effect of the form
 
 $$s(\tilde{s}({\boldsymbol x})) = s(\boldsymbol a^T \boldsymbol x),$$
 
 where $\boldsymbol a$ are the coefficients of the linear combination.
 
-**(adaptive) exponential smoothing**: These are obtained with `trans = trans_nexpsm()`. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form 
+**Adaptive exponential smoothing**: These are obtained with `trans = trans_nexpsm()`. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form 
 
 ![Equation](https://latex.codecogs.com/png.latex?s(\tilde{s}({x}_t))%20=%20s(\omega\tilde{s}(x_{t-1})%20+%20(1-\omega)x_{t}))
 
@@ -83,7 +83,7 @@ takes the following arguments:
 
    - `family` is a family object specifying the distribution and link to use in fitting. Available families are Gaussian (`fam_gaussian`), binomial (`fam_binomial`), generalised Pareto distribution (`fam_gpd`), Poisson (`fam_poisson`) and Sinh-Arsinh (`fam_shash`).
 
-   - `data` is adata frame or list that includes the model's response variable along with the covariates specified in the formula.
+   - `data` is a data frame or list that includes the model's response variable along with the covariates specified in the formula.
 
    - `fit` same argument as in `mgcv::gam`. If this argument is `TRUE` then `gam_nl` sets up the model and fits it, but if it is `FALSE` then the model is set up and an object containing what would be required to fit is returned.
 
@@ -164,7 +164,7 @@ abline(0, 1, col = 2)
 ```
 
 <img src="gamFactory_files/figure-html/gamFactory-9-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
-which look roughly correct here.
+which looks roughly correct here.
 
 The standard plotting methods of `mgcv` can be used on the model, but the nested effects are not plotted by default. To plot them, we can use the methods provided by `mgcViz` (development version, see the top of this document):
 
@@ -209,7 +209,7 @@ The data set contains daily measurements of air pollution and mortality in Chica
 ```r
 dat <- chicago_data() # Assumes "gamair" package is installed
 ```
-The structure of the data frame is quite complex, let's start by look at the following elements:
+The structure of the data frame is quite complex, let's start by looking at the following elements:
 
 ```r
 head(dat[ , c("death", "time", "X")])
@@ -232,11 +232,11 @@ dim(dat$X)
 ```
 ## [1] 4791    3
 ```
-Here `death` is the number of deaths, `time` is a time counter and `X` is a matrix of transformed pollutants (shifted and the square-rooted to reduce right-skewness).
+Here `death` is the number of deaths, `time` is a time counter, and `X` is a matrix of transformed pollutants (shifted and the square-rooted to reduce right-skewness).
 
 ### A single index model
 
-We fit a Poisson GAM to the data, including a single index effect of three pollutant. Here we set `method = "efs"` to fit the model via the generalised Fellner-Schall iteration of Wood and Fasiolo (2017), which is faster (but occasionally less accurate) than the default BFGS optimiser:
+We fit a Poisson GAM to the data, including a single index effect of three pollutants. Here we set `method = "efs"` to fit the model via the generalised Fellner-Schall iteration of Wood and Fasiolo (2017), which is faster (but occasionally less accurate) than the default BFGS optimiser:
 
 ```r
 # Should take a couple of minutes to converge
@@ -285,7 +285,7 @@ print(plot(fit_si), pages = 1)
 ```
 
 <img src="gamFactory_files/figure-html/gamFactory-17-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
-where the effect of time is using a lot of degress of freedom, while the effects of the linear combination of pollutants is fairly smooth. The coefficients of the linear combination are plotted by:
+where the effect of time is using a lot of degrees of freedom, while the effects of the linear combination of pollutants is fairly smooth. The coefficients of the linear combination are plotted by:
 
 ```r
 plot(fit_si, select = 2, inner = TRUE)
@@ -375,7 +375,7 @@ fit_exp <- gam_nl(death ~ s(time, k = 200) +
 <!-- ``` -->
 <!-- Note that the latest model has more parameters, but less effective degrees of freedom (EDF).  -->
 <!-- TOTALMENTE SBALLATI: DA CORREGGERE -->
-<!-- This is because adding the exponentially smoothed effects has reduce the EDF neeeded to model the effect of time: -->
+<!-- This is because adding the exponentially smoothed effects has reduced the EDF neeeded to model the effect of time: -->
 <!-- ```{r} -->
 <!-- pen.edf(fit_si) -->
 <!-- pen.edf(fit_exp) -->
@@ -408,7 +408,7 @@ the amount of exponential smoothing is somewhat arbitrary).
 
 ### Using kernel rather than exponential smoothing
 
-Given that the data considered here is time-ordered (i.e., we are dealing with time series) using a exponential smooth is more natural than using a kernel smooth. However, we can still use the latter to capture the effect of lagged pollutants concentration.
+Given that the data considered here is time-ordered (i.e., we are dealing with time series) using an exponential smooth is more natural than using a kernel smooth. However, we can still use the latter to capture the effect of lagged pollutants' concentration.
 To do so we need the following data:
 
 ```r
@@ -436,7 +436,7 @@ plot(dat$pm_10_lag_2[1, 51:100])
 ```
 
 <img src="gamFactory_files/figure-html/gamFactory-26-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
-shows that first observed death count in the data set will be modelled using the 50 lagged values of `pm10` with time-distances (time-lags in days) ranging from around 60 to 1 day. The matrix `dat$o3_lag_2` has a similar structure.
+shows that the first observed death count in the data set will be modelled using the 50 lagged values of `pm10` with time-distances (time-lags in days) ranging from around 60 to 1 day. The matrix `dat$o3_lag_2` has a similar structure.
 
 We can fit a model containing the effects of kernel smoothed `pm10` and `o3` as follows:
 
@@ -473,7 +473,7 @@ The smoothed O3 is quite similar across the two type of smooths, but the smoothe
 
 Probabilistic additive stacking is a semi-parametric extension of regression stacking (Breiman, 1996), proposed by Capezza et al. (2020). The idea is to create a mixture of experts, where the weight of each expert depends on the covariates via parametric, random or smooth effects. See the paper for more details.
 
-The `gamFactory` package provide a new family of distributions, `fam_stackProb`, which can be used to fit models with probabilistic additive stacking. But **note that many more stacking methods** are provided by the `gamstackr` package, available [here](https://github.com/eenticott/gamstackr)
+The `gamFactory` package provides a new family of distributions, `fam_stackProb`, which can be used to fit models with probabilistic additive stacking. But **note that many more stacking methods** are provided by the `gamstackr` package, available [here](https://github.com/eenticott/gamstackr)
 
 Here we illustrate how to use additive stacking on a very simple example. Consider the UK electricity demand data contained in the `qgam` package:
 
@@ -574,7 +574,7 @@ lines(dTest$Posan, denBasic_t, col = 2) # Basic
 ```
 
 <img src="gamFactory_files/figure-html/gamFactory-40-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
-The higher the better, hence stacking seems to be doing sligthly better than the basic GAM. Obviously this is a fairly dumb example, whose only purpose is to illustrate how additive stacking works. For example, we have not excluded holidays and both models do badly on those days. In particular, on the plot we see very negative likelihood values on Jan 1st, around Easter and around the 1st May bank holiday.
+The higher the better, hence stacking seems to be doing slightly better than the basic GAM. Obviously, this is a fairly dumb example, whose only purpose is to illustrate how additive stacking works. For example, we have not excluded holidays and both models do badly on those days. In particular, on the plot we see very negative likelihood values on Jan 1st, around Easter and around the 1st May bank holiday.
 
 Note that the `fam_stackProb` family can be used to create mixtures of more than two experts. For example, we could get the log-density of the basic model on the stacking set:
 
@@ -603,7 +603,7 @@ print(plot(fitStack2, allTerms = TRUE), pages = 1)
 ```
 
 <img src="gamFactory_files/figure-html/gamFactory-44-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
-As explained in Capezza et al. (2020), the accumulated local effect (ALE) plot of Apley and Zhu (2016) often provide a better way to visualise the effect of covariate on the experts weights:
+As explained in Capezza et al. (2020), the accumulated local effect (ALE) plots of Apley and Zhu (2016) often provide a better way to visualise the effect of covariate on the experts weights:
 
 ```r
 plot(ALE(fitStack2, x = "wM", oind = 3, type = "response"))
