@@ -60,7 +60,7 @@ with $\omega \in (0, 1)$. Adaptive smoothing is achieved by modelling the expone
 $$\omega_t = \phi(  { a}^T { z}_t ),$$
 where $\phi(\cdot)$ is the standard logistic function, ${ z}_t$ is a vector of covariates and ${ a}$ is a vector of unknown parameters.
 
-**multivariate kernel smoothing**: specified via `trans = trans_mgks()`. For example, suppose that response variable $y_i$ (e.g., ozone concentration) corresponds to location $ z_i^0$ and that we think that it depends on air temperature. We have temperature measurements $\text{temp}_1, \dots, \text{temp}_L$ at locations $ z_1, \dots,  z_L$, but none corresponds to $ z_i^0$. Then we can use `trans_mgks()` to build an estimate of the temperature at $ z_i^0$ via kernel smoothing, that is
+**multivariate kernel smoothing**: specified via `trans = trans_mgks()`. For example, suppose that response variable $y_i$ (e.g., ozone concentration) corresponds to location $z_i^0$ and that we think that it depends on air temperature. We have temperature measurements $\text{temp}_1, \dots, \text{temp}_L$ at locations $z_1, \dots,  z_L$, but none corresponds to $z_i^0$. Then we can use `trans_mgks()` to build an estimate of the temperature at $z_i^0$ via kernel smoothing, that is
 
 ![Equation](https://latex.codecogs.com/png.latex?\tilde{s}({%20z}^0_i)%20=%20\frac{\sum_{l%20=%201}^L%20w_l%20\text{temp}_l}{\sum_{l%20=%201}^L%20w_l})
 
