@@ -18,19 +18,19 @@ install_github("mfasiolo/mgcViz")
 The `gamFactory` `R` package extends `mgcv` by providing a new class of smooth effects, the so-called nested effects.
 These are smooth effects that take as argument a transformation of the covariates. To define them more precisely, let:  
 
-   - ${\boldsymbol x} \in \mathbb{R}^d$ be a vector of features or covariates.
+   - $x \in \mathbb{R}^d$ be a vector of features or covariates.
 
-   - $\tilde{s}({\boldsymbol x}): \mathbb{R}^d \rightarrow \mathbb{R}$ be a scalar-valued covariate transformation.
+   - $\tilde{s}(x): \mathbb{R}^d \rightarrow \mathbb{R}$ be a scalar-valued covariate transformation.
    
-Then a smooth effect with a nested transformation is $s(\tilde{s}({\boldsymbol x}))$, where $s(\cdot)$ is a smooth effect built via a spline basis expansion.
+Then a smooth effect with a nested transformation is $s(\tilde{s}({ x}))$, where $s(\cdot)$ is a smooth effect built via a spline basis expansion.
 
-Nested effect can be used in standard or multi-parameter GAMs (the latter include the GAMLSS models of Rigby and Stasinopoulos, 2005). In particular, assume that the conditional distribution of the response $y$ given the covariates ${\boldsymbol x}$ is
+Nested effect can be used in standard or multi-parameter GAMs (the latter include the GAMLSS models of Rigby and Stasinopoulos, 2005). In particular, assume that the conditional distribution of the response $y$ given the covariates ${ x}$ is
 
-![Equation](https://latex.codecogs.com/png.latex?y|{\boldsymbol%20x}%20\sim%20\text{Distr}(y|\theta_1({\boldsymbol%20x}),%20\theta_2({\boldsymbol%20x}),%20\dots,%20\theta_p({\boldsymbol%20x})))
+![Equation](https://latex.codecogs.com/png.latex?y|{%20x}%20\sim%20\text{Distr}(y|\theta_1({%20x}),%20\theta_2({%20x}),%20\dots,%20\theta_p({%20x})))
 
 then the model for the $j$-th parameter of the distribution is
 
-![Equation](https://latex.codecogs.com/png.latex?g_j(\theta_j({\boldsymbol%20x}))%20=%20\sum_{k=1}^m%20f_k({\boldsymbol%20x})%20%20+%20\sum_{u=1}^l%20s_u(\tilde{s}_u({\boldsymbol%20x})))
+![Equation](https://latex.codecogs.com/png.latex?g_j(\theta_j({%20x}))%20=%20\sum_{k=1}^m%20f_k({%20x})%20%20+%20\sum_{u=1}^l%20s_u(\tilde{s}_u({%20x})))
 
 where the $f_k$'s are standard smooth effects and the $s_u$'s are smooth effects with nested transformations (henceforth **nested effects**).
 
@@ -46,29 +46,29 @@ where `...` should contain the name of the covariate to be transformed, `trans` 
 
 Here we list the transformations currently available:
 
-**Linear combinations**: use `trans = trans_linear()` a **single index** smooth effect. In particular, if ${\boldsymbol x} = (x_1, x_2, \dots, x_d)^T$, then this specifies a nested effect of the form
+**Linear combinations**: use `trans = trans_linear()` a **single index** smooth effect. In particular, if ${ x} = (x_1, x_2, \dots, x_d)^T$, then this specifies a nested effect of the form
 
-$$s(\tilde{s}({\boldsymbol x})) = s(\boldsymbol a^T \boldsymbol x),$$
+$$s(\tilde{s}({ x})) = s( a^T  x),$$
 
-where $\boldsymbol a$ are the coefficients of the linear combination.
+where $ a$ are the coefficients of the linear combination.
 
-**Adaptive exponential smoothing**: These are obtained with `trans = trans_nexpsm()`. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form 
+**Adaptive exponential smoothing**: These are obtained with `trans = trans_nexpsm()`. For example, suppose that ${ x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form 
 
 ![Equation](https://latex.codecogs.com/png.latex?s(\tilde{s}({x}_t))%20=%20s(\omega\tilde{s}(x_{t-1})%20+%20(1-\omega)x_{t}))
 
 with $\omega \in (0, 1)$. Adaptive smoothing is achieved by modelling the exponential smoothing coefficient via
-$$\omega_t = \phi(  {\boldsymbol a}^T {\boldsymbol z}_t ),$$
-where $\phi(\cdot)$ is the standard logistic function, ${\boldsymbol z}_t$ is a vector of covariates and ${\boldsymbol a}$ is a vector of unknown parameters.
+$$\omega_t = \phi(  { a}^T { z}_t ),$$
+where $\phi(\cdot)$ is the standard logistic function, ${ z}_t$ is a vector of covariates and ${ a}$ is a vector of unknown parameters.
 
-**multivariate kernel smoothing**: specified via `trans = trans_mgks()`. For example, suppose that response variable $y_i$ (e.g., ozone concentration) corresponds to location $\boldsymbol z_i^0$ and that we think that it depends on air temperature. We have temperature measurements $\text{temp}_1, \dots, \text{temp}_L$ at locations $\boldsymbol z_1, \dots, \boldsymbol z_L$, but none corresponds to $\boldsymbol z_i^0$. Then we can use `trans_mgks()` to build an estimate of the temperature at $\boldsymbol z_i^0$ via kernel smoothing, that is
+**multivariate kernel smoothing**: specified via `trans = trans_mgks()`. For example, suppose that response variable $y_i$ (e.g., ozone concentration) corresponds to location $ z_i^0$ and that we think that it depends on air temperature. We have temperature measurements $\text{temp}_1, \dots, \text{temp}_L$ at locations $ z_1, \dots,  z_L$, but none corresponds to $ z_i^0$. Then we can use `trans_mgks()` to build an estimate of the temperature at $ z_i^0$ via kernel smoothing, that is
 
-![Equation](https://latex.codecogs.com/png.latex?\tilde{s}({\boldsymbol%20z}^0_i)%20=%20\frac{\sum_{l%20=%201}^L%20w_l%20\text{temp}_l}{\sum_{l%20=%201}^L%20w_l})
+![Equation](https://latex.codecogs.com/png.latex?\tilde{s}({%20z}^0_i)%20=%20\frac{\sum_{l%20=%201}^L%20w_l%20\text{temp}_l}{\sum_{l%20=%201}^L%20w_l})
 
 and
 
-![Equation](https://latex.codecogs.com/png.latex?w_l%20=%20\text{exp}(-%20a%20\text{dist}({\boldsymbol%20z}^0_i,%20{\boldsymbol%20z}_l)))
+![Equation](https://latex.codecogs.com/png.latex?w_l%20=%20\text{exp}(-%20a%20\text{dist}({%20z}^0_i,%20{%20z}_l)))
 
-where $a > 0$ is the kernel smoothing parameter and $\text{dist}(\cdot, \cdot)$ is a distance function. The latter can be vector-valued, in which case $\boldsymbol a$ will be a vector of positive kernel smoothing coefficients.
+where $a > 0$ is the kernel smoothing parameter and $\text{dist}(\cdot, \cdot)$ is a distance function. The latter can be vector-valued, in which case $ a$ will be a vector of positive kernel smoothing coefficients.
 
 ## Building and fitting models with nested effects
 
@@ -343,7 +343,7 @@ head(dat$pm_10_lag)
 ## 60 3.455803 1 1
 ## 61 5.739562 1 1
 ```
-here the first column contains lagged values of `pm10`, all the elements of the 2nd column are set to 1 and the third column contains the time differences between the current observed death count and the corresponding lagged value of `pm10`. Precisely the columns with `colnames` equal to `x` specify the elements of the $\boldsymbol z_t$ vector (see the explanations on `trans_nexpsm` above). Note the values on the third column:
+here the first column contains lagged values of `pm10`, all the elements of the 2nd column are set to 1 and the third column contains the time differences between the current observed death count and the corresponding lagged value of `pm10`. Precisely the columns with `colnames` equal to `x` specify the elements of the $ z_t$ vector (see the explanations on `trans_nexpsm` above). Note the values on the third column:
 
 ```r
 table(dat$pm_10_lag[ , 3])
