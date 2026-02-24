@@ -4,7 +4,14 @@
 \alias{gam_nl}
 \title{Fit GAM models with nested effects}
 \usage{
-gam_nl(formula, family = fam_gaussian(), data = list(), fit = TRUE, ...)
+gam_nl(
+  formula,
+  family = fam_gaussian(),
+  data = list(),
+  fit = TRUE,
+  sp = NULL,
+  ...
+)
 }
 \arguments{
 \item{formula}{A GAM formula, or a list of formulae. See ?mgcv::gam details.}

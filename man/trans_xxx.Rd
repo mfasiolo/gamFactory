@@ -4,6 +4,7 @@
 \alias{trans_linear}
 \alias{trans_mgks}
 \alias{trans_nexpsm}
+\alias{trans_linear_nexpsm}
 \title{Specifying inner transformations}
 \usage{
 trans_linear(pord, S, alpha, a0)
@@ -11,6 +12,22 @@ trans_linear(pord, S, alpha, a0)
 trans_mgks(y0, alpha)
 
 trans_nexpsm(S, alpha)
+
+trans_linear_nexpsm(
+  pord = NULL,
+  S_si = NULL,
+  S_nexp = NULL,
+  alpha_nexp = NULL,
+  alpha_si = NULL,
+  alpha_scale = NULL,
+  center = TRUE,
+  alpha_center = NULL,
+  n_si = NULL,
+  n_nexp = NULL,
+  check_coef = FALSE,
+  check_deriv = FALSE,
+  Z0 = NULL
+)
 }
 \arguments{
 \item{pord}{The order of the differences of the transformation parameters
@@ -26,6 +43,18 @@ between parameters are penalised, see the \code{pord} argument.}
 by the optimiser.}
 
 \item{y0}{Vector of \eqn{n} observations corresponding to the rows of the variables in \code{s_nest}.}
+
+\item{S_si}{Penalty matrix used in trans_linear_nexpsm. For the linear transformation parameters.}
+
+\item{S_nexp}{Penalty matrix used in expsmooth. For the linear transformation parameters.}
+
+\item{alpha_nexp}{Initial values used in trans_linear_nexpsm. For expsmooth parameters.}
+
+\item{alpha_si}{Initial values used in trans_linear_nexpsm. For linear transformation parameters.}
+
+\item{n_si}{Length of \code{alpha_si} if \code{alpha_si} is not provided.}
+
+\item{n_nexp}{Length of \code{alpha_nexp} if \code{alpha_nexp} is not provided.}
 }
 \description{
 Functions to specify nested covariate transformations, to be used
@@ -39,5 +68,6 @@ The types of transformations currently provided are:
 \item{\code{trans_mgks}{ a multivariate kernel smooth transformation based on the response variable observation 
                          vector \code{y0} and corresponding distance matrix.}}
 \item{\code{trans_nexpsm}{ an exponential smoothing transformation.}}
+\item{\code{trans_linear_nexpsm}{ a combination of a linear transformation and an exponential smoothing transformation.}}
 }
 }

@@ -20,6 +20,7 @@
   l1 <- l2 <- l3 <- NULL
   if( deriv ){
     g1 <- o$store$g1
+    
     g1cT <- t(g1) - colMeans(g1)
     gc <- g - mean(g)
     q <- g1cT %*% gc
@@ -97,6 +98,6 @@
                                          .vec_to_sym_mat(.contract3_vect(g3cvett, dar, ind$i3), p) )
   } 
   
-  return( d1H ) 
+  return( d1H )
   
 }

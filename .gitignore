@@ -7,3 +7,4 @@
 *.tmp
 gamFactory.Rproj
 inst/doc
+data/dat_era5.land.RData

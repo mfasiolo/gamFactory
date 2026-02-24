@@ -47,7 +47,7 @@
 #' print(plot(fit, inner = TRUE), pages = 1) # plot inner components
 #'
 #'
-gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE, ...){
+gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE, sp = NULL, ...){
   
   if( !is.list(formula) ){
     formula <- list(formula)
@@ -69,7 +69,7 @@ gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE, 
   }
   
   if( fit ){
-    out <- gam(G = out, ...)
+    out <- gam(G = out, sp = sp, ...)
 
     out <- postproc_gam_nl(o = out, info = info)
     

@@ -11,6 +11,23 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// deriv_si_nexp_cpp
+Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si, const NumericMatrix& X_nexp, const NumericVector& param, int deriv, Rcpp::Nullable<NumericVector> alpha_center, double Z0, bool positive_si);
+RcppExport SEXP _gamFactory_deriv_si_nexp_cpp(SEXP X_siSEXP, SEXP X_nexpSEXP, SEXP paramSEXP, SEXP derivSEXP, SEXP alpha_centerSEXP, SEXP Z0SEXP, SEXP positive_siSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type X_si(X_siSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type X_nexp(X_nexpSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type param(paramSEXP);
+    Rcpp::traits::input_parameter< int >::type deriv(derivSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<NumericVector> >::type alpha_center(alpha_centerSEXP);
+    Rcpp::traits::input_parameter< double >::type Z0(Z0SEXP);
+    Rcpp::traits::input_parameter< bool >::type positive_si(positive_siSEXP);
+    rcpp_result_gen = Rcpp::wrap(deriv_si_nexp_cpp(X_si, X_nexp, param, deriv, alpha_center, Z0, positive_si));
+    return rcpp_result_gen;
+END_RCPP
+}
 // expsmooth
 List expsmooth(NumericVector y, NumericMatrix Xi, NumericVector beta, NumericVector x0, int deriv);
 RcppExport SEXP _gamFactory_expsmooth(SEXP ySEXP, SEXP XiSEXP, SEXP betaSEXP, SEXP x0SEXP, SEXP derivSEXP) {
@@ -42,6 +59,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_gamFactory_deriv_si_nexp_cpp", (DL_FUNC) &_gamFactory_deriv_si_nexp_cpp, 7},
     {"_gamFactory_expsmooth", (DL_FUNC) &_gamFactory_expsmooth, 5},
     {"_gamFactory_mgks", (DL_FUNC) &_gamFactory_mgks, 4},
     {NULL, NULL, 0}

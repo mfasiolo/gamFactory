@@ -1,13 +1,20 @@
-#' 
 #' Function for building GAM families containing non-standard effects
 #' 
 #' @name build_family_nl
 #' @rdname build_family_nl
 #' @export build_family_nl
 #' 
-build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
+#' 
+# [changes for si_nexp:]
+# lamRidge elevated to 1e-2
+# Every 5th iter: print max|eta|, pen_si, ll_pen, ll0, & coefs
+# Handle mgcv column dropping in Gradient/Hessian calculations
+# Limit available.derivs to 1 (only efs avaliable)
+# Added y_true plotting and FD derivative verification
+
+build_family_nl <- function(y_true = NULL, bundle, info, lamVar = 1e5, lamRidge = 1e-2){
   
-  available_deriv <- min(bundle$available_deriv, 3)
+  available_deriv <- bundle$available_deriv
   cdf <- bundle$cdf
   rd <- bundle$rd
   qf <- bundle$qf
@@ -25,7 +32,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
   if( is.null(check_extra) ){ check_extra <- function(.ex) NULL }
   
   initialize_bundle <- bundle$initialize
-
+  
   initialize_internal <- function(y, nobs, E, x, family, offset){
     
     p <- ncol( x )
@@ -34,7 +41,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
     
     si <- which( sapply(info$type, paste0, collapse = '') != "stand" )
     nsi <- length( si )
-
+    
     nkk <- 1:ncol(x)
     start <- numeric( ncol(x) )
     if( nsi ){ # If there are nested effects we: 
@@ -56,7 +63,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
     }
     
     start[nkk] <- family$initialize_bundle(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset, 
-                                            jj = lpi, unscaled = unscaled)
+                                           jj = lpi, unscaled = unscaled)
     
     return( start )
     
@@ -86,6 +93,23 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
                           np = np, 
                           nam = nam)
     
+    ## ====== prepare for check_coef ==================================
+    it <- 0L  
+    
+    .get_nested_index <- function(info) {
+      which(sapply(info$type, function(x) paste0(x, collapse = "")) != "stand")[1L]
+    }
+    
+    .get_eta <- function(X, coef, info, deriv) {
+      derLev <- switch(as.character(deriv), "0"=0, "1"=2, "2"=3, "3"=3, "4"=4)
+      outDer <- deriv > 1
+      eff <- gamFactory:::.build_effects(X = X, info = info, outer = outDer)
+      olp <- linpreds(eff = eff, iel = info$iel, iec = info$iec)
+      olp <- olp$eval(param = coef, deriv = derLev)
+      unlist(olp$f, use.names = FALSE)
+    }
+    ## ======= prepare end ==============================================
+    
     ll <- function(y, X, coef, wt, family, offset=NULL, deriv=0, d1b=0, d2b=0, Hp=NULL, rank=0, fh=NULL, D=NULL) {
       ## function defining a gamlss model log lik. 
       ## deriv: 0 - eval
@@ -94,6 +118,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
       ##        3 - first deriv of Hess
       ##        4 - everything.
       lpi <- attr(X, "lpi") ## extract linear predictor index
+      drop <- attr(X, "drop") ## extract droped attribute (if any)
       np <- length(lpi)
       n <- length(y)
       
@@ -111,23 +136,62 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
       
       ne <- length( info$type )
       
+      # Put back column removed by mgcv
+      if (!is.null(drop)) {
+        X_last <- X[ , drop:ncol(X), drop = FALSE]
+        X[,drop] <- 0
+        X <- cbind(X[,1:drop, drop = FALSE], X_last)
+
+        coef_last <- coef[drop:length(coef)]
+        coef[drop] <- 0
+        coef <- c(coef[1:drop], coef_last)
+      }
+      
       # Build list of effect and penalties
-      eff <- .build_effects(X = X, info = info, outer = outDer)
+      eff <- gamFactory:::.build_effects(X = X, info = info, outer = outDer)
       
       # Build linear predictors and evaluate them
       olp <- linpreds(eff = eff, iel = info$iel, iec = info$iec)
       olp <- olp$eval(param = coef, deriv = derLev)
       
-      # Evaluate effect-specific (not smoothing) penalties and their derivatives
-      pen <- .eval_penalties(eff = olp$eff, info = info, d1b = d1b, deriv = derLev, outer = outDer)
-      pen_ridge <- .eval_ridge_penalties(eff = olp$eff, info = info, deriv = derLev)
+      # --------------------------------------------------------------------
+      # --------------- start check for gradient and Hessian ---------------
+      # ----------------- (g1, g2 in olp$eff[[i]]$store) -------------------
+      # --------------------------------------------------------------------
+      i_nes <- .get_nested_index(info)
+      si_extra <- info$extra[[i_nes]]$si
+      check.deriv.g <- si_extra$check_deriv
+      if (isTRUE(check.deriv.g)) {
+        res <- check_g_derivatives_fd(olp,
+                                      h1 = 1e-6,   # step for gradient
+                                      h2 = 2e-4,   # step for Hessian
+                                      verbose = TRUE, # if compare the mean value of gradient/Hessian
+                                      per_sample = TRUE) # if check each sample's gradient/Hessian
+        }
       
+      
+      # --------------------------------------------------------------------
+      # --------------- end check for gradient and Hessian ---------------
+      # --------------------------------------------------------------------
+      
+      
+      # Evaluate effect-specific (not smoothing) penalties and their derivatives
+      pen <- gamFactory:::.eval_penalties(eff = olp$eff, info = info, d1b = d1b, deriv = derLev, outer = outDer)
+      pen_ridge <- gamFactory:::.eval_ridge_penalties(eff = olp$eff, info = info, deriv = derLev)
+
       # Evaluate eta and mu
       etas <- olp$f
       mus <- lapply(1:np, function(.kk) family$linfo[[.kk]]$linkinv( etas[[.kk]] ))
       
+      if (!is.null(y_true)) {
+        plot(mus[[1]], y_true); abline(0,1) # For checking
+      }
+      
+      
       # Derivatives of llk w.r.t. mu
       DllkDmu <- llkFam(y = y, param = mus, deriv = derLev)
+      
+      ll0 <- drop(crossprod(wt, DllkDmu$d0))  #  log-lik without penalty
       
       ret <- list("l" = drop(crossprod(wt, DllkDmu$d0)))
       
@@ -142,7 +206,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
       if( deriv ){
         
         # Derivatives of llk w.r.t. etas (linear predictors) 
-        DllkDeta <- DllkDMu_to_DllkDeta(DllkDMu = DllkDmu, etas = etas, mus = mus, family = family, wt = wt, deriv = derLev)
+        DllkDeta <- gamFactory:::DllkDMu_to_DllkDeta(DllkDMu = DllkDmu, etas = etas, mus = mus, family = family, wt = wt, deriv = derLev)
         
         # Derivatives of log-likelihood w.r.t. beta
         Dbeta <- DllkDbeta(olp, param = coef, llk = DllkDeta, deriv = min(derLev, 2))
@@ -175,6 +239,77 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
           
         }
         
+      }
+      
+      ## ======================= check_coef (every 5 iteration)===========================
+      i_nes <- .get_nested_index(info)
+      si_extra <- info$extra[[i_nes]]$si
+      check_coef <- si_extra$check_coef
+      
+      if (isTRUE(check_coef)) {
+        
+        it <<- it + 1L
+        
+        i_nes <- .get_nested_index(info)
+        if (!is.na(i_nes)) {
+          
+          idx_all  <- info$iec[[i_nes]]           # index for this eff in all coef
+          si_extra <- info$extra[[i_nes]]$si
+          dsi <- length(si_extra$alpha)           # length of alpha
+          
+          ## ---- p:length of si; q:length of nexp----
+          q <-  ncol(si_extra$X_nexp)
+          p <- ncol(si_extra$X_si)
+          
+          ## ---- alpha_nexp and alpha_si ----
+          alpha_nexp <- coef[1:q] 
+          alpha_si   <- coef[q+1:p+q]
+          
+          ## ---- max|eta| ----
+          eta_now <- tryCatch(.get_eta(X, coef, info, deriv), error = function(e) NA_real_)
+          max_abs_eta <- if (all(is.finite(eta_now))) max(abs(eta_now)) else NA_real_
+          
+          ## ---- pen_si（priority α_si^T S_si α_si）----
+          pen_si_val <- NA_real_
+          if (!is.null(si_extra$S_si) && length(alpha_si)) {
+            pen_si_val <- as.numeric(t(alpha_si) %*% si_extra$S_si %*% alpha_si)
+          } else {
+            if (length(pen) >= i_nes && length(pen_ridge) >= i_nes) {
+              pen_si_val <- as.numeric(lamVar * pen[[i_nes]]$d0 + lamRidge * pen_ridge[[i_nes]]$d0)
+            }
+          }
+          
+          ## ---- log-like before and after penalty ----
+          ll_pen_val <- ret$l    # after penalty
+          ll0_val    <- ll0      # before penalty
+          
+          ## ---- print every 5 iteration ----
+          if (it %% 5 == 0) {
+            ## only print 6 elements of long vector, use "..." to indicate more elements
+            k <- 6L
+            fmt_vec <- function(x, k = 6L) {
+              if (!length(x)) return("")
+              s <- paste(format(head(x, k), digits = 6), collapse = ", ")
+              if (length(x) > k) paste0(s, " ...") else s
+            }
+            
+            cat(sprintf("[nl] eval %4d : max|eta|=%.6g  pen_si=%.6g  ll_pen=%.6g  ll0=%.6g\n",
+                        it, max_abs_eta, pen_si_val, ll_pen_val, ll0_val))
+            cat(sprintf("              alpha_nexp(q=%d): [%s]\n",
+                        length(alpha_nexp), fmt_vec(alpha_nexp, k)))
+            cat(sprintf("              alpha_si  (p=%d): [%s]\n",
+                        length(alpha_si),   fmt_vec(alpha_si, k)))
+          }
+        }
+      }
+      ## ===================== check_coef end ============================
+      
+      if (!is.null(drop)) {
+        #remove column
+        ret$lb <- ret$lb[-drop]
+        ret$lbb <- ret$lbb[-drop, -drop, drop = FALSE]
+        
+        drop <- NULL
       }
       
       return( ret )
@@ -222,7 +357,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
                    put_extra = put_extra, 
                    get_extra = get_extra,
                    ls = 1, ## signals that ls not needed here
-                   available.derivs = available_deriv - 2,
+                   available.derivs = 1,  # <- [change] allow 3rd order derivatives
                    discrete.ok = FALSE
     ), class = c("general.family","extended.family","family"))
     
@@ -231,5 +366,3 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
   return(outFam)
   
 }
-
-
