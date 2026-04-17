@@ -28,6 +28,19 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
   
   Xi <- o$store$Xi
   
+  # [新增] 提取正约束开关和 a0。注意这里的 o 结构中 si 信息通常在 o$xt$si
+  positive_si <- isTRUE(o$xt$si$positive_si)
+  if(positive_si) {
+    a0 <- o$xt$si$a0
+    if(is.null(a0)) a0 <- rep(0, na)
+    
+    # 计算指数映射因子
+    exp_alpha <- exp(alpha + a0)
+    
+    # 核心步骤：直接通过缩放 Xi 来吸收一阶链式法则的 exp() 乘子
+    Xi <- t(t(Xi) * exp_alpha)
+  }
+  
   # Outer design matrix and its derivatives
   X <- o$store$X0; X1 <- o$store$X1; X2 <- o$store$X2; X3 <- o$store$X3
   
@@ -51,6 +64,14 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
     leg <- lee * f1
     
     ll_aa <- t(Xi) %*% (lgg * Xi) 
+    
+    # [新增] 二阶导数的海森矩阵修正
+    if (positive_si) {
+      # 根据链式法则：d^2(l)/d(alpha_inner)^2 必须加上一阶导数 lg * d^2(xa)/d(alpha_inner)^2
+      # 因为 d^2(exp)/dx^2 还是 exp，所以这个修正项完美等同于对角线化的一阶导数 ll_a
+      ll_aa <- ll_aa + diag(as.vector(ll_a))
+    }
+    
     ll_bb <- t(X) %*% (lee * X)    # Same as t(X) %*% diag(le2) %*% X
     ll_ba <- t(X) %*% (leg * Xi) + t(X1) %*% (le * Xi)
     

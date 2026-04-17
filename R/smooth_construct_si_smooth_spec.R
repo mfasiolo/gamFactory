@@ -59,12 +59,32 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   # Reparametrise and then impose that variance should be 1
   si$alpha <- solve(si$B, si$alpha)
   si$a0 <- solve(si$B, si$a0)
-  tmp <- sd(si$X %*% (si$alpha + si$a0))
-  si$alpha <- si$alpha / tmp
-  si$a0 <- si$a0 / tmp
   
-  # Compute single index vector and store it in the data
-  ax <- drop( si$X %*% (si$alpha + si$a0) ) 
+  # positive constrain
+  positive_si <- isTRUE(si$positive_si) 
+  
+  if (positive_si) {
+    # 针对 positive constrain 的情况: alpha_final = exp(alpha_inner + a0)
+    # 计算当前指数化后的单指数向量的标准差
+    tmp <- sd(si$X %*% exp(si$alpha + si$a0))
+    
+    # 巧妙的标准化：因为 exp(alpha)/tmp = exp(alpha - log(tmp))
+    # 我们只需要在对数尺度上减去 log(tmp) 即可保证指数化后的方差为 1
+    si$alpha <- si$alpha - log(tmp)
+    
+    # Compute single index vector (带有指数映射)
+    ax <- drop( si$X %*% exp(si$alpha + si$a0) )
+    
+  } else {
+    # 原有的无约束逻辑
+    tmp <- sd(si$X %*% (si$alpha + si$a0))
+    si$alpha <- si$alpha / tmp
+    si$a0 <- si$a0 / tmp
+    
+    # Compute single index vector
+    ax <- drop( si$X %*% (si$alpha + si$a0) )
+  }
+  
   data[[object$term]] <- ax
   
   # Construct the B-splines corresponding to the outer smooth effect 
