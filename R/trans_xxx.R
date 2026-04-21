@@ -27,8 +27,7 @@
 #' }
 #' @export trans_linear
 #'
-trans_linear <- function(pord, S, alpha, a0, positive_si = FALSE){
-  
+trans_linear <- function(pord, S, alpha, a0, positive_si=FALSE){
   out <- lapply(as.list(match.call())[-1], eval, envir = parent.frame())
   out$type <- "si"
   

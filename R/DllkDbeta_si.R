@@ -14,36 +14,29 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
     if( is.null(param) ){ stop("param vector not provided!") }
   }
   
-  # Need to update the object
   if( is.null(o$param) || !identical(param, o$param) || o$deriv < deriv){
     o <- o$eval(param = param, deriv = deriv)
   }
   
-  # Extract stuff from object for convenience
   alpha <- param[ 1:o$na ]
   beta <- param[ -(1:o$na) ]
-  
   na <- length( alpha )
   nb <- length( beta ) 
   
-  Xi <- o$store$Xi
-  
-  # [新增] 提取正约束开关和 a0。注意这里的 o 结构中 si 信息通常在 o$xt$si
+  # 获取原始矩阵和约束状态
+  Xi_raw <- o$store$Xi
   positive_si <- isTRUE(o$xt$si$positive_si)
-  if(positive_si) {
-    a0 <- o$xt$si$a0
-    if(is.null(a0)) a0 <- rep(0, na)
-    
-    # 计算指数映射因子
-    exp_alpha <- exp(alpha + a0)
-    
-    # 核心步骤：直接通过缩放 Xi 来吸收一阶链式法则的 exp() 乘子
-    Xi <- t(t(Xi) * exp_alpha)
+  a0 <- o$a0
+  if(is.null(a0)) a0 <- rep(0, na)
+  
+  # 计算第一级雅可比矩阵 (Jacobian)
+  if (positive_si) {
+    Xi <- t(t(Xi_raw) * exp(alpha + a0))
+  } else {
+    Xi <- Xi_raw
   }
   
-  # Outer design matrix and its derivatives
   X <- o$store$X0; X1 <- o$store$X1; X2 <- o$store$X2; X3 <- o$store$X3
-  
   f <- o$f
   
   der1 <- der2 <- der3 <- der4 <- NULL
@@ -54,7 +47,6 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
   
   ll_a <- t(Xi) %*% lg
   ll_b <- t(X) %*% le
-  
   der1 <- c(ll_a, ll_b)
   
   if( deriv >  1){
@@ -65,14 +57,12 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
     
     ll_aa <- t(Xi) %*% (lgg * Xi) 
     
-    # [新增] 二阶导数的海森矩阵修正
+    # 【二阶精确补偿】: Hessian 必须加上对角线的一阶偏导
     if (positive_si) {
-      # 根据链式法则：d^2(l)/d(alpha_inner)^2 必须加上一阶导数 lg * d^2(xa)/d(alpha_inner)^2
-      # 因为 d^2(exp)/dx^2 还是 exp，所以这个修正项完美等同于对角线化的一阶导数 ll_a
       ll_aa <- ll_aa + diag(as.vector(ll_a))
     }
     
-    ll_bb <- t(X) %*% (lee * X)    # Same as t(X) %*% diag(le2) %*% X
+    ll_bb <- t(X) %*% (lee * X) 
     ll_ba <- t(X) %*% (leg * Xi) + t(X1) %*% (le * Xi)
     
     der2 <- rbind(cbind(ll_aa, t(ll_ba)), 
@@ -91,12 +81,31 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
         XJ <- Xi[ , jj]
         for(kk in jj:na){   # AAX
           XJK <- XJ * Xi[ , kk]
+          
           for(ll in kk:na){ # AAA
-            der3[[coun]] <- sum(lggg * XJK * Xi[ , ll])
+            val <- sum(lggg * XJK * Xi[ , ll])
+            
+            # 【三阶张量精确补偿】: 指数嵌套带来的高阶曲率修正
+            if (positive_si) {
+              if (jj == kk && kk == ll) {
+                val <- val + sum(3 * lgg * XJK + lg * XJ)
+              } else if (jj == kk && kk != ll) {
+                val <- val + sum(lgg * XJ * Xi[, ll])
+              } else if (jj != kk && kk == ll) {
+                val <- val + sum(lgg * Xi[, jj] * XJK)
+              }
+            }
+            der3[[coun]] <- val
             coun <- coun + 1
           }
+          
           for(ll in 1:nb){  # AAB
-            der3[[coun]] <- sum((legg*X[,ll]+2*leg*X1[,ll]+le*X2[,ll]) * XJK)
+            val <- sum((legg*X[,ll]+2*leg*X1[,ll]+le*X2[,ll]) * XJK)
+            # AAB 混合偏导补偿
+            if (positive_si && jj == kk) {
+              val <- val + sum((leg * X[, ll] + le * X1[, ll]) * Xi[, jj])
+            }
+            der3[[coun]] <- val
             coun <- coun + 1
           }
         }
@@ -113,18 +122,15 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
         for(kk in jj:nb){
           XJK <- XJ * X[ , kk]
           for(ll in kk:nb){
-            der3[[coun]] <- sum( XJK * X[ , ll] ) # Same as t(leee) %*% (X[ , jj] * X[ , kk] * X[ , ll])
+            der3[[coun]] <- sum( XJK * X[ , ll] )
             coun <- coun + 1
           }
         }
       }
       der3 <- do.call("c", der3)
-      
-    } # deriv = 3
-  }   #         2
+    } 
+  }   
   
   out <- list("d1" = der1, "d2" = der2, "d3" = der3)
-  
   return( out )
-  
 }

@@ -10,11 +10,10 @@
   alpha <- si$alpha
   a0 <- si$a0
   
-  positive_si <- isTRUE(si$positive_si) # 安全获取约束开关
-  
   # Need to subtract colMeans of original data "xm" and rescale using B
   Xi <- t(t(data[[object$term]]) - si$xm)  %*% si$B
   
+  positive_si <- isTRUE(si$positive_si) # 安全获取约束开关
   # 根据约束开关计算 xa (预测时的单指数向量)
   if (positive_si) {
     exp_alpha_a0 <- exp(alpha + a0)

@@ -60,30 +60,37 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   si$alpha <- solve(si$B, si$alpha)
   si$a0 <- solve(si$B, si$a0)
   
-  # positive constrain
   positive_si <- isTRUE(si$positive_si) 
   
   if (positive_si) {
-    # 针对 positive constrain 的情况: alpha_final = exp(alpha_inner + a0)
-    # 计算当前指数化后的单指数向量的标准差
-    tmp <- sd(si$X %*% exp(si$alpha + si$a0))
+    alpha_outer <- pmax((si$alpha + si$a0), 1e-4)
+    tmp <- sd(si$X %*% alpha_outer)
+    alpha_outer_std <- alpha_outer / tmp
     
-    # 巧妙的标准化：因为 exp(alpha)/tmp = exp(alpha - log(tmp))
-    # 我们只需要在对数尺度上减去 log(tmp) 即可保证指数化后的方差为 1
-    si$alpha <- si$alpha - log(tmp)
+    si$alpha <- log(alpha_outer_std)
+    si$a0 <- rep(0, di)
     
-    # Compute single index vector (带有指数映射)
     ax <- drop( si$X %*% exp(si$alpha + si$a0) )
     
+    # # 2. 【求初始方差】：计算在这个安全起点下，单指数向量的标准差
+    # tmp <- sd(si$X %*% exp(si$alpha + si$a0))
+    # 
+    # # 3. 【核心修正】：在对数空间完成标准化
+    # # 等价于让 Outer 除以 tmp。经过这一步，si$alpha 变成了 -log(tmp)
+    # si$alpha <- si$alpha - log(tmp)
+    # 
+    # # 4. 【生成基底锚点】：正推算出真实的 ax，用于放置 B-spline 节点
+    # # 经过上一步的修正，这里算出来的 ax 方差严格等于 1，完美！
+    # ax <- drop( si$X %*% exp(si$alpha + si$a0) )
+    
   } else {
-    # 原有的无约束逻辑
+    # 无约束逻辑保持原样
     tmp <- sd(si$X %*% (si$alpha + si$a0))
     si$alpha <- si$alpha / tmp
     si$a0 <- si$a0 / tmp
-    
-    # Compute single index vector
     ax <- drop( si$X %*% (si$alpha + si$a0) )
   }
+  # ... 后面接 B-spline 构建
   
   data[[object$term]] <- ax
   
