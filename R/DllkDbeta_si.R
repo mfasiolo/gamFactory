@@ -23,13 +23,12 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
   na <- length( alpha )
   nb <- length( beta ) 
   
-  # 获取原始矩阵和约束状态
   Xi_raw <- o$store$Xi
   positive_si <- isTRUE(o$xt$si$positive_si)
   a0 <- o$a0
   if(is.null(a0)) a0 <- rep(0, na)
   
-  # 计算第一级雅可比矩阵 (Jacobian)
+  # Jacobian
   if (positive_si) {
     Xi <- t(t(Xi_raw) * exp(alpha + a0))
   } else {
@@ -57,7 +56,7 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
     
     ll_aa <- t(Xi) %*% (lgg * Xi) 
     
-    # 【二阶精确补偿】: Hessian 必须加上对角线的一阶偏导
+    # diagnoal correct for second derivative of single index with positive constraint
     if (positive_si) {
       ll_aa <- ll_aa + diag(as.vector(ll_a))
     }
@@ -85,7 +84,7 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
           for(ll in kk:na){ # AAA
             val <- sum(lggg * XJK * Xi[ , ll])
             
-            # 【三阶张量精确补偿】: 指数嵌套带来的高阶曲率修正
+            # correct for third derivative of single index with positive constraint
             if (positive_si) {
               if (jj == kk && kk == ll) {
                 val <- val + sum(3 * lgg * XJK + lg * XJ)
@@ -101,7 +100,7 @@ DllkDbeta.si <- function(o, llk, deriv = 1, param = NULL){
           
           for(ll in 1:nb){  # AAB
             val <- sum((legg*X[,ll]+2*leg*X1[,ll]+le*X2[,ll]) * XJK)
-            # AAB 混合偏导补偿
+            # correct for AAB 
             if (positive_si && jj == kk) {
               val <- val + sum((leg * X[, ll] + le * X1[, ll]) * Xi[, jj])
             }

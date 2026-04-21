@@ -63,6 +63,8 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   positive_si <- isTRUE(si$positive_si) 
   
   if (positive_si) {
+    #see si$alpha as alpha_outer, want keep information from previous initialisation
+    #after filter by B, some of them may be negative, set them to a small positive value because of log()
     alpha_outer <- pmax((si$alpha + si$a0), 1e-4)
     tmp <- sd(si$X %*% alpha_outer)
     alpha_outer_std <- alpha_outer / tmp
@@ -71,26 +73,13 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
     si$a0 <- rep(0, di)
     
     ax <- drop( si$X %*% exp(si$alpha + si$a0) )
-    
-    # # 2. 【求初始方差】：计算在这个安全起点下，单指数向量的标准差
-    # tmp <- sd(si$X %*% exp(si$alpha + si$a0))
-    # 
-    # # 3. 【核心修正】：在对数空间完成标准化
-    # # 等价于让 Outer 除以 tmp。经过这一步，si$alpha 变成了 -log(tmp)
-    # si$alpha <- si$alpha - log(tmp)
-    # 
-    # # 4. 【生成基底锚点】：正推算出真实的 ax，用于放置 B-spline 节点
-    # # 经过上一步的修正，这里算出来的 ax 方差严格等于 1，完美！
-    # ax <- drop( si$X %*% exp(si$alpha + si$a0) )
-    
   } else {
-    # 无约束逻辑保持原样
     tmp <- sd(si$X %*% (si$alpha + si$a0))
     si$alpha <- si$alpha / tmp
     si$a0 <- si$a0 / tmp
+    
     ax <- drop( si$X %*% (si$alpha + si$a0) )
   }
-  # ... 后面接 B-spline 构建
   
   data[[object$term]] <- ax
   
