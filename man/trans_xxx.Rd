@@ -25,6 +25,8 @@ between parameters are penalised, see the \code{pord} argument.}
 \item{alpha}{Vector containing the initial values for the parameters of the transformation. If provided they can be used
 by the optimiser.}
 
+\item{positive_si}{Logical indicating whether alpha should be constrained to be positive.}
+
 \item{y0}{Vector of \eqn{n} observations corresponding to the rows of the variables in \code{s_nest}.}
 }
 \description{

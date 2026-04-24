@@ -63,8 +63,8 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   positive_si <- isTRUE(si$positive_si) 
   
   if (positive_si) {
-    #see si$alpha as alpha_outer, want keep information from previous initialisation
-    #after filter by B, some of them may be negative, set them to a small positive value because of log()
+    #see si$alpha as after exp transformation(alpha_outer), because we want keep information from previous initialization
+    #after filter by B, some alpha and a0 may be negative, set them to a small positive value because we need to do log() later
     alpha_outer <- pmax((si$alpha + si$a0), 1e-4)
     tmp <- sd(si$X %*% alpha_outer)
     alpha_outer_std <- alpha_outer / tmp
