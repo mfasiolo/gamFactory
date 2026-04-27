@@ -4,6 +4,10 @@
 #' @noRd
 .sumChi2 <- function(ss, V, Jac) {
   
+  Vf <- unname(colSums(t(Jac)* tcrossprod(V, Jac)))
+  ss <- ss/Vf
+  Jac <- Jac/Vf
+  
   # Compute the sum of squared fitted values
   t_y <- sum(ss^2)
   
