@@ -65,7 +65,7 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   if (positive_si) {
     # Here we are working on element-wise log of single index vector
     tmp <- sd(si$X %*% exp(si$alpha + si$a0))
-    si$a0 <- si$a0 - log(tmp)
+    si$alpha <- si$alpha - log(tmp)
     ax <- drop( si$X %*% exp(si$alpha + si$a0) )
   } else {
     tmp <- sd(si$X %*% (si$alpha + si$a0))
