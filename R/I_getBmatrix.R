@@ -5,6 +5,14 @@
 .getBmatrix <- function(P, r){
 
   d <- ncol( P )
+  
+  # if P is very close to identity, return identity matrix
+  # It would work even without this special cause but this getting a B 
+  # that is a permutation matrix. 
+  if( max(abs(P - diag(d))) < 1e-6 ){ 
+    return( diag(d) )
+  }
+  
   ei <- eigen( P )
   v <- ei$values
 
