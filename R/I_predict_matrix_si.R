@@ -13,10 +13,23 @@
   # Need to subtract colMeans of original data "xm" and rescale using B
   Xi <- t(t(data[[object$term]]) - si$xm)  %*% si$B
   
-  xa <- Xi %*% (alpha + a0)
+  positive_si <- isTRUE(si$positive_si) 
+
+  if (positive_si) {
+    exp_alpha_a0 <- exp(alpha + a0)
+    xa <- Xi %*% exp_alpha_a0
+  } else {
+    xa <- Xi %*% (alpha + a0)
+  }
   
   if(get.xa){ 
-    return(list(xa = xa, xa_da = Xi))
+    if (positive_si) {
+      # chain rules：d(Xi * exp(alpha + a0)) / d_alpha = Xi * diag(exp(alpha + a0))
+      xa_da <- t(t(Xi) * as.vector(exp_alpha_a0))
+    } else {
+      xa_da <- Xi
+    }
+    return(list(xa = xa, xa_da = xa_da))
   }
   
   # Compute outer model matrix

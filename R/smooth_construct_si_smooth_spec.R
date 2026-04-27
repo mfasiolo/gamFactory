@@ -59,12 +59,28 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   # Reparametrise and then impose that variance should be 1
   si$alpha <- solve(si$B, si$alpha)
   si$a0 <- solve(si$B, si$a0)
-  tmp <- sd(si$X %*% (si$alpha + si$a0))
-  si$alpha <- si$alpha / tmp
-  si$a0 <- si$a0 / tmp
   
-  # Compute single index vector and store it in the data
-  ax <- drop( si$X %*% (si$alpha + si$a0) ) 
+  positive_si <- isTRUE(si$positive_si) 
+  
+  if (positive_si) {
+    #see si$alpha as after exp transformation(alpha_outer), because we want keep information from previous initialization
+    #after filter by B, some alpha and a0 may be negative, set them to a small positive value because we need to do log() later
+    alpha_outer <- pmax((si$alpha + si$a0), 1e-4)
+    tmp <- sd(si$X %*% alpha_outer)
+    alpha_outer_std <- alpha_outer / tmp
+    
+    si$alpha <- log(alpha_outer_std)
+    si$a0 <- rep(0, di)
+    
+    ax <- drop( si$X %*% exp(si$alpha + si$a0) )
+  } else {
+    tmp <- sd(si$X %*% (si$alpha + si$a0))
+    si$alpha <- si$alpha / tmp
+    si$a0 <- si$a0 / tmp
+    
+    ax <- drop( si$X %*% (si$alpha + si$a0) )
+  }
+  
   data[[object$term]] <- ax
   
   # Construct the B-splines corresponding to the outer smooth effect 

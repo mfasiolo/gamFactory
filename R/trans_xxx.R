@@ -15,6 +15,7 @@
 #'          between parameters are penalised, see the \code{pord} argument.
 #' @param alpha Vector containing the initial values for the parameters of the transformation. If provided they can be used
 #'              by the optimiser.
+#' @param positive_si Logical indicating whether alpha should be constrained to be positive.
 #' @param y0 Vector of \eqn{n} observations corresponding to the rows of the variables in \code{s_nest}.
 #' 
 #' @details The types of transformations currently provided are:
@@ -27,8 +28,7 @@
 #' }
 #' @export trans_linear
 #'
-trans_linear <- function(pord, S, alpha, a0){
-  
+trans_linear <- function(pord, S, alpha, a0, positive_si=FALSE){
   out <- lapply(as.list(match.call())[-1], eval, envir = parent.frame())
   out$type <- "si"
   

@@ -4,13 +4,15 @@
 \alias{eff_si}
 \title{Build single index effect}
 \usage{
-eff_si(Xi, basis, a0 = NULL)
+eff_si(Xi, basis, a0 = NULL, positive_si = FALSE)
 }
 \arguments{
 \item{Xi}{matrix to be projected via single index vector \code{alpha}.}
 
 \item{basis}{function which takes \code{si = Xi\%*\%alpha} as input and returns model
 matrix and its derivatives w.r.t. \code{si}.}
+
+\item{positive_si}{logical, whether to constrain the single index to be positive.}
 }
 \description{
 Build single index effect
