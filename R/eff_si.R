@@ -37,19 +37,18 @@ eff_si <- function(Xi, basis, a0 = NULL, positive_si = FALSE){
     # The error is probably due to the fact that no observations falls within range
     store <- basis$evalX(x = ax, deriv = deriv)
     store$Xi <- Xi
-    if (positive_si) {store$g <- ax} 
-    
+ 
     # derivatives w.r.t ax
     if (deriv >= 1) store$f1 <- drop(store$X1 %*% beta)
     if (deriv >= 2) store$f2 <- drop(store$X2 %*% beta)
     if (deriv >= 3) store$f3 <- drop(store$X3 %*% beta)
     
-    # derivatives w.r.t alpha
-    # si_posi will use general case, which requires lower.tri matrix
-    # expand the g_diag to match the required size, use 0 to fill the position
+    # derivatives of g w.r.t alpha. 
       if (!positive_si) {
+        # Further derivative g2 and g3 are zero because the transformation is linear
         store$g1 <- Xi
       } else {
+        store$g <- ax
         g_diag <- t(t(Xi) * as.vector(exp(alpha + a0)))
         store$g1 <- g_diag
         
@@ -80,7 +79,10 @@ eff_si <- function(Xi, basis, a0 = NULL, positive_si = FALSE){
     
   }
   
+  
   if (positive_si) {
+    # We need to return the class "si_posi" to trigger the "general" formulas
+    # for derivative computation later on (on those for the standard "si" case).
     out <- structure(list("eval" = eval), class = c("si_posi", "nested"))
   } else {
     out <- structure(list("eval" = eval), class = c("si", "nested"))
