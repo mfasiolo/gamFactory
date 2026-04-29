@@ -37,6 +37,7 @@ eff_si <- function(Xi, basis, a0 = NULL, positive_si = FALSE){
     # The error is probably due to the fact that no observations falls within range
     store <- basis$evalX(x = ax, deriv = deriv)
     store$Xi <- Xi
+    store$g <- ax
  
     # derivatives w.r.t ax
     if (deriv >= 1) store$f1 <- drop(store$X1 %*% beta)
@@ -45,24 +46,26 @@ eff_si <- function(Xi, basis, a0 = NULL, positive_si = FALSE){
     
     # derivatives of g w.r.t alpha. 
       if (!positive_si) {
-        # Further derivative g2 and g3 are zero because the transformation is linear
+        # Further derivatives g2 and g3 are zero because the transformation is linear
         store$g1 <- Xi
       } else {
-        store$g <- ax
+        # Jacobian of alpha_posit = exp(alpha + a0) is diag(exp(alpha + a0))
         g_diag <- t(t(Xi) * as.vector(exp(alpha + a0)))
         store$g1 <- g_diag
         
+        # Mixed 2nd and 3rd derivs w.r.t. elements of alpha are zero, 
+        # the others are Xi[ , j] * alpha_posit[j]
+        # Code below uses idx2 and idx3 to fill only the relevant columns of 
+        # g2 and g3 with the non-zero elements (those that correspond to non-mixed derivatives).
         if (deriv >= 2) {
-          n_lower <- na * (na + 1) / 2
-          store$g2 <- matrix(0, nrow = nrow(Xi), ncol = n_lower)
-          idx2 <- if (na == 1) 1 else cumsum(c(1, na:2))
+          store$g2 <- matrix(0, nrow = nrow(Xi), ncol = na*(na+1)/2)
+          idx2 <- cumsum(c(1, na:2))
           store$g2[, idx2] <- g_diag
         }
         
         if (deriv >= 3) {
-          n_tensor <- na * (na + 1) * (na + 2) / 6
-          store$g3 <- matrix(0, nrow = nrow(Xi), ncol = n_tensor)
-          idx3 <- if (na == 1) 1 else cumsum(c(1, (na:2 * (na:2 + 1)) / 2))
+          store$g3 <- matrix(0, nrow = nrow(Xi), ncol =  na*(na+1)*(na+2)/6)
+          idx3 <- cumsum(c(1, (na:2 * (na:2 + 1)) / 2))
           store$g3[, idx3] <- g_diag
         }
       }
