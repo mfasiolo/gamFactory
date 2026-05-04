@@ -89,7 +89,7 @@
 #' )
 #' 
 #' # Numerical vs analytical derivative check
-#' check_std <- check_deriv(obj = obj_standard, param = param, ord = 1:3)
+#' check_std <- gamFactory:::check_deriv(obj = obj_standard, param = param, ord = 1:3)
 #' 
 #' 
 #' # ==============================================================================
@@ -128,7 +128,7 @@
 #' )
 #' 
 #' # Numerical vs analytical derivative check
-#' check_pos <- check_deriv(obj = obj_positive, param = param, ord = 1:3)
+#' check_pos <- gamFactory:::check_deriv(obj = obj_positive, param = param, ord = 1:3)
 #' 
 #' 
 #' # ==============================================================================

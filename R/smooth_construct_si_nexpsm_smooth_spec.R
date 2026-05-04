@@ -43,47 +43,40 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
   if(is.null(si)) si <- object$xt$si <- list()
   positive_si <- isTRUE(si$positive_si)
   
-  ## 0. Split design matrix into X_si and X_nexp and times --------------------
-  
-  # split times
-  Xall <- data[[object$term]] # Xall do not include response variable
+  ## --- Phase 0 & 1: Data Partitioning and Centering ---
+  # 0. Data Partitioning
+  Xall <- data[[object$term]] # Xall = [X_si | X_nexp | times]
   nms  <- colnames(Xall)
-  i_t  <- which(nms == "times")            # index of 'times' column, if any
-  times <- NULL                            # extract time column if present
+  i_t  <- which(nms == "times")            
+  times <- NULL                           
   if (length(i_t)) {
     times <- Xall[ , i_t]
     Xall  <- Xall[ , -i_t, drop = FALSE]
   }
   si$times <- times
+  all_columns <- ncol(Xall) # Xall = [X_si | X_nexp]
   
-  all_columns <- ncol(Xall)
-  # Xall = [X_si | X_nexp]
-
+  # For messy(flatten) data
   if(length(i_t)){
     n_si <- si$n_si
     n_nexp <- si$n_nexp
     if (is.null(n_si)) {
       stop("`n_si` is NULL: the number of single-index covariates must be specified.", call. = FALSE)
     }
-    
     if (is.null(n_nexp)) {
       stop("`n_nexp` is NULL: the number of exponential-smoothing covariates must be specified.", call. = FALSE)
     }
     
     all_columns_true <- n_si + n_nexp
-    nrep <- ceiling(all_columns / all_columns_true)
-    # nrep: umber of repeats
-    
+    nrep <- ceiling(all_columns / all_columns_true) # nrep: umber of repeats
     n_obs  <- nrow(Xall)
     stopifnot(ncol(Xall) == nrep * (n_si + n_nexp))
     
     X_block <- Xall[, 1:(nrep * n_si), drop = FALSE]
     W_block <- Xall[, (nrep * n_si + 1):(nrep * (n_si + n_nexp)), drop = FALSE]
-
     X_si_long   <- matrix(NA_real_, nrow = n_obs * nrep, ncol = n_si)
     X_nexp_long <- matrix(NA_real_, nrow = n_obs * nrep, ncol = n_nexp)
     
-    # recover
     for (d in 1:n_obs) {
       for (s in 1:nrep) {
         row <- (d - 1) * nrep + s
@@ -95,25 +88,19 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     # names（eg. c("East","South","West","North")、c("intercept","time_diff")）
     colnames(X_si_long)   <- paste0("x", 1:n_si)      # c("East","South","West","North")
     colnames(X_nexp_long) <- paste0("w", 1:n_nexp)    # c("intercept","time_diff")
-    
-    # --- original X_si, X_nexp ---
     X_si   <- X_si_long
     X_nexp <- X_nexp_long
-    
-    # drop INF rows
     ok_si   <- rowSums(is.finite(X_si))   == ncol(X_si)
-    ok_nexp <- rowSums(is.finite(X_nexp)) == ncol(X_nexp)
-    
+    ok_nexp <- rowSums(is.finite(X_nexp)) == ncol(X_nexp) # drop INF rows
     last_good <- max(which(ok_si & ok_nexp))
     
     X_si   <- X_si[  1:last_good, , drop = FALSE]
     X_nexp <- X_nexp[1:last_good, , drop = FALSE]
-    
     si$n_si <- n_si
     si$n_nexp <- n_nexp
-  }
-  else{
-    #get n_si and n_nexp based on si,nexp attributes
+    
+  }else{
+    # For normal data
     if (!is.null(si$n_nexp)){
       n_si <- all_columns - si$n_nexp
       n_nexp <- si$n_nexp
@@ -121,20 +108,17 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
       n_nexp <- all_columns - si$n_si
       n_si <- si$n_si
     }
-    
-    # check if n_si+n_nexp = all_columns
     if (n_si + n_nexp != all_columns) {
       stop(sprintf("Inconsistent number of variables: n_si + n_nexp = %d + %d != %d (ncol of Xall)", n_si, n_nexp, all_columns))
     }
     
     si$n_si <- n_si
     si$n_nexp <- n_nexp
-    
     X_si <- Xall[, 1:n_si,       drop = FALSE]
     X_nexp <- Xall[, (n_si+1):(n_si+n_nexp), drop = FALSE]
   }
   
-  ## 1. Optionally center X -----------------------------------------------------
+  # 1. center X_si (optionally)
   if (isTRUE(si$center)){
     X_si <- scale(X_si, scale = FALSE)
     si$xm <- attr(X_si, "scaled:center")
@@ -142,10 +126,11 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     si$xm <- rep(0, n_si)
   }
 
-  ## 2. Linear projection layer: design + penalty + initialization --------------
+  ## --- Phase 2: Single-Index: Initialization ---
   S_si <- si$S_si
   noPen_si <- is.null(S_si) && is.null(si$pord)
   
+  # Diagonalise S_si by .diagPen (3 cases)
   if (noPen_si){  # Case [a] no penalisation
     si$X_si    <- X_si
     si$B_si    <- diag(n_si)
@@ -163,7 +148,8 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     si$B_si    <- diag_pen_si$B
     si$X_si    <- diag_pen_si$X
   }
-  # Initialize alpha_si and alpha_center
+  
+  # Initialise alpha_si and alpha_center
   if( is.null(si$alpha_center) ){
     if( noPen_si ){
       si$alpha_center <- rep(0, n_si)
@@ -171,7 +157,6 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
       si$alpha_center <- rep(1, n_si)
     }
   }
-
   if( is.null(si$alpha_si) ){ 
     if( is.null(si$alpha_center) || all(si$alpha_center == 0) ){
       si$alpha_si <- rep(1, n_si) 
@@ -180,27 +165,24 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     }
   }
   
-  # Reparametrise and then impose that variance should be 1
+  # Reparametrise by B & Imposed variance of `z` to 1(by `tmp`)
   si$alpha_si  <- solve(si$B_si, si$alpha_si)
   si$alpha_center <- solve(si$B_si, si$alpha_center)
   
   tmp <- sd(si$X_si %*% (si$alpha_si + si$alpha_center))
-  
   si$alpha_si      <- si$alpha_si / tmp
   si$alpha_center  <- si$alpha_center / tmp
-  
-  browser()
   
   if (positive_si) {
     # transform to log scale to ensure positive
     si$alpha_si <- log(pmax(si$alpha_si, 1e-8))
   }
   
-  ## 3. Exponential smoothing layer: design + penalty + init α ------------------
+  ## --- Phase 3: Exponential Smoothing: Initialization ---
   S_nexp <- si$S_nexp
-  
   noPen_nexp <- is.null(S_nexp)
   
+  #Diagonalise S_nexp by .diagPen (2 cases)
   if (noPen_nexp){
     si$X_nexp     <- X_nexp
     si$B_nexp     <- diag(n_nexp)
@@ -214,8 +196,7 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     si$X_nexp     <- diag_pen_nexp$X
   }
  
-  
-  # Initialize alpha_nexp without alpha_scale
+  # Initialise alpha_nexp -> Reparametrise by B -> Calculate g by deriv_si_nexp
   if (is.null(si$alpha_nexp)){
     si$alpha_nexp <- rep(0,n_nexp)
     g <- deriv_si_nexp(X_si = si$X_si, 
@@ -237,36 +218,34 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
                        positive_si = positive_si)$d0
   }
   
-  ## 4. Center and scale the initialized inner linear predictor -----------------
+  ## --- Phase 4: Global: Standardization ---
+  # Imposed variance of s to 1(by sd(g))
   # alpha_si_inner has different scales
   if (positive_si) {
     si$alpha_si <- si$alpha_si - log(sd(g)) 
   } else {
     si$alpha_si <- si$alpha_si / sd(g)      
   }
-  
   si$alpha_center <- si$alpha_center / sd(g) 
   si$sd_g   <- sd(g)
   
-  s     <-  (g - mean(g))/sd(g)   # standardization
-  
-  data[[object$term]] <- s            # pass to outer smooth
-  
+  # center and scale s
+  s <- (g - mean(g))/sd(g)
+  data[[object$term]] <- s
   si$s <- s  
   si$mean_g <- mean(g)  
   si$tmp <- tmp
 
-  ## 5. Build outer B-spline basis ----------------------------------------------
-  # temporarily merge alpha_si and alpha_nexp for basis building
-  si$alpha <- c(si$alpha_nexp, si$alpha_si)  
-  
+  ## --- Phase 5 & 6: Outer B-Spline Construction and Global Penalty Assembly ---
+  # 5. Outer B-Spline Construction
+  si$alpha <- c(si$alpha_nexp, si$alpha_si)  # .build_nested_bspline_basis will use si$alpha directly
   out <- gamFactory:::.build_nested_bspline_basis(object = object,
                                                   data   = data,
                                                   knots  = knots,
                                                   si     = si)
   
-  ## 6. Add penalties to output object ------------------------------------------
-  ### 6.1 alpha_si-layer penalty (if any)
+  # 6. Global Penalty Assembly
+  # alpha_si penalty
   if (!noPen_si) {
     
     di_si <- ncol(si$X_si)
@@ -283,7 +262,7 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     out$rank <- c(out$rank, si$rank_si)
   }
   
-  ### 6.2 α-layer penalty (α₀ unpenalized)
+  # alpha_nexp penalty (α₀ unpenalized)
   if (!noPen_nexp) {
     
     di_si <- ncol(si$X_si)
@@ -306,7 +285,8 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     out$S[[2]] <- out$S[[3]]
     out$S[[3]] <- NULL
   }
-  ## 7. Return ------------------------------------------------------------------
+  
+  ## --- Return ---
   class(out) <- c("si_nexpsm", "nested")
   return(out)
 }
