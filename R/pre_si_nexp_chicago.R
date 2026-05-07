@@ -60,7 +60,17 @@ pre_si_nexp_chicago <- function(dat,
   }
   rownames(XW) <- rownames(dat)
   
-  # 5) return the same structure as the previous code
-  out <- data.frame(y = y, xw = I(XW))
+  # doy
+  # ⚠️ not sure if this is correct
+  time_vec <- dat[[time_col]]
+  doy <- (time_vec - 0.5) %% 365.25 
+  
+  # 5) return the combined structure
+  out <- data.frame(
+    death = y, 
+    xw    = I(XW), 
+    time  = time_vec, 
+    doy   = doy 
+  )
   out
 }

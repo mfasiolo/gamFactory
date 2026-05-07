@@ -96,7 +96,7 @@ trans_linear_nexpsm <- function(
     alpha_nexp   = NULL,
     alpha_si     = NULL,
     alpha_scale  = NULL,
-    center       = TRUE,
+    center       = FALSE,
     alpha_center = NULL,
     n_si         = NULL,
     n_nexp       = NULL,
@@ -108,29 +108,12 @@ trans_linear_nexpsm <- function(
   # if missing n_si/n_nexp，get it from alpha_si/alpha_nexp
   if (is.null(n_si)   && !is.null(alpha_si))   n_si   <- length(alpha_si)
   if (is.null(n_nexp) && !is.null(alpha_nexp)) n_nexp <- length(alpha_nexp)
-  
   if (is.null(alpha_nexp) && is.null(alpha_si) && is.null(n_si) && is.null(n_nexp)) {
     stop("You must provide at least one of: alpha_si, alpha_nexp, n_si, n_nexp.")
   }
   
-  out <- list(
-    pord = pord,
-    S_si = S_si,
-    S_nexp = S_nexp,
-    alpha_nexp = alpha_nexp,
-    alpha_si = alpha_si,
-    alpha_scale = alpha_scale,
-    center = center,   #Logical; whether to center the projected matrix X (default: TRUE)
-    alpha_center = alpha_center,   #Intercept term for the inner projection (scalar)
-    n_si = n_si,
-    n_nexp = n_nexp,
-    check_coef = check_coef,
-    check_deriv = check_deriv,
-    Z0 = Z0,
-    positive_si = positive_si
-  )
+  out <- as.list(environment())
   out$type <- "si_nexpsm"
-  # class(out) <- c("trans_linear_nexpsm", "list")
   return(out)
 }
 

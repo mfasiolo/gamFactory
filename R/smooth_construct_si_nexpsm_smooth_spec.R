@@ -169,9 +169,11 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
   si$alpha_si  <- solve(si$B_si, si$alpha_si)
   si$alpha_center <- solve(si$B_si, si$alpha_center)
   
-  tmp <- sd(si$X_si %*% (si$alpha_si + si$alpha_center))
-  si$alpha_si      <- si$alpha_si / tmp
-  si$alpha_center  <- si$alpha_center / tmp
+  ## maybe we don't need to Imposed variance of `z` to 1(by `tmp`) here
+  ## because this will be done with s
+  # tmp <- sd(si$X_si %*% (si$alpha_si + si$alpha_center))
+  # si$alpha_si      <- si$alpha_si / tmp
+  # si$alpha_center  <- si$alpha_center / tmp
   
   if (positive_si) {
     # transform to log scale to ensure positive
@@ -227,14 +229,10 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     si$alpha_si <- si$alpha_si / sd(g)      
   }
   si$alpha_center <- si$alpha_center / sd(g) 
-  si$sd_g   <- sd(g)
   
   # center and scale s
   s <- (g - mean(g))/sd(g)
   data[[object$term]] <- s
-  si$s <- s  
-  si$mean_g <- mean(g)  
-  si$tmp <- tmp
 
   ## --- Phase 5 & 6: Outer B-Spline Construction and Global Penalty Assembly ---
   # 5. Outer B-Spline Construction
@@ -262,7 +260,7 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     out$rank <- c(out$rank, si$rank_si)
   }
   
-  # alpha_nexp penalty (α₀ unpenalized)
+  # alpha_nexp penalty
   if (!noPen_nexp) {
     
     di_si <- ncol(si$X_si)

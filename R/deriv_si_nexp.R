@@ -193,13 +193,6 @@ deriv_si_nexp <- function(X_si, X_nexp, param, times = NULL, deriv = 0,
   list(d0 = out$d0, d1 = out$d1, d2 = out$d2, d3 = out$d3)
 }
 
-
-
-
-
-
-
-
 # # ======================== OLD R-Version ========================
 # deriv_si_nexp_R <- function(X_si, X_nexp, param, times = NULL, deriv = 0,
 #                             alpha_center = NULL, Z0 = NULL,

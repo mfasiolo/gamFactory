@@ -41,7 +41,7 @@ postproc_gam_nl <- function(o, info){
       
       jacobian <- get_jacobian.nested(sii, data = o$model, param = coef(o)[info$iec[[ii]]])
       sii$xt$jacobian <- jacobian$JJ
-      sii$xt$xa <- jacobian$xa  #smoothed s_t, useful for f(s_t) vs s_t plot
+      sii$xt$xa <- jacobian$xa  #smoothed s_t, useful for plot
       
       o$smooth[[ism]] <- sii
       
