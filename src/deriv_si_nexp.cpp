@@ -26,7 +26,7 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
                              int deriv,
                              Rcpp::Nullable<NumericVector> alpha_center,
                              double Z0,
-                             bool positive_si = false) {  // <-- 新增参数
+                             bool positive_si = false) { 
   
   if(deriv > 3){ Rcpp::warning("deriv exceeds 3; truncating to 3"); deriv = 3; }
   
@@ -43,7 +43,6 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
   NumericVector a_ne(n_nexp), a_si(n_si);
   for(int j=0;j<n_nexp;++j) a_ne[j] = param[j];
   for(int j=0;j<n_si;++j) {
-    // <-- 新增：如果开启 positive_si，在此处取指数 -->
     if (positive_si) {
       a_si[j] = std::exp(param[n_nexp + j]);
     } else {
@@ -117,7 +116,7 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
   }
   s_prev = d0[0];
   
-  // 初始化一阶导并计算映射后的 final_e
+  // initialize first derivative and get final_e
   NumericVector e_final_0(n_si); 
   for(int j=0;j<n_si;++j) {
     e_prev[j] = X_si(0,j);
@@ -127,10 +126,10 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
   
   if(need1){
     for(int j=0;j<n_nexp;++j) d1(0, j) = 0.0;
-    for(int j=0;j<n_si;++j)   d1(0, n_nexp + j) = e_final_0[j]; // <-- 替换为 mapped final e
+    for(int j=0;j<n_si;++j)   d1(0, n_nexp + j) = e_final_0[j];
   }
   
-  // <-- 新增：t=0 时的二阶导和三阶导的对角线补齐 -->
+  // Filling in the diagonal elements of the second and third derivatives at t=0
   if (need2 && positive_si) {
     int col = 0;
     for (int j = 0; j < m_par; ++j) {
@@ -165,10 +164,10 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
     
     // ========= 1st-order =========
     NumericVector e_curr(n_si);
-    NumericVector e_final(n_si); // <-- 新增：映射后的一阶导
+    NumericVector e_final(n_si); // first derivative after mapping
     for (int j = 0; j < n_si; ++j) {
       e_curr[j] = w * e_prev[j] + (1.0 - w) * X_si(t, j);
-      e_final[j] = positive_si ? (e_curr[j] * a_si[j]) : e_curr[j]; // 链式法则
+      e_final[j] = positive_si ? (e_curr[j] * a_si[j]) : e_curr[j]; // chain rule
     }
     
     NumericVector d_curr(n_nexp);
@@ -178,7 +177,7 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
     
     if (need1) {
       for (int j = 0; j < n_nexp; ++j) d1(t, j) = d_curr[j];
-      for (int j = 0; j < n_si;   ++j) d1(t, n_nexp + j) = e_final[j]; // <-- 写入 mapped e
+      for (int j = 0; j < n_si;   ++j) d1(t, n_nexp + j) = e_final[j]; // insert mapped e
     }
     
     // ========= 2nd-order =========
@@ -202,22 +201,23 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
       
       if (need2) {
         int col = 0;
-        // 1. g 矩阵块
+        // 1. g
         for (int j = 0; j < n_nexp; ++j) {
           for (int k = j; k < n_nexp; ++k) d2(t, col++) = g_curr(j, k);
-          // 2. h 矩阵交叉块 (t(h))
+          // 2. h-matrix cross-block (t(h))
           for (int k = n_nexp; k < m_par; ++k) {
             int i = k - n_nexp;
             double h_val = h_curr(i, j);
-            if (positive_si) h_val *= a_si[i]; // <-- 链式法则：混合二阶导缩放
+            if (positive_si) h_val *= a_si[i]; // Chain Rule: Mixed Second-Order Derivation Scaling
             d2(t, col++) = h_val; 
           }
         }
-        // 3. 纯 si 参数的二阶导矩阵块 H_sisi
+        // 3. The second-order derivative matrix block H_sisi for pure si parameters
         for (int j = n_nexp; j < m_par; ++j) {
           for (int k = j; k < m_par; ++k) {
             double val = 0.0;
-            // <-- 链式法则：补充 exp 求导的二阶对角线 (就是刚才算好的 e_final)
+            // <-- Chain rule: Substitute the second-order diagonal of the derivative of exp 
+            // (i.e. the e_final we calculated earlier)
             if (positive_si && j == k) val = e_final[j - n_nexp];
             d2(t, col++) = val;
           }
@@ -269,7 +269,6 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
               val = U3_curr[(j * n_nexp + k) * n_nexp + l];
             } 
             else if (si_cnt == 1) {
-              // 提取索引 (保持你原来的逻辑)
               int idxs[3] = {j, k, l};
               int si_pos = -1; 
               for(int t2=0; t2<3; ++t2) if(idxs[t2] >= n_nexp) { si_pos=t2; break; }
@@ -282,11 +281,11 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
               if(a_idx > b_idx) std::swap(a_idx, b_idx);
               val = T3_curr[(si_idx * n_nexp + a_idx) * n_nexp + b_idx];
               
-              // 只有开启 positive_si 才缩放，否则保持原始 T3
+              // Scaling only occurs if `positive_si` is enabled; otherwise, the original T3 is retained.
               if (positive_si) val *= a_si[si_idx]; 
             } 
             else if (si_cnt == 2) {
-              // 线性尺度下 alpha_si 的二阶导为 0，所以仅在 positive_si 时有值
+              // On a linear scale, the second derivative of `alpha_si` is zero, so it is non-zero only when `positive_si`
               if (positive_si) {
                 int idxs[3] = {j, k, l};
                 int si_idx1 = -1, si_idx2 = -1, a_idx = -1;
@@ -301,7 +300,7 @@ Rcpp::List deriv_si_nexp_cpp(const NumericMatrix& X_si,
               }
             } 
             else if (si_cnt == 3) {
-              // 线性尺度下 alpha_si 的三阶导为 0
+              // In the linear regime, the third derivative of α_si is zero
               if (positive_si) {
                 int si_idx1 = j - n_nexp, si_idx2 = k - n_nexp, si_idx3 = l - n_nexp;
                 if (si_idx1 == si_idx2 && si_idx2 == si_idx3) val = e_final[si_idx1];

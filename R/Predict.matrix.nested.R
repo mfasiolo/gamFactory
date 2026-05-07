@@ -18,7 +18,7 @@ Predict.matrix.nested <- function(object, data, ...){
     return( .predict.matrix.mgks(object, data, ...) ) 
   }
   if(class(object)[1] == "si_nexpsm"){
-    return( .predict.matrix.si_nexpsm(object, data, ...) )  # <-new type
+    return( .predict.matrix.si_nexpsm(object, data, ...) )
   }
   
   stop("Predict.matrix.nested --- I do not know this effect type")

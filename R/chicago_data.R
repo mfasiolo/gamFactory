@@ -8,7 +8,7 @@
 #' dim(dat)
 #' str(dat)
 #' @export
-chicago_data <- function(){
+chicago_data <- function(si_nexp = FALSE, ...){
   
   if( !require(gamair) ){
     message("Please install the package gamair")
@@ -54,6 +54,10 @@ chicago_data <- function(){
   head(my_data$o3_lag_2)
   
   my_data <- na.omit(my_data)
+  
+  if (isTRUE(si_nexp)) {
+    my_data <- pre_si_nexp_chicago(dat = my_data, ...)
+  }
   
   return(my_data)
 } 

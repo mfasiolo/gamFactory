@@ -10,8 +10,7 @@ get_jacobian.nested <- function(object,data, param){
   if(class(object)[1] == "nexpsm" || class(object)[1] == "mgks"){
     return( .get.jacobian.nexpsm.mgks(object, data, param) )
   }
-  
-  if(class(object)[1] == "si_nexpsm"){                           # <-new type
+  if(class(object)[1] == "si_nexpsm"){ 
     return(.get.jacobian.si_nexpsm(object, data, param))
   }
   
@@ -53,34 +52,21 @@ get_jacobian.nested <- function(object,data, param){
   return(list("JJ" = JJ, "xa" = NULL) )
 }
 
-
-
-
-# ---------------------new type of subfunction: si_nexpsm-----------------------
 .get.jacobian.si_nexpsm <- function(object, data, param){
-  # Step 1: get parameter
   na <- length(object$xt$si$alpha)
   beta <- param[ -(1:na) ]
   
-  # Step 2: output contain: xa = s_t, xa_dalpha_si = ∂s_t/∂alpha_si
   x_nest <- gamFactory:::Predict.matrix.nested(object, data = data, get.xa = TRUE)
-  
-  # Step 3: X0, X1
   store <- object$xt$basis$evalX(x = x_nest$xa, deriv = 1)
+  X1beta <- drop(store$X1 %*% beta)  # derivative to beta
   
-  # Step 4: derivative of beta
-  X1beta <- drop(store$X1 %*% beta)  # length n
-  
-  # Step 5: construct jacobian components
   # ∂eta/∂alpha_si = (dM/dz %*% beta) * ∂z/∂alpha_si
-  J_alpha_si <- X1beta * x_nest$xa_dalpha_si  # dim: n × na_si
+  J_alpha_si <- X1beta * x_nest$xa_dalpha_si  # n × na_si
   # ∂eta/∂alpha_nexp = (dM/dz %*% beta) * ∂z/∂alpha_nexp
-  J_alpha_nexp <- X1beta * x_nest$xa_dalpha_nexp  # dim: n × na_nexp
-  
+  J_alpha_nexp <- X1beta * x_nest$xa_dalpha_nexp  # n × na_nexp
   # ∂eta/∂beta = M
   J_beta <- store$X0
   
-  # combine
   JJ <- cbind(J_alpha_nexp, J_alpha_si, J_beta)
   
   return( list("JJ" = JJ, "xa" = x_nest$xa) )

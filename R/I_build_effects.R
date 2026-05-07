@@ -7,19 +7,6 @@
   ne <- length(effType)
   eff <- list()
   
-  # # --- Diagnostic code for index problem---
-  # max_iec <- max(unlist(info$iec))
-  # if (ncol(X) < max_iec) {
-  #   message("\n[!!!] Detected Index-Matrix Mismatch!")
-  #   message("Total columns in X: ", ncol(X))
-  #   message("Max index required by info$iec: ", max_iec)
-  #   for(k in 1:ne) {
-  #     cat("Effect", k, "(", effType[k], "): columns", range(info$iec[[k]]), "\n")
-  #   }
-  #   browser()
-  # }
-  # # --------------------
-  
   for(ii in 1:ne){
     iec <- info$iec[[ii]]
     
@@ -33,7 +20,7 @@
       if(effType[ii] == "si.nested"){
         eff[[ii]] <- eff_si(Xi = Xi, basis = extra$basis, a0 = extra$si$a0)
         
-      } else if(effType[ii] == "si_nexpsm.nested"){     # <-- new type
+      } else if(effType[ii] == "si_nexpsm.nested"){
         eff[[ii]] <- eff_si_nexp(
           X_si    = extra$si$X_si,
           X_nexp    = extra$si$X_nexp,
