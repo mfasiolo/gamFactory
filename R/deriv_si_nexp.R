@@ -30,6 +30,7 @@
 #'                     set to \code{NULL} to disable centering.
 #' @param Z0 Optional numeric scalar giving the initial smoothed state \eqn{s_0};
 #'           if \code{NULL}, the recursion starts with \eqn{s_1 = z_1}.
+#' @param positive_si Positive constrain on \eqn{\alpha_{si}}.
 #'
 #' @return
 #' A list containing:

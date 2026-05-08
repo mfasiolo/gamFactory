@@ -21,5 +21,5 @@ A numeric vector containing the predicted values for all time points
 in the same order as the input rows of \code{X_ori} and \code{w_ori}.
 }
 \description{
-smoothing components.
+Smoothing components.Used for forecasting when the model processes data with time-series anomalies.
 }

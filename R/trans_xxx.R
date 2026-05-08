@@ -100,8 +100,6 @@ trans_linear_nexpsm <- function(
     alpha_center = NULL,
     n_si         = NULL,
     n_nexp       = NULL,
-    check_coef   = FALSE,
-    check_deriv  = FALSE,
     Z0           = NULL,   # initialization for expsmooth
     positive_si = FALSE
 ){

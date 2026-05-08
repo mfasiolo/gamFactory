@@ -1,6 +1,6 @@
 #' Predict fitted values at all time points from a nested GAM-NL model
 #'
-#' smoothing components.
+#' Smoothing components.Used for forecasting when the model processes data with time-series anomalies.
 #'
 #' @param object A fitted \code{gamnl} model object obtained from
 #'        \code{\link[gamFactory]{gamnl}} or similar fitting functions.

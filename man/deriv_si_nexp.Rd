@@ -38,6 +38,8 @@ set to \code{NULL} to disable centering.}
 
 \item{Z0}{Optional numeric scalar giving the initial smoothed state \eqn{s_0};
 if \code{NULL}, the recursion starts with \eqn{s_1 = z_1}.}
+
+\item{positive_si}{Positive constrain on \eqn{\alpha_{si}}.}
 }
 \value{
 A list containing:

@@ -24,8 +24,6 @@ trans_linear_nexpsm(
   alpha_center = NULL,
   n_si = NULL,
   n_nexp = NULL,
-  check_coef = FALSE,
-  check_deriv = FALSE,
   Z0 = NULL,
   positive_si = FALSE
 )
