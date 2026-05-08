@@ -9,6 +9,7 @@
 build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
   
   available_deriv <- bundle$available_deriv
+  # available_deriv <- min(bundle$available_deriv, 3)
   cdf <- bundle$cdf
   rd <- bundle$rd
   qf <- bundle$qf
@@ -245,7 +246,7 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
                    put_extra = put_extra, 
                    get_extra = get_extra,
                    ls = 1, ## signals that ls not needed here
-                   available.derivs = available_deriv -2,
+                   available.derivs = available_deriv - 2,
                    discrete.ok = FALSE
     ), class = c("general.family","extended.family","family"))
     
