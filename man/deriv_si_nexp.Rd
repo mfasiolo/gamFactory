@@ -11,7 +11,8 @@ deriv_si_nexp(
   times = NULL,
   deriv = 0,
   alpha_center = NULL,
-  Z0 = NULL
+  Z0 = NULL,
+  positive_si = FALSE
 )
 }
 \arguments{
@@ -74,53 +75,108 @@ alpha_center <- rep(1, n_si)  # Optional centering for inner layer
 # Parameter order: [alpha_nexp, alpha_si], length q + p
 param <- rnorm(n_nexp + n_si)
 
-# -------------------- Wrap into obj for numerical derivative check --------------------
-obj <- list(
+# ==============================================================================
+# Case A: positive_si = FALSE
+# ==============================================================================
+cat("\n>>> Running checks for standard logic (positive_si = FALSE)...\n")
+
+obj_standard <- list(
   d0 = function(param) {
     sum(deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
                       param = param, alpha_center = alpha_center,
+                      positive_si = FALSE, 
                       deriv = 0)$d0)
   },
   d1 = function(param) {
     tmp <- colSums(deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
                                  param = param, alpha_center = alpha_center,
+                                 positive_si = FALSE,
                                  deriv = 1)$d1)
     as.list(tmp)
   },
   d2 = function(param) {
     tmp <- colSums(deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
                                  param = param, alpha_center = alpha_center,
+                                 positive_si = FALSE,
                                  deriv = 2)$d2)
     as.list(tmp)
   },
   d3 = function(param) {
     tmp <- colSums(deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
                                  param = param, alpha_center = alpha_center,
+                                 positive_si = FALSE,
                                  deriv = 3)$d3)
     as.list(tmp)
   }
 )
 
-# -------------------- Numerical vs analytical derivative check --------------------
-check <- check_deriv(obj = obj, param = param, ord = 1:3)
+# Numerical vs analytical derivative check
+check_std <- gamFactory:::check_deriv(obj = obj_standard, param = param, ord = 1:3)
 
+
+# ==============================================================================
+# Case B: positive_si = TRUE
+# ==============================================================================
+cat("\n>>> Running checks for exponential mapping (positive_si = TRUE)...\n")
+
+obj_positive <- list(
+  d0 = function(param) {
+    sum(deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
+                      param = param, alpha_center = alpha_center,
+                      positive_si = TRUE, 
+                      deriv = 0)$d0)
+  },
+  d1 = function(param) {
+    tmp <- colSums(deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
+                                 param = param, alpha_center = alpha_center,
+                                 positive_si = TRUE,
+                                 deriv = 1)$d1)
+    as.list(tmp)
+  },
+  d2 = function(param) {
+    tmp <- colSums(deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
+                                 param = param, alpha_center = alpha_center,
+                                 positive_si = TRUE,
+                                 deriv = 2)$d2)
+    as.list(tmp)
+  },
+  d3 = function(param) {
+    tmp <- colSums(deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
+                                 param = param, alpha_center = alpha_center,
+                                 positive_si = TRUE,
+                                 deriv = 3)$d3)
+    as.list(tmp)
+  }
+)
+
+# Numerical vs analytical derivative check
+check_pos <- gamFactory:::check_deriv(obj = obj_positive, param = param, ord = 1:3)
+
+
+# ==============================================================================
 # -------------------- Consistency test for partial time evaluation --------------------
+# ==============================================================================
+cat("\n>>> Running consistency test for 'times' argument...\n")
 time_seq <- sort(sample(1:n, 25))
 
 xsm <- deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
                      param = param,
                      alpha_center = alpha_center,
+                     positive_si = TRUE,
                      deriv = 3)
 
 xsm_2 <- deriv_si_nexp(X_si = X_si, X_nexp = X_nexp,
                        param = param,
                        times = time_seq,
                        alpha_center = alpha_center,
+                       positive_si = TRUE,
                        deriv = 3)
 
 stopifnot(identical(xsm$d0[time_seq], xsm_2$d0))
 stopifnot(identical(xsm$d1[time_seq, ], xsm_2$d1))
 stopifnot(identical(xsm$d2[time_seq, ], xsm_2$d2))
 stopifnot(identical(xsm$d3[time_seq, ], xsm_2$d3))
+
+cat(">>> All consistency tests passed!\n")
 
 }

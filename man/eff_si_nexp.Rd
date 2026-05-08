@@ -4,7 +4,15 @@
 \alias{eff_si_nexp}
 \title{Build nested adaptive linear transform and exponential smooth effect}
 \usage{
-eff_si_nexp(X_si, X_nexp, basis, Z0, times = NULL, alpha_center = NULL)
+eff_si_nexp(
+  X_si,
+  X_nexp,
+  basis,
+  Z0,
+  times = NULL,
+  alpha_center = NULL,
+  positive_si = FALSE
+)
 }
 \description{
 Build nested adaptive linear transform and exponential smooth effect

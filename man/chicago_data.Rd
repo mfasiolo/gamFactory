@@ -4,7 +4,7 @@
 \alias{chicago_data}
 \title{Process chicago data from gamair package}
 \usage{
-chicago_data()
+chicago_data(si_nexp = FALSE, ...)
 }
 \description{
 Process chicago data from gamair package

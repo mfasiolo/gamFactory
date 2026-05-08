@@ -34,7 +34,7 @@
 #'         penalty matrices, and additional attributes required by 
 #'         the \pkg{mgcv} fitting engine.
 #'
-#' @importFrom Matrix rankMatrix
+#' @importFrom Matrix rankMatrix bdiag
 #' @export
 #'
 #'
@@ -255,7 +255,7 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     S_nexp <- matrix(0, di_nexp, di_nexp)
     S_beta <- matrix(0, di_beta, di_beta)
     
-    out$S[[2]] <- as.matrix(bdiag(S_nexp, S_si, S_beta))
+    out$S[[2]] <- as.matrix(Matrix::bdiag(S_nexp, S_si, S_beta))
     out$null.space.dim <- out$null.space.dim + (out$bs.dim - si$rank_si)
     out$rank <- c(out$rank, si$rank_si)
   }
@@ -271,7 +271,7 @@ smooth.construct.si_nexpsm.smooth.spec <- function(object, data, knots){
     S_beta <- matrix(0, di_beta, di_beta)
     S_si <- matrix(0, di_si, di_si)
     
-    out$S[[3]] <- as.matrix(bdiag(S_nexp, S_si, S_beta))
+    out$S[[3]] <- as.matrix(Matrix::bdiag(S_nexp, S_si, S_beta))
     out$null.space.dim <- out$null.space.dim + (out$bs.dim - si$rank_nexp)
     out$rank <- c(out$rank, si$rank_nexp)
   }

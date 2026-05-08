@@ -20,13 +20,14 @@ trans_linear_nexpsm(
   alpha_nexp = NULL,
   alpha_si = NULL,
   alpha_scale = NULL,
-  center = TRUE,
+  center = FALSE,
   alpha_center = NULL,
   n_si = NULL,
   n_nexp = NULL,
   check_coef = FALSE,
   check_deriv = FALSE,
-  Z0 = NULL
+  Z0 = NULL,
+  positive_si = FALSE
 )
 }
 \arguments{

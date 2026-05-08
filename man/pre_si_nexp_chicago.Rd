@@ -9,7 +9,7 @@ pre_si_nexp_chicago(
   time_col = "time",
   y_col = "death",
   gap_col = "time_gap_num",
-  intercept = FALSE,
+  intercept = TRUE,
   ...
 )
 }
@@ -38,8 +38,8 @@ optional intercept, and time-gap column.
 }
 }
 \description{
-This function prepares a data frame for use in the \code{si_nexp} model,
-using the output of \code{\link{chicago_data}()} as input.
+This function will be used in \code{\link{chicago_data}()} in case of double nested effect,
+as this type of effect requires a different structure of data.
 It extracts the response variable, computes time gaps between consecutive
 observations, and constructs a combined predictor matrix that includes
 the original covariates, an optional intercept, and the computed time-gap feature.
