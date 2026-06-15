@@ -4,7 +4,7 @@
 \alias{fam_binomial}
 \title{The binomial family}
 \usage{
-fam_binomial(n)
+fam_binomial(n, link = NULL)
 }
 \description{
 The binomial family

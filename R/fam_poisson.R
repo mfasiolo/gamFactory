@@ -54,11 +54,11 @@
 #' check(fit)
 #' check0D(fit, type = "deviance")
 #' 
-fam_poisson <- function(){
+fam_poisson <- function(link = NULL){
   
   bundle <- bundle_poisson()
   
-  fam <- build_family(bundle)()
+  fam <- build_family(bundle, link = link)()
   
   return(fam)
   

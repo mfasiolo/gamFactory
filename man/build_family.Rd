@@ -4,7 +4,7 @@
 \alias{build_family}
 \title{Building new GAM families for mgcv::gam}
 \usage{
-build_family(bundle)
+build_family(bundle, link = NULL)
 }
 \arguments{
 \item{np}{XXX.}

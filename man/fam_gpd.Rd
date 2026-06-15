@@ -4,7 +4,7 @@
 \alias{fam_gpd}
 \title{The GPD family}
 \usage{
-fam_gpd()
+fam_gpd(link = NULL)
 }
 \description{
 The GPD family

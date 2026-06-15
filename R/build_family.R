@@ -14,7 +14,7 @@
 #' summary(b) 
 #' plot(b,pages=1,scale=0)
 #'
-build_family <- function(bundle){
+build_family <- function(bundle, link = NULL){
   
   available_deriv <- bundle$available_deriv
   cdf <- bundle$cdf
@@ -41,9 +41,13 @@ build_family <- function(bundle){
     }
   }) 
   
-  defLinks <- lapply(oklinks, "[[", 1) # Default link function(s)
+  if(is.null(link)){
+   Links <- lapply(oklinks, "[[", 1) # Default link function(s)
+  } else{
+   Links <- link
+  }
   
-  outFam <- function(link = defLinks, extra = bundle$extra){
+  outFam <- function(link = Links, extra = bundle$extra){
     
     # Saving extra parameters in .GlobalEnv environment
     assign(".extra", extra, envir = environment())

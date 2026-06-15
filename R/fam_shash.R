@@ -107,11 +107,11 @@
 #' check(fit, type = "tnormal")
 #' check0D(fit, type = "tnormal")
 #' 
-fam_shash <- function(){
+fam_shash <- function(link = NULL){
   
   bundle <- bundle_shash()
   
-  fam <- build_family(bundle)()
+  fam <- build_family(bundle, link = link)()
   
   return(fam)
   

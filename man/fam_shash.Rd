@@ -4,7 +4,7 @@
 \alias{fam_shash}
 \title{The Sinh-Arsinh (shash) regression model}
 \usage{
-fam_shash()
+fam_shash(link = NULL)
 }
 \description{
 The Sinh-Arsinh (shash) regression model

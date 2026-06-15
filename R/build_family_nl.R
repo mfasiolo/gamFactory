@@ -5,7 +5,7 @@
 #' @rdname build_family_nl
 #' @export build_family_nl
 #' 
-build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
+build_family_nl <- function(bundle, info, link, lamVar = 1e5, lamRidge = 0){
   
   available_deriv <- min(bundle$available_deriv, 3)
   cdf <- bundle$cdf
@@ -68,9 +68,13 @@ build_family_nl <- function(bundle, info, lamVar = 1e5, lamRidge = 1e-5){
     }
   }) 
   
-  defLinks <- lapply(oklinks, "[[", 1) # Default link function(s)
+  if(is.null(link)){
+    Links <- lapply(oklinks, "[[", 1) # Default link function(s)
+  } else{
+    Links <- link
+  }
   
-  outFam <- function(link = defLinks, extra = bundle$extra){
+  outFam <- function(link = Links, extra = bundle$extra){
     
     # Saving extra parameters in .GlobalEnv environment
     assign(".extra", extra, envir = environment())

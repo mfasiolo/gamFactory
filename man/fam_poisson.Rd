@@ -4,7 +4,7 @@
 \alias{fam_poisson}
 \title{The Poisson family}
 \usage{
-fam_poisson()
+fam_poisson(link = NULL)
 }
 \description{
 The Poisson family

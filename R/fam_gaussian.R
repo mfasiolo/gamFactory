@@ -28,11 +28,11 @@
 #' if(err > 1e-6){
 #'   stop("Discrepancy between gam and gam_nl")
 #' }
-fam_gaussian <- function(){
+fam_gaussian <- function(link = NULL){
   
   bundle <- bundle_gaussian()
   
-  fam <- build_family(bundle)()
+  fam <- build_family(bundle, link = link)()
   
   return(fam)
   

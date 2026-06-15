@@ -57,11 +57,11 @@
 #' check(fit)
 #' check0D(fit, type = "deviance")
 #' 
-fam_binomial <- function(n){
+fam_binomial <- function(n, link = NULL){
   
   bundle <- bundle_binomial(n)
   
-  fam <- build_family(bundle)()
+  fam <- build_family(bundle, link = link)()
   
   return(fam)
   

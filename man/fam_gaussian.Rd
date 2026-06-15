@@ -4,7 +4,7 @@
 \alias{fam_gaussian}
 \title{The gaussian family}
 \usage{
-fam_gaussian()
+fam_gaussian(link = NULL)
 }
 \description{
 The gaussian family

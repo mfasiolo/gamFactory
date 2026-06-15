@@ -34,11 +34,11 @@
 #'   stop("Discrepancy between gam and gam_nl")
 #' }
 #' 
-fam_gpd <- function(){
+fam_gpd <- function(link = NULL){
   
   bundle <- bundle_gpd()
   
-  fam <- build_family(bundle)()
+  fam <- build_family(bundle, link = link)()
   
   return(fam)
   
