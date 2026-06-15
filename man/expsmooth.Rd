@@ -2,12 +2,57 @@
 % Please edit documentation in R/expsmooth.R
 \name{expsmooth}
 \alias{expsmooth}
-\title{Exponential smooth and its derivatives}
+\title{Adaptive exponential smoothing and its derivatives}
 \usage{
 expsmooth(y, Xi, beta, x0 = NULL, times = NULL, deriv = 0)
 }
+\arguments{
+\item{y}{A numeric vector representing the time series or sequence to be smoothed.
+If a matrix is provided, it will be automatically coerced to a vector via \code{as.vector}.}
+
+\item{Xi}{A numeric design matrix of dimensions \code{n} by \code{p} containing
+the historical covariates that drive the time-varying smoothing rate.}
+
+\item{beta}{A numeric parameter vector of length \code{p} used to weight the
+covariates in \code{Xi}.}
+
+\item{x0}{A numeric scalar representing the initial state of the smooth at
+time step 0. Defaults to \code{NULL}, which sets the initial state to the
+first observation, \code{y[1]}.}
+
+\item{times}{An optional integer vector of indices specifying the time points at
+which to return the evaluations and derivatives. If \code{NULL}, values for
+all time steps are returned.}
+
+\item{deriv}{An integer (0, 1, 2, or 3) indicating the maximum order of
+analytical derivatives to calculate with respect to \code{beta}. Defaults to 0.}
+}
+\value{
+A list containing the following components:
+\itemize{
+\item{\code{d0}}{ A numeric vector containing the exponential smooth evaluations.}
+\item{\code{d1}}{ If \code{deriv >= 1}, a matrix containing first-order partial derivatives w.r.t. \code{beta}. Otherwise \code{NULL}.}
+\item{\code{d2}}{ If \code{deriv >= 2}, a matrix containing second-order partial derivatives w.r.t. \code{beta} in a packed upper-triangular format. Otherwise \code{NULL}.}
+\item{\code{d3}}{ If \code{deriv >= 3}, a matrix containing third-order partial derivatives w.r.t. \code{beta} in a packed format. Otherwise \code{NULL}.}
+}
+}
 \description{
-Exponential smooth and its derivatives
+Computes an adaptive exponential smooth of a sequence where the
+smoothing factor varies over time as a logistic function of covariates. The
+function evaluates the smooth and provides its analytical derivatives up to
+order 3 with respect to the parameter vector \code{beta}.
+}
+\details{
+The function runs an adaptive exponential smoothing filter. At each step
+\eqn{i}, the smoothing factor \eqn{\omega_i} is computed via a logistic mapping
+of the linear predictor:
+\deqn{\omega_i = \frac{1}{1 + \exp(-\mathbf{X}_{i \cdot} \bm{\beta})}}
+The recursive smoothing process is formulated as:
+\deqn{g_i = \omega_i g_{i-1} + (1 - \omega_i) y_i, \qquad \text{for } i \geq 1}
+Analytical derivatives are propagated forward recursively at each step using the
+chain rule. If the \code{times} argument is specified, the output vectors and
+matrices are filtered down to only contain rows corresponding to those selected indices,
+dropping unneeded rows safely.
 }
 \examples{
 n <- 1000
@@ -23,19 +68,19 @@ xsm <- expsmooth(y = y, Xi = Xi, beta = beta, deriv = 3)
 lines(xseq, xsm$d0, col = 2, lwd = 2)
 
 obj <- list(d0 = function(param){
-  sum(expsmooth(y = y, Xi = Xi, beta = param, deriv = 0)$d0)
+   sum(expsmooth(y = y, Xi = Xi, beta = param, deriv = 0)$d0)
 },
 d1 = function(param){
-  tmp <- colSums(expsmooth(y = y, Xi = Xi, beta = param, deriv = 1)$d1)
-  as.list(tmp)
+   tmp <- colSums(expsmooth(y = y, Xi = Xi, beta = param, deriv = 1)$d1)
+   as.list(tmp)
 },
 d2 = function(param){
-  tmp <- colSums(expsmooth(y = y, Xi = Xi, beta = param, deriv = 2)$d2)
-  as.list(tmp)
+   tmp <- colSums(expsmooth(y = y, Xi = Xi, beta = param, deriv = 2)$d2)
+   as.list(tmp)
 },
 d3 = function(param){
-  tmp <- colSums(expsmooth(y = y, Xi = Xi, beta = param, deriv = 3)$d3)
-  as.list(tmp)
+   tmp <- colSums(expsmooth(y = y, Xi = Xi, beta = param, deriv = 3)$d3)
+   as.list(tmp)
 })
 
 check_deriv(obj = obj, param = beta, ord = 1:3)

@@ -2,10 +2,60 @@
 % Please edit documentation in R/eff_nexpsm.R
 \name{eff_nexpsm}
 \alias{eff_nexpsm}
-\title{Build nested adaptive exponential smooth effect}
+\title{Build Nested Adaptive Exponential Smooth Effect Evaluator}
 \usage{
 eff_nexpsm(y, Xi, basis, x0 = NULL, times = NULL)
 }
+\arguments{
+\item{y}{A numeric vector representing the time series or sequence data to be
+smoothed by the inner layer.}
+
+\item{Xi}{A numeric design matrix of dimensions \code{n} by \code{p} containing
+the historical covariates that drive the time-varying smoothing rate.}
+
+\item{basis}{A structure or list containing an outer basis evaluation function
+\code{evalX(x, deriv)} which evaluates the final spline transformation stage.}
+
+\item{x0}{A numeric scalar representing the initial state of the smooth at
+time step 0. Defaults to \code{NULL}, which sets the initial state to \code{y[1]}.}
+
+\item{times}{An optional integer vector of indices specifying the precise time
+points at which to return evaluations and analytical derivatives.}
+}
+\value{
+An object of class \code{c("nexpsm", "nested")} containing a locked-environment closure:
+\itemize{
+\item{\code{.eval(param, deriv = 0)}}{ An evaluation function that takes a combined
+numeric parameter vector \code{param} (where the first \code{ncol(Xi) + 1}
+elements represent the smoothing parameters, and the remainder represent
+the outer spline coefficients) and returns an updated effect state evaluation.}
+}
+}
 \description{
-Build nested adaptive exponential smooth effect
+This function acts as a constructor factory for nested adaptive
+exponential smoothing (NEXPSM) effects within a Generalized Additive Model (GAM)
+framework. It bundles the target sequence, smoothing covariates, initial state,
+and an outer basis expansion method into a state-holding closure object that
+can evaluate the effect and its analytical derivatives dynamically.
+}
+\details{
+The function maps a two-layer hierarchical smoothing architecture:
+\enumerate{
+\item \strong{Inner Adaptive Filter:} The raw parameters are split. The first
+\code{ncol(Xi) + 1} parameters (\code{alpha}) are fed directly into
+\code{\link{expsmooth}} to yield a time-varying smoothed trajectory vector:
+\deqn{\eta_i = \text{expsmooth}(y, \mathbf{X}_i, \bm{\alpha})_i}
+\item \strong{Outer Spline Expansion:} The smooth vector elements \eqn{\eta}
+are evaluated through the outer \code{basis} transformation. The
+remaining parameter elements (\code{beta}) serve as linear weights
+against this expanded basis matrix:
+\deqn{f(\eta_i) = \mathbf{B}_0(\eta_i) \bm{\beta}}
+}
+
+Metaprogramming expressions (\code{incall} and \code{efcall}) are pre-compiled
+here and dispatched inside the shared runtime environment worker
+\code{.get_eff_eval_general()}.
+}
+\seealso{
+\link{trans_nexpsm}, \link{s_nest}
 }

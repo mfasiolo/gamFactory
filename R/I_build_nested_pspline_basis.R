@@ -57,7 +57,7 @@
   X00 <- basis$evalX(x = 0)
   Xth <- basis$evalX(x = basis$krange, deriv = 4)
   con <- rbind(X00$X0, Xth$X2, Xth$X3, Xth$X4)
-  NS <- Null(t(con))
+  NS <- MASS::Null(t(con))
   
   # We add constrain to remove linear basis from first "dsmo" columns, but then 
   # we add an unpenalised linear basis in the last column of the model matrix.

@@ -2,15 +2,47 @@
 % Please edit documentation in R/chicago_data.R
 \name{chicago_data}
 \alias{chicago_data}
-\title{Process chicago data from gamair package}
+\title{Process Chicago Air Pollution and Mortality Data}
 \usage{
-chicago_data(si_nexp = FALSE, ...)
+chicago_data()
+}
+\value{
+A processed \code{data.frame} containing:
+\itemize{
+\item{\code{death}}{ Numeric vector of daily mortality counts.}
+\item{\code{time}}{ Numeric vector of sequential time step indices.}
+\item{\code{X}}{ A matrix with columns \code{pm10}, \code{o3}, and \code{so2} representing transformed concentrations.}
+\item{\code{pm_10_lag / o3_lag}}{ Lag 1 pollutant vectors.}
+\item{\code{time_gap}}{ Numeric vector tracking the difference between subsequent time steps.}
+\item{\code{pm_10_lag2 / o3_lag2}}{ Matrices of dimension \code{N} by 50 containing rolling historical pollutant entries.}
+\item{\code{time_dist}}{ Matrix of dimension \code{N} by 50 tracking historical day gaps relative to the current evaluation row.}
+}
 }
 \description{
-Process chicago data from gamair package
+Loads, transforms, and structures the Chicago Air Pollution and Mortality Data
+from the \code{gamair} package for testing nested effects (\code{\link{s_nest}}).
+}
+\details{
+The function executes the following preprocessing steps on the raw data:
+\enumerate{
+\item Pollutant observations (\code{pm10median}, \code{o3median}, \code{so2median})
+are shifted by adding the absolute value of their respective minimums to guarantee non-negative values.
+\item A square-root transformation is applied via \eqn{\sqrt{1 + X}}.
+\item Creates lag 1 vectors for \eqn{PM_{10}} and \eqn{O_3} (\code{pm_10_lag}, \code{o3_lag}) along with a
+vector of time gaps \code{time_gap}, which indicate the time passed between the current observation and the previous.
+\item Generates wide matrices containing, for each row, the
+previous \code{n_lag = 50} historical days of pollutant exposure and
+corresponding time distances for localized smoothing operations.
+}
+
+Final rows containing any \code{NA} values (including the initial 50 rows used
+to build history windows and the final row from shifting) are automatically dropped via
+\code{na.omit}.
 }
 \examples{
 dat <- chicago_data()
-dim(dat)
-str(dat)
+if (!is.null(dat)) {
+  dim(dat)
+  str(dat)
+}
 }

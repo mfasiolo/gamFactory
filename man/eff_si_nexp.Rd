@@ -2,7 +2,7 @@
 % Please edit documentation in R/eff_si_nexp.R
 \name{eff_si_nexp}
 \alias{eff_si_nexp}
-\title{Build nested adaptive linear transform and exponential smooth effect}
+\title{Build Nested Adaptive Exponential Smoothing Effect Evaluator}
 \usage{
 eff_si_nexp(
   X_si,
@@ -14,6 +14,69 @@ eff_si_nexp(
   positive_si = FALSE
 )
 }
+\arguments{
+\item{X_si}{A numeric design matrix of dimensions \code{n} by \code{n_si} containing
+the covariates to be projected down into the single-index dimension.}
+
+\item{X_nexp}{A numeric design matrix of dimensions \code{n} by \code{n_nexp} containing
+the covariates used to dynamically generate the adaptive exponential smoothing weights.}
+
+\item{basis}{A structure or list containing a basis evaluation function
+\code{evalX(x, deriv)}. This function must accept a vector of smoothed values
+and return a list containing basis matrices (\code{X0}, \code{X1}, \code{X2}, \code{X3})
+corresponding to the specified derivative order.}
+
+\item{Z0}{A numeric scalar or vector providing the initial state value used to
+start the exponential smoothing sequence.}
+
+\item{times}{An optional numeric vector indicating specific time steps or indices
+for the sequential evaluation. Defaults to \code{NULL}.}
+
+\item{alpha_center}{An optional numeric offset vector of length \code{n_si} added directly
+to the single index coefficients \code{alpha_si}. If \code{NULL}, no offset is applied.}
+
+\item{positive_si}{A logical flag. If \code{TRUE}, it strictly enforces positivity
+on the single-index weights during dynamic evaluation. Defaults to \code{FALSE}.}
+}
+\value{
+An object of class \code{c("si_nexpsm", "nested")} containing:
+\itemize{
+\item{\code{eval(param, deriv = 0)}}{ A function designed to accept a combined
+numeric parameter vector \code{param}. The first \code{ncol(X_nexp)} elements
+represent the smoothing weight parameters \code{alpha_nexp}, the subsequent
+\code{ncol(X_si)} elements represent the single-index weights \code{alpha_si},
+and the remainder represent the spline coefficients \code{beta}. It returns
+a fully evaluated state object.}
+}
+}
 \description{
-Build nested adaptive linear transform and exponential smooth effect
+This function acts as a constructor for dual-nested smooth effects.
+It bundles the covariate data for both single-index projection and dynamic smoothing
+weights, along with initialization states and a basis expansion method, into an
+object that can evaluate the smoothed effect and its analytical derivatives dynamically.
+}
+\details{
+The function maps covariates through a sequential three-layer transformation.
+The matrices \code{X_si} and \code{X_nexp} are combined with their respective parameters
+to construct a dynamically smoothed sequence, which is subsequently transformed via
+an outer smooth basis expansion.
+
+For a given combined parameter vector \code{param = c(alpha_nexp, alpha_si, beta)}:
+\enumerate{
+\item The single-index projection step is calculated as:
+\deqn{z_t = \mathbf{X}_{si, t \cdot} (\bm{\alpha}_{si} + \bm{\alpha}_{center})}
+\item The dynamic weights and the adaptive exponential smoothing sequence are calculated recursively as:
+\deqn{\omega_t = \text{sigmoid}(\mathbf{X}_{nexp, t \cdot} \bm{\alpha}_{nexp})}
+\deqn{s_t = \omega_t s_{t-1} + (1 - \omega_t) z_t, \qquad \text{with } s_0 = Z_0}
+\item The outer smooth function value is calculated via linear combination with the basis matrix evaluated at the smoothed sequence:
+\deqn{f(s_t) = \mathbf{B}_0(s_t) \bm{\beta}}
+}
+
+When \code{deriv >= 1}, partial derivatives of the spline basis with respect to
+both sets of inner projection parameters (\eqn{\bm{\alpha}_{nexp}} and \eqn{\bm{\alpha}_{si}})
+are computed analytically via the chain rule and recursive differentiation across
+the time steps, yielding corresponding \eqn{f^{(m)}} components.
+}
+\seealso{
+\link{trans_linear_nexpsm}, \link{s_nest}
 }

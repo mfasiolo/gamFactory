@@ -16,9 +16,9 @@
 #'   (default), existing column names are preserved, or columns are left
 #'   unnamed if none are present.
 #'
-#' @return A numeric matrix with \code{n} rows and \code{p} columns, where
-#'   \code{n} is the length of each variable and \code{p} is the number of
-#'   variables in \code{data}.  Column names are set to \code{cnames} when
+#' @return A numeric \eqn{n\times p} matrix, where
+#'   \eqn{n} is the length of each variable and \eqn{p} is the number of
+#'   variables in \code{data}.  Column names are set to \code{cnames}, when
 #'   supplied.
 #'
 #' @examples
@@ -34,6 +34,8 @@
 #' dat$X <- data_linear(X, cnames = cn)
 #' str(dat)
 #' colnames(dat$X)
+#' 
+#' @seealso \code{\link{smooth.construct.si.smooth.spec}}, \code{\link{trans_linear}}, \code{\link{s_nest}}
 #'
 #' @export
 data_linear <- function(data, cnames = NULL){
@@ -110,12 +112,12 @@ data_linear <- function(data, cnames = NULL){
 #' head(dat)
 #' @export
 data_nexpsm <- function(y, X=NULL, times = NULL, n_obs=NULL) {
-    
+  
   # variable to be smoothed
   if (is.vector(y)) {y <- matrix(y, ncol = 1)} else if (!is.matrix(y)) {stop("`y` must be a numeric vector or matrix.")
-    } else if (ncol(y) > 1) {stop("`y` must be a vector or a matrix with a single column.")}
+  } else if (ncol(y) > 1) {stop("`y` must be a vector or a matrix with a single column.")}
   ny    <- nrow(y)
-    
+  
   # variables for the inner linear predictor of the smoothing rate
   # if X is null, then exponential smoothing with a constant rate is fitted.  
   # If X is a vector, it is coerced to a single-column matrix.  
@@ -128,7 +130,7 @@ data_nexpsm <- function(y, X=NULL, times = NULL, n_obs=NULL) {
     stop("`X` must be a numeric vector or matrix.")
   }
   if (nrow(X) != ny) {stop("`X` must have the same number of rows as `y`.","\n  nrow(y) = ",ny,", nrow(X) = ",nrow(X))}
-
+  
   if (!is.null(times)) {
     n_obs <- length(times)
   } else if (is.null(n_obs)) {
@@ -160,7 +162,6 @@ data_nexpsm <- function(y, X=NULL, times = NULL, n_obs=NULL) {
   colnames(res) <- cnames
   res
 }
-
 
 #' Prepare data matrix for a double nested smooth effect with
 #' \code{trans = trans_linear_nexpsm}
@@ -288,7 +289,7 @@ data_linear_nexpsm <- function(X_si, X_nexp = NULL,
   
   n_si <- ncol(X_si)
   n_nexp <- ncol(X_nexp)
-
+  
   # Reshape into (n_obs x nrep*n_si) and (n_obs x nrep*n_nexp)
   # Filled row-by-row (byrow = TRUE); constructor unpacks with
   # as.vector(t(Xi[, cols])) which reads column-by-column from the transpose.
@@ -299,11 +300,15 @@ data_linear_nexpsm <- function(X_si, X_nexp = NULL,
   cnames <- c(rep("x", ncol(si_block)), rep("w", ncol(nexp_block)))
   mat    <- list(si_block, nexp_block)
   
+  if (!is.null(times)) {
+    mat[[3]] <- times
+    cnames   <- c(cnames, "times")
+  }
+  
   res <- do.call("cbind", mat)
   colnames(res) <- cnames
   res
 }
-
 
 #' Prepare data matrix for a nested smooth effect with \code{trans = trans_mgks}
 #'

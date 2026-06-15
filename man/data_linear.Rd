@@ -19,9 +19,9 @@ names of the output matrix, where \code{p} is the number of variables
 unnamed if none are present.}
 }
 \value{
-A numeric matrix with \code{n} rows and \code{p} columns, where
-\code{n} is the length of each variable and \code{p} is the number of
-variables in \code{data}.  Column names are set to \code{cnames} when
+A numeric \eqn{n\times p} matrix, where
+\eqn{n} is the length of each variable and \eqn{p} is the number of
+variables in \code{data}.  Column names are set to \code{cnames}, when
 supplied.
 }
 \description{
@@ -43,4 +43,7 @@ dat$X <- data_linear(X, cnames = cn)
 str(dat)
 colnames(dat$X)
 
+}
+\seealso{
+\code{\link{smooth.construct.si.smooth.spec}}, \code{\link{trans_linear}}, \code{\link{s_nest}}
 }

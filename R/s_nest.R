@@ -1,12 +1,14 @@
 #'
-#' Defining nested smooths in GAM formulae
+#' Defining nested smooths in GAM formulas
 #' 
 #' @name s_nest
 #' 
 #' @description Function used to define nested smooth effects. It works similarly to \link{mgcv::s}.
 #'              
-#' @param ... A \code{matrix} object containing variables that are used to define the nested smooth effect. See Details
-#' @param trans The type of covariate transformation to use (see, [trans_linear], [trans_mgks], or [trans_nexpsm]).
+#' @param ... A \code{matrix} object containing variables that are used to define the nested smooth effect. 
+#'            Each transformation has their specific requirements on how the variables in this matrix should be organized. 
+#'            Use [data_linear], [data_mgks], [data_nexpsm] or [data_linear_nexpsm] to easily create the matrix.
+#' @param trans The type of covariate transformation to use (see, [trans_linear], [trans_mgks], [trans_nexpsm], or [trans_linear_nexpsm]).
 #' @param k The number of basis functions used to construct the outer smooth effect. 
 #' @param m A vector of two positive integers. The first indicates the order of the 
 #'          outer B-spline basis (see \link{basis_bspline}), the second is the order of the corresponding P-spline
@@ -16,27 +18,36 @@
 #' @export
 #' 
 #' @details
-#' The types of transformations currently provided are three: the linear transformation, the multivariate kernel 
-#' smooth transformation and the exponential smoothing transformation. Here we provide details on the definition 
-#' of the list of variables used to define each nested effect. In the following we will refer to the list 
-#' of variables passed as \code{X}.
+#' The types of transformations currently provided are four: the linear transformation, the multivariate kernel 
+#' smooth transformation, the exponential smoothing transformation and double nested effect 
+#' which combines single index and exponential smooth. Specifically, 
+#' \itemize{
+#'  \item{\code{trans_linear}{ implements a linear transformation \eqn{X^\top \alpha}, the simplest type of
+#'    transformation which can be used to specify a single index vector (i.e. a projection) or a linear effect.}}
+#'  \item{\code{trans_mgks}{ implements a multivariate kernel smooth transformation based on the response variable
+#'    observation vector \code{z} and corresponding distance matrix. The transformation is defined as
+#'    \deqn{\tilde{s}(\mathbf{x}_i) = \frac{\sum_{j\in \mathcal{N}_i}K_{\mathbf{a}}(\mathbf{x}_{i},
+#'    \mathbf{x}_{j})z_{j}}{\sum_{q\in \mathcal{N}_i}K_{\mathbf{a}}(\mathbf{x}_{i},\mathbf{x}_{q})},}
+#'    with \eqn{K_{\mathbf{a}}} denoting the kernel of a multivariate p.d.f. parameterised by
+#'    \eqn{\mathbf{a}}, and \eqn{\mathcal{N}_i} the index set of neighbours of \eqn{\mathbf{x}_i}.}}
+#'  \item{\code{trans_nexpsm}{ implements an exponential smoothing transformation, defined as
+#'    \deqn{\tilde{s}(x_i) = \tilde{s}_i = \omega_{i}\tilde{s}_{i-1}+(1-\omega_{i})x_{i}, \qquad \text{for } i \geq 1,}
+#'    with \eqn{\tilde{s}_0 = x_0} and \eqn{\omega_i \in (0, 1)}. The smoothing factor can be defined as
+#'    \eqn{\omega_i = \phi(\tilde{\mathbf{x}}_i^\top \mathbf{a})}, where \eqn{\phi} is the logistic function, 
+#'    \eqn{\tilde{\mathbf{x}}_i} is a given vector.}}
+#'  \item{\code{trans_linear_nexpsm}{ implements a combination of a linear transformation and an exponential
+#'    smoothing transformation. The trasformation is defined as 
+#'    \deqn{\tilde{s}({\bf x}_i, {\bf w}_i) = \tilde{s}_i = \omega_i \tilde{s}_{i-1} + (1-\omega_i)z_i,}
+#'    where \eqn{z_i = {\bf x}_i^\top \bm a_{\mathrm{si}}}, for \eqn{i \geq 1,\ \tilde{s}_0 = z_0}, 
+#'    and the smoothing factor is defined as \eqn{\omega_i = \phi({\bf w}_i^\top \bm a_{\mathrm{nexp}}),\ \omega_i \in (0,1)}. 
+#'    As in the previous case, the smoothing factor can be defined as
+#'    \eqn{\omega_i = \phi(\tilde{\mathbf{x}}_i^\top {\mathbf{a}_{\mathrm{si}})}}, where \eqn{\phi} is the logistic function
+#'    and \eqn{\tilde{\mathbf{x}}_i} is a given vector.
+#'    }}}
+#' \code{trans_nexpsm} and \code{trans_linear_nexpsm} allow for different time granularities in the inner exponential and outer smooths. 
+#' It is particularly useful for handling data structures where the response variable is observed at a 
+#' different frequency than the covariates driving the smoothing rate (e.g., daily response with hourly covariates).
 #' 
-#' If \code{trans = trans_linear()}, \code{X} is a \eqn{n\times p} matrix with a covariate for each column.
-#' 
-#' When \code{trans = trans_mgks()}, the matrix \code{X} is organized into two distinct blocks, \code{X = cbind(Y, D)}.  
-#' The \eqn{j}-th column in \code{Y} corresponds directly to the \eqn{j}-th column in \code{D}, with the two 
-#' blocks defined as follows:  
-#'  
-#' - The columns in \code{Y} are all named with \code{"y"} and represent observations of the variable that is first extrapolated and then smoothed.  
-#' - The columns in \code{D} are named with \code{"d"} prefixes, and the \eqn{j}-th column in \code{D} contains the distance between the location where the
-#'  corresponding \eqn{j}-th column in \code{Y} was observed and the location where all other covariates in the model were observed.  
-#' 
-#' When \code{trans = trans_nexpsm()}, the matrix \code{X} is divided into three distinct blocks: \code{X = cbind(y, Xi, times)}. The third block, \code{times}, is optional.  
-#'  
-#' - The columns in \code{y} are all named with \code{"y"} and represent the variable to be exponentially smoothed (stored as a vector or matrix). These columns may have a higher resolution compared to other covariates (e.g., hourly resolution for \code{y} versus daily resolution for other covariates and the response variable).  
-#' - The columns in \code{Xi} are all named with \code{"x"} and correspond to the model matrix used to estimate the exponential smoothing rate.  
-#' - The column in \code{times}, named \code{"times"}, contains the vector of times at which the response variable of the GAM is observed.  
-#'
 #' @examples
 #' #####
 #' # Example using trans_linear
@@ -101,7 +112,30 @@
 #' fit <- getViz(fit)
 #' print(plot(fit), pages = 1) # plot smooth effects
 #' print(plot(fit, inner = TRUE), pages = 1) # plot inner components
+#' #####
+#' # Example using trans_linear_nexpsm
+#' ####
+#' n <- 1000; p <- 3; b_si <- 1:p; b_nexp <- 1:3
 #' 
+#' tim <- seq(0, 2*pi, length.out = n)
+#' temp <- sin(tim) + rnorm(n, 0, 0.5)
+#' w <- cbind(1, tim, tim^2)
+#' w[,-1] <- scale(w[,-1], scale=FALSE)
+#' x <- matrix(runif(p * n), ncol = p)
+#' xw <- cbind(x,w)
+#' colnames(xw) <- c("x1","x2","x3","w1","w2","w3")
+#' y <- gamFactory:::deriv_si_nexp(X_si = x, X_nexp = w, param = c(b_si,b_nexp))$d0 + rnorm(n)
+#' dat <- data.frame(y = y, xw = I(xw))
+#' 
+#' # Fit the model
+#' fit <- gam_nl(list(y~s_nest(xw, trans = trans_linear_nexpsm(n_si = 3), k = 10, m = c(4,2)), ~1), 
+#'               data = dat, family = fam_gaussian(), control=list(trace=TRUE))
+#' 
+#' # Plot the fit
+#' fit <- getViz(fit)
+#' print(plot(fit), pages = 1) # plot smooth effects
+#' print(plot(fit, inner = TRUE), pages = 1) # plot inner components
+#' #####
 #' }
 #'
 s_nest <- function(..., trans, k, m, sarg){
@@ -109,7 +143,7 @@ s_nest <- function(..., trans, k, m, sarg){
   vars <- as.list(substitute(list(...)))[-1]
   
   if( missing(sarg) ){ sarg <- list() }
-
+  
   if( is.null(sarg$xt) ){ sarg$xt <- list() }
   sarg$xt$sumConv <- FALSE
   sarg$bs <- trans$type
