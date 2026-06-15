@@ -90,6 +90,8 @@ gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE, 
     }
   }
   
+  out$call <- match.call()
+  
   class(out) <- c("gamnl", class(out))
   
   return( out )
