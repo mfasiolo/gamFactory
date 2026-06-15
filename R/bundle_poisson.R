@@ -23,8 +23,6 @@ bundle_poisson <- function(){
               },
               initialize = function(y, nobs, E, x, family, offset, jj, unscaled){
                 
-                n <- rep(1, nobs)
-                
                 ## should E be used unscaled or not?..
                 use.unscaled <- if (!is.null(attr(E, "use.unscaled"))){ TRUE } else { FALSE }
                 
