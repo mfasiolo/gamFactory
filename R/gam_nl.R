@@ -53,13 +53,25 @@ gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE, 
     formula <- list(formula)
   }
   
-  ddd <- match.call(expand.dots = FALSE)$`...`
+  dots <- list(...)
   
-  out <- ddd$G
+  out <- dots$G
+  
+  ## Arguments for the first gam() call:
+  ## remove sp so it is not used when fit = FALSE
+  build_dots <- dots
+  build_dots$sp <- NULL
+  
+  ## Arguments for the second gam() call:
+  ## keep sp, but remove G because we pass G explicitly
+  fit_dots <- dots
+  fit_dots$G <- NULL
+  fit_dots$data <- NULL
+  
   if( is.null(out) ){ # Do not build if G already provided
     form_comp <- .compile_formula(formula)
     
-    out <- gam(formula = form_comp, family = family, data = data, fit = FALSE, ...)
+    out <- do.call("gam", c(list(formula = form_comp, family = quote(family), data = quote(data), fit = FALSE), build_dots))
     
     info <- prep_info(o = out)
     
@@ -69,7 +81,7 @@ gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE, 
   }
   
   if( fit ){
-    out <- gam(G = out, ...)
+    out <- do.call("gam", c(list(G = out), fit_dots))
 
     out <- postproc_gam_nl(o = out, info = info)
     
