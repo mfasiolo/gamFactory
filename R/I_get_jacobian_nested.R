@@ -69,7 +69,10 @@ get_jacobian.nested <- function(object,data, param){
   
   JJ <- cbind(J_alpha_nexp, J_alpha_si, J_beta)
   
-  return( list("JJ" = JJ, "xa" = x_nest$xa) )
+  return( list("JJ" = JJ, 
+               "z" = x_nest$z,
+               "xa" = x_nest$xa, 
+               "xsm_raw" = x_nest$xsm_raw) )
 }
 
 

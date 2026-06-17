@@ -83,6 +83,7 @@
   ## --- Phase 2: Linear transformation, exp smooth and global center ---
   X_si <- X_si %*% si$B_si
   X_nexp <- X_nexp %*% si$B_nexp
+  z <- X_si %*% alpha_si
   
   res <- deriv_si_nexp(X_si = X_si,
                            X_nexp = X_nexp,
@@ -104,6 +105,8 @@
     
     return(list(
       X = NULL,  # don't need it for now, because type = "link" will call basis again
+      z = z, #data after linear trans before exp smooth
+      xsm_raw = xsm_raw, #data after exp smooth
       xa = xsm,
       xa_dalpha_si = xa_dalpha_si,
       xa_dalpha_nexp = xa_dalpha_nexp
