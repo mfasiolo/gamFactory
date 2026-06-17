@@ -17,11 +17,11 @@ target covariate dimensions used to compute the Gaussian kernel weights.}
 \code{evalX(x, deriv)} which evaluates the final spline transformation stage.}
 }
 \value{
-An object of class \code{c("mgks", "nested")} containing a locked-environment closure:
+An object of class \code{c("mgks", "nested")} containing:
 \itemize{
 \item{\code{.eval(param, deriv = 0)}}{ An evaluation function that takes a combined
 numeric parameter vector \code{param} (where the first \code{length(dist) + 1}
-elements represent the kernel tuning metrics, and the remainder represent
+elements represent the kernel parameters, and the remainder represent
 the outer spline coefficients) and returns an updated effect state evaluation.}
 }
 }
@@ -45,9 +45,6 @@ parameters (\code{beta}) are used as linear coefficients against this
 basis expansion matrix:
 \deqn{f(\tilde{s}(\mathbf{x}_i) ) = \mathbf{B}_0(\tilde{s}(\mathbf{x}_i) ) \bm{\beta}}
 }
-
-This composition allows the package's optimization engines to jointly fit
-both the non-linear bandwidth profiles and the outer spline curves simultaneously.
 }
 \seealso{
 \link{trans_mgks}, \link{s_nest}

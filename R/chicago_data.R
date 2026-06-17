@@ -34,10 +34,8 @@
 #' @rdname chicago_data
 #' @examples 
 #' dat <- chicago_data()
-#' if (!is.null(dat)) {
-#'   dim(dat)
-#'   str(dat)
-#' }
+#' dim(dat)
+#' str(dat)
 #' @export
 chicago_data <- function() {
   if( !require(gamair) ){

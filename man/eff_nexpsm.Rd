@@ -8,7 +8,7 @@ eff_nexpsm(y, Xi, basis, x0 = NULL, times = NULL)
 }
 \arguments{
 \item{y}{A numeric vector representing the time series or sequence data to be
-smoothed by the inner layer.}
+exponentially smoothed.}
 
 \item{Xi}{A numeric design matrix of dimensions \code{n} by \code{p} containing
 the historical covariates that drive the time-varying smoothing rate.}
@@ -32,29 +32,25 @@ the outer spline coefficients) and returns an updated effect state evaluation.}
 }
 }
 \description{
-This function acts as a constructor factory for nested adaptive
-exponential smoothing (NEXPSM) effects within a Generalized Additive Model (GAM)
-framework. It bundles the target sequence, smoothing covariates, initial state,
-and an outer basis expansion method into a state-holding closure object that
+This function acts as a constructor for nested adaptive
+exponential smoothing. It bundles the target sequence, smoothing covariates, initial state,
+and an outer basis expansion method into an object that
 can evaluate the effect and its analytical derivatives dynamically.
 }
 \details{
 The function maps a two-layer hierarchical smoothing architecture:
 \enumerate{
-\item \strong{Inner Adaptive Filter:} The raw parameters are split. The first
+\item \strong{Inner Adaptive Exponential Smooth:} The raw parameters are split. The first
 \code{ncol(Xi) + 1} parameters (\code{alpha}) are fed directly into
 \code{\link{expsmooth}} to yield a time-varying smoothed trajectory vector:
 \deqn{\eta_i = \text{expsmooth}(y, \mathbf{X}_i, \bm{\alpha})_i}
 \item \strong{Outer Spline Expansion:} The smooth vector elements \eqn{\eta}
-are evaluated through the outer \code{basis} transformation. The
+are evaluated through the outer \code{basis} transformation at the observation points
+corresponding to \code{times}. The
 remaining parameter elements (\code{beta}) serve as linear weights
 against this expanded basis matrix:
 \deqn{f(\eta_i) = \mathbf{B}_0(\eta_i) \bm{\beta}}
 }
-
-Metaprogramming expressions (\code{incall} and \code{efcall}) are pre-compiled
-here and dispatched inside the shared runtime environment worker
-\code{.get_eff_eval_general()}.
 }
 \seealso{
 \link{trans_nexpsm}, \link{s_nest}

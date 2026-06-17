@@ -41,8 +41,6 @@ to build history windows and the final row from shifting) are automatically drop
 }
 \examples{
 dat <- chicago_data()
-if (!is.null(dat)) {
-  dim(dat)
-  str(dat)
-}
+dim(dat)
+str(dat)
 }

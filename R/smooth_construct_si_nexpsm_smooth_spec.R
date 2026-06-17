@@ -1,7 +1,7 @@
 #' Nested single-index and adaptive exponential smoothing constructor
 #'
 #' @description
-#' This function implements a dual-nested smooth of the form 
+#' This function implements a double-nested smooth of the form
 #' \eqn{f_t = s(\text{expsmooth}(z_t, \omega_t))}, which combines an inner linear 
 #' projection (single-index transformation) with a middle adaptive exponential 
 #' smoothing layer, followed by an outer B-spline basis expansion. 
@@ -32,7 +32,7 @@
 #'   basis construction. Can be \code{NULL} (default).
 #'  
 #' @details
-#' The constructor builds the nested smooth through the following rigorous steps:
+#' The constructor builds the nested smooth through the following steps:
 #' \itemize{
 #'   \item \strong{Covariate Partitioning & Centering:} The input matrix is split into 
 #'         \eqn{X_{si}} and \eqn{X_{nexp}} based on \code{n_si}. Both matrices are 
