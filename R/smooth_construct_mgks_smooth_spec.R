@@ -77,15 +77,17 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   
   # Need to initialize inner coefficients?
   alpha <- si$alpha
+  # We divide by "n" not "n-1" in the penalties on variance!
+  sd_n <- function(x){ sd(x) * sqrt(n-1) / sqrt(n) }
   if( is.null(alpha) ){ 
     # alpha[1] s.t. sd(inner_lin_pred) = 1 (target variance)
     # Other elements of alpha set to the negative marginal standard deviations / 10.
     # Dividing by 10 seems a good compromise between under- and over-smoothing.
     g <- mgks(y = si$x, dist = Dist, beta = -log(sapply(si$dist, sd)/10))$d0
-    alpha <- si$alpha <- c(log(1/sd(g)), -log(sapply(si$dist, sd)/10)) 
+    alpha <- si$alpha <- c(log(1/sd_n(g)), -log(sapply(si$dist, sd)/10)) 
   } else {
     g <- mgks(y = si$x, dist = Dist, beta = alpha)$d0
-    alpha <- si$alpha <- c(log(1/sd(g)), alpha)
+    alpha <- si$alpha <- c(log(1/sd_n(g)), alpha)
   }
   
   # Center and scale the initialized inner linear preditor

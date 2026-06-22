@@ -62,13 +62,15 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   
   positive_si <- isTRUE(si$positive_si) 
   
+  # We divide by "n" not "n-1" in the penalties on variance!
+  sd_n <- function(x){ sd(x) * sqrt(n-1) / sqrt(n) }
   if (positive_si) {
     # Here we are working on element-wise log of single index vector
-    tmp <- sd(si$X %*% exp(si$alpha + si$a0))
+    tmp <- sd_n(si$X %*% exp(si$alpha + si$a0))
     si$alpha <- si$alpha - log(tmp)
     ax <- drop( si$X %*% exp(si$alpha + si$a0) )
   } else {
-    tmp <- sd(si$X %*% (si$alpha + si$a0))
+    tmp <- sd_n(si$X %*% (si$alpha + si$a0))
     si$alpha <- si$alpha / tmp
     si$a0 <- si$a0 / tmp
     ax <- drop( si$X %*% (si$alpha + si$a0) )

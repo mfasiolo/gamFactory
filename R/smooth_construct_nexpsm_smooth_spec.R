@@ -47,14 +47,16 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   
   # Need to initialize inner coefficients?
   alpha <- si$alpha
+  # We divide by "n" not "n-1" in the penalties on variance!
+  sd_n <- function(x){ sd(x) * sqrt(n-1) / sqrt(n) }
   if( is.null(alpha) ){ 
-    # alpha[1] s.t. sd(inner_lin_pred) = 1 (target variance)
+    # alpha[1] s.t. sd_n(inner_lin_pred) = 1 (target variance)
     g <- expsmooth(y = x, Xi = si$X, beta = rep(0, di-1), times = times)$d0
-    alpha <- si$alpha <- c(log(1/sd(g)), rep(0, di-1))
+    alpha <- si$alpha <- c(log(1/sd_n(g)), rep(0, di-1))
   } else {
     alpha <- solve(si$B) %*% alpha
     g <- expsmooth(y = x, Xi = si$X, beta = alpha, times = times)$d0
-    alpha <- si$alpha <- c(log(1/sd(g)), alpha)
+    alpha <- si$alpha <- c(log(1/sd_n(g)), alpha)
   }
   
   # Center and scale the initialized inner linear predictor
