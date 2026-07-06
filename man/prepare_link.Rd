@@ -7,10 +7,18 @@
 prepare_link(link, oklinks, np, nam)
 }
 \arguments{
-\item{np}{XXX.}
+\item{link}{A character vector of link function(s) to be used for the response family.}
+
+\item{oklinks}{A list of character vectors, each containing the allowed link functions.}
+
+\item{np}{Number of parameters of the family.}
+
+\item{nam}{Name of the family.}
 }
 \description{
-XXX.
+Internal function used to check whether a link function is within
+the set of allowed link functions for a given response family. It called
+\code{fix_family_link} to ensure that the link function has the correct derivatives.
 }
 \examples{
 library(gamFactory)

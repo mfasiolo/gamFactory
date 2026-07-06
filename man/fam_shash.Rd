@@ -2,12 +2,18 @@
 % Please edit documentation in R/fam_shash.R
 \name{fam_shash}
 \alias{fam_shash}
-\title{The Sinh-Arsinh (shash) regression model}
+\title{The Sinh-Arsinh (shash) location-scale-skewness-kurtosis family}
 \usage{
 fam_shash(link = NULL)
 }
 \description{
-The Sinh-Arsinh (shash) regression model
+\code{gam}/\code{gam_nl} should be called with a list of 4 formulae: the
+first specifies the response and the linear predictor for the location
+\code{mu}; the second (one sided) specifies the linear predictor for
+\code{tau = log(sigma)}, the log-scale; the third (one sided) specifies
+the linear predictor for the skewness \code{eps}; the fourth (one sided)
+specifies the linear predictor for \code{phi = log(delta)}, the
+log-kurtosis.
 }
 \examples{
 ###############

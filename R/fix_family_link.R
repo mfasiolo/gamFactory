@@ -2,10 +2,14 @@
 #' Preparing response family function
 #' 
 #' @description Extension of \code{mgcv::fix.family.link} including additional links.
-#' @param fam XXX.
+#'              It purpose is to add the necessary link derivatives to a family object, 
+#'              if they are not already present.
+#' @param fam a family, such as the output of \code{fam_gaussian}.
 #' @name fix_family_link
 #' @rdname fix_family_link
 #' @export fix_family_link
+#' @examples
+#' fix_family_link(fam_gaussian())$link
 #' 
 fix_family_link <- function(fam){
   
@@ -20,35 +24,45 @@ fix_family_link <- function(fam){
     
     link <- fam$link
     
+    # NOTE: "logea2" contains "logea" as a substring, so it must be matched before
+    # "logea" below (hence the if/else if chain, ordered most-specific-first).
+
     # Get limits (a, b) of logitab link
     if( grepl("logitab", link, fixed=TRUE) ){
-      
+
       tmp <- sort( as.numeric(strapplyc(link, "[-+.e0-9]*\\d")[[1]]) )
       l1 <- tmp[1]
       l2 <- tmp[2]
       link <- "logitab"
-      
-    }
-    
-    # Get limit (a, \infinity) on 1/mu of loginva link
-    if( grepl("loginva", link, fixed=TRUE) ){
-      
+
+    } else if( grepl("loginva", link, fixed=TRUE) ){
+      # Get limit (a, \infinity) on 1/mu of loginva link
+
       tmp <- sort( as.numeric(strapplyc(link, "[-+.e0-9]*\\d")[[1]]) )
       l1 <- tmp[1]
       link <- "loginva"
-      
-    }
-    
-    # Get limit (a, \infinity) on exp(mu) of logea link
-    if( grepl("logea", link, fixed=TRUE) ){
-      
+
+    } else if( grepl("logea2", link, fixed=TRUE) ){
+      # Get log-lower-limit loga of logea2 link (loga = log(a): same link as logea(a),
+      # but parametrised by loga instead of a; used by default for the scale parameters
+      # of mgcv::gammals and mgcv::gumbls). We extract the number from inside the
+      # parentheses only, since the numeric-extraction regex below would otherwise also
+      # match the "2" in "logea2" itself.
+      inside <- sub(".*\\((.*)\\).*", "\\1", link)
+      tmp <- as.numeric(strapplyc(inside, "[-+.e0-9]*\\d")[[1]])
+      l1 <- tmp[1]
+      link <- "logea2"
+
+    } else if( grepl("logea", link, fixed=TRUE) ){
+      # Get limit (a, \infinity) on exp(mu) of logea link
+
       tmp <- sort( as.numeric(strapplyc(link, "[-+.e0-9]*\\d")[[1]]) )
       l1 <- tmp[1]
       link <- "logea"
-      
+
     }
-  
-    switch(link, 
+
+    switch(link,
            logitab = {
              fam$d2link <- eval(parse(text=paste("function(mu) { mu <- (mu - ", 
                                       l1, ") / ", l2 - l1, "; (1/(1 - mu)^2 - 1/mu^2) / ", 
@@ -75,6 +89,16 @@ fix_family_link <- function(fam){
                                         paste("function(mu) { em<-exp(mu); fr<-em/(em-",l1,"); oo<-fr*(1-fr); oo-2*oo*fr }",sep='')))
              fam$d4link <- eval(parse(text=
                                         paste("function(mu) { em<-exp(mu); b<-",l1,"; -b*em*(b^2+4*b*em+em^2)/(em-b)^4 }",sep='')))
+           },
+           logea2 = {
+             # Same derivatives as logea(a) with a = exp(l1) (l1 = loga = log(a)),
+             # reformulated to avoid overflow for large mu, see make_link.R.
+             fam$d2link <- eval(parse(text=paste0(
+               "function(mu) { mub <- mu - (", l1, "); mub <- exp(-mub*sign(mub)); -mub/(mub-1)^2 }")))
+             fam$d3link <- eval(parse(text=paste0(
+               "function(mu) { mub <- mu - (", l1, "); sm <- -sign(mub); mub <- exp(mub*sm); sm*(mub+mub^2)/(mub-1)^3 }")))
+             fam$d4link <- eval(parse(text=paste0(
+               "function(mu) { mub <- mu - (", l1, "); sm <- -sign(mub); mub <- exp(mub*sm); sm*(mub+4*mub^2+mub^3)/(mub-1)^4 }")))
            },
            stop(gettextf("%s link not recognised", sQuote(link)), domain = NA))
     

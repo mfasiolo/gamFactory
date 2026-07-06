@@ -2,26 +2,32 @@
 % Please edit documentation in R/llk_poisson.R
 \name{llk_poisson}
 \alias{llk_poisson}
-\title{Log-likelhood of a Gaussian model}
+\title{Log-likelihood of a Poisson model}
 \usage{
 llk_poisson(y, param, deriv = 0, ...)
 }
 \arguments{
-\item{param}{XXX.}
+\item{y}{a vector of observed counts.}
 
-\item{deriv}{XXX.}
+\item{param}{a matrix (or list) with 1 column (element), the rate \code{mu}.}
+
+\item{deriv}{integer between 0 and 4 indicating the maximum derivative order to
+return: 0 only returns \code{d0} (the log-density itself), while 1-4
+additionally return \code{d1}-\code{d4}.}
 }
 \description{
-XXX.
+Log-likelihood of the Poisson distribution, and its derivatives with
+respect to \code{param = mu}, the rate. Returned in the list format used
+by \code{[gamFactory::llk_gaussian]} and friends.
 }
 \examples{
 library(gamFactory)
 n <- 10
 y <- rpois(n, 15)
-param <- c(12.5) # mu and 1/sigma
+param <- c(12.5) # rate
 
-# Derivatives of Gaussian log-lik up to order 3
-llk_poisson(y = y, param = param, deriv = 3)
+# Derivatives of Poisson log-lik up to order 4
+llk_poisson(y = y, param = param, deriv = 4)
 
 # Wrap derivatives for compatibility with gamFactory::checkDeriv
 obj <- list(
@@ -30,17 +36,20 @@ obj <- list(
   },
   "d1" = function(param){
     colSums(do.call("cbind", llk_poisson(y = y, param = param, deriv = 1)$d1))
-    
+
   },
   "d2" = function(param){
     colSums(do.call("cbind", llk_poisson(y = y, param = param, deriv = 2)$d2))
-    
+
   },
   "d3" = function(param){
     colSums(do.call("cbind", llk_poisson(y = y, param = param, deriv = 3)$d3))
+  },
+  "d4" = function(param){
+    colSums(do.call("cbind", llk_poisson(y = y, param = param, deriv = 4)$d4))
   })
 
-check_deriv(obj = obj, param = param, ord = 1:3)
+check_deriv(obj = obj, param = param, ord = 1:4)
 
 
 }

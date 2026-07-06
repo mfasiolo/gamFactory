@@ -1,10 +1,17 @@
 #'
-#' The Sinh-Arsinh (shash) regression model
-#' 
+#' The Sinh-Arsinh (shash) location-scale-skewness-kurtosis family
+#'
+#' @description \code{gam}/\code{gam_nl} should be called with a list of 4 formulae: the
+#'              first specifies the response and the linear predictor for the location
+#'              \code{mu}; the second (one sided) specifies the linear predictor for
+#'              \code{tau = log(sigma)}, the log-scale; the third (one sided) specifies
+#'              the linear predictor for the skewness \code{eps}; the fourth (one sided)
+#'              specifies the linear predictor for \code{phi = log(delta)}, the
+#'              log-kurtosis.
 #' @name fam_shash
 #' @rdname fam_shash
 #' @export fam_shash
-#' @examples 
+#' @examples
 #' ###############
 #' # [1] Example with standard effects 
 #' ###############

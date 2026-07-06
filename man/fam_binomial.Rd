@@ -2,12 +2,23 @@
 % Please edit documentation in R/fam_binomial.R
 \name{fam_binomial}
 \alias{fam_binomial}
-\title{The binomial family}
+\title{The Binomial family}
 \usage{
 fam_binomial(n, link = NULL)
 }
+\arguments{
+\item{n}{number of trials, either a single value (recycled for every observation) or
+a vector with one value per observation.}
+
+\item{link}{link function for \code{mu}, either \code{"logit"} or \code{"probit"}. If
+\code{NULL} (the default), \code{"logit"} is used.}
+}
 \description{
-The binomial family
+\code{gam}/\code{gam_nl} should be called with a single formula, or a
+list containing a single formula, specifying the response and the linear
+predictor for the success probability \code{mu}. \code{y} should contain
+the observed number of successes out of \code{n} trials (not
+proportions).
 }
 \examples{
 library(gamFactory)

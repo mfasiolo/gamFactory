@@ -2,12 +2,15 @@
 % Please edit documentation in R/fam_gaussian.R
 \name{fam_gaussian}
 \alias{fam_gaussian}
-\title{The gaussian family}
+\title{The Gaussian location-scale family}
 \usage{
 fam_gaussian(link = NULL)
 }
 \description{
-The gaussian family
+\code{gam}/\code{gam_nl} should be called with a list of 2 formulae: the
+first specifies the response and the linear predictor for the mean
+\code{mu}; the second (one sided) specifies the linear predictor for
+\code{tau = 1 / sigma}, the reciprocal of the standard deviation.
 }
 \examples{
 library(gamFactory)

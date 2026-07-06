@@ -1,10 +1,19 @@
 #'
-#' The binomial family
-#' 
+#' The Binomial family
+#'
+#' @description \code{gam}/\code{gam_nl} should be called with a single formula, or a
+#'              list containing a single formula, specifying the response and the linear
+#'              predictor for the success probability \code{mu}. \code{y} should contain
+#'              the observed number of successes out of \code{n} trials (not
+#'              proportions).
+#' @param n number of trials, either a single value (recycled for every observation) or
+#'          a vector with one value per observation.
+#' @param link link function for \code{mu}, either \code{"logit"} or \code{"probit"}. If
+#'             \code{NULL} (the default), \code{"logit"} is used.
 #' @name fam_binomial
 #' @rdname fam_binomial
 #' @export fam_binomial
-#' @examples 
+#' @examples
 #' library(gamFactory)
 #' 
 #' #### [1] Example with standard effects

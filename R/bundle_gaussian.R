@@ -1,6 +1,10 @@
 #'
-#' Bundle for Gaussian regression model
-#' 
+#' Bundle for the Gaussian location-scale model
+#'
+#' @description Ported from \code{mgcv::gaulss}. The two linear predictors correspond,
+#'              in order, to the mean \code{mu} and \code{tau = 1 / sigma}, the
+#'              reciprocal of the standard deviation. The default link for \code{tau} is
+#'              \code{"loginva(0.01)"}, constraining \code{sigma > 0.01}.
 #' @name bundle_gaussian
 #' @rdname bundle_gaussian
 #' @export
@@ -27,9 +31,12 @@ bundle_gaussian <- function(){
               qf = function(p, mu, logp = FALSE) {
                 return( qnorm(p, mean = mu[ , 1], sd = 1/mu[ , 2], log.p = logp) )
               },
-              initialize = function(y, nobs, E, x, family, offset, jj, unscaled){
+              initialize = function(y, nobs, E, x, family, offset, jj, unscaled, weights){
                 start <- NULL
                 pen.reg <- penreg
+                # Here the arguments of gaulss() are not used/important because gaulss()$initialize is an expression, 
+                # not a closure. So the value of any variable it uses will depend on the environment in which 
+                # it is evaluated. 
                 eval(gaulss()$initialize)
                 return( start )
               }

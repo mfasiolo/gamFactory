@@ -9,10 +9,23 @@ llk_shash(y, param, deriv = 0, phiPen = 0.001)
 \arguments{
 \item{y}{a vector of observations.}
 
+\item{param}{a matrix (or list) with 4 columns (elements), containing \code{mu},
+\code{tau}, \code{eps} and \code{phi}, in this order.}
+
+\item{deriv}{integer between 0 and 3 indicating the maximum derivative order to
+return: 0 only returns \code{d0} (the log-density itself), while 1-3
+additionally return \code{d1}-\code{d3} (4th order derivatives are not
+implemented for this family).}
+
 \item{phiPen}{positive coefficient of ridge penalty on phi parameter.}
 }
 \description{
-Log-likelihood of the Sinh-Arsinh (shash) distribution
+Log-likelihood of the Sinh-Arsinh (shash) location-scale-skewness-kurtosis
+distribution, and its derivatives with respect to
+\code{param = cbind(mu, tau, eps, phi)}, where \code{mu} is the location,
+\code{tau = log(sigma)} is the log-scale, \code{eps} is the skewness and
+\code{phi = log(delta)} is the log-kurtosis. Returned in the list format
+used by \code{[gamFactory::llk_gaussian]} and friends.
 }
 \examples{
 
@@ -20,8 +33,9 @@ library(gamFactory)
 
 ##### Simulate data and create object
 n <- 10
-param <- c(1, exp(2), 0.5, exp(1))
-y <- param[1] + (param[4] * param[2]) * sinh((1/param[4]) * asinh(qnorm(runif(n))) + (param[3]/param[4]))
+param <- c(mu = 1, tau = 2, eps = 0.5, phi = 1) # tau = log(sigma), phi = log(delta)
+sig <- exp(param["tau"]); del <- exp(param["phi"])
+y <- param["mu"] + (del * sig) * sinh((1 / del) * asinh(qnorm(runif(n))) + (param["eps"] / del))
 
 llk_shash(y = y, param = param, deriv = 3)
 

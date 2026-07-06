@@ -1,6 +1,12 @@
 #'
-#' Bundle for Gaussian regression model
-#' 
+#' Bundle for the Binomial regression model
+#'
+#' @description Bundle for a Binomial GAM with a single linear predictor for the success
+#'              probability \code{mu} (\code{n} trials fixed in advance, not estimated).
+#' @param n number of trials, either a single value (recycled for every observation) or
+#'          a vector with one value per observation. Fixed at bundle-creation time
+#'          and stored for later use by \code{residuals}/\code{rd}/
+#'          \code{initialize} in \code{$store$n}.
 #' @name bundle_binomial
 #' @rdname bundle_binomial
 #' @export
@@ -49,7 +55,7 @@ bundle_binomial <- function(n){
               rd = function(mu, wt, scale) {
                 return( rbinom(nrow(mu), n, mu) )
               },
-              initialize = function(y, nobs, E, x, family, offset, jj, unscaled){
+              initialize = function(y, nobs, E, x, family, offset, jj, unscaled, weights){
                 
                 n <- family$store$n
                 

@@ -7,8 +7,78 @@
 make_link(link)
 }
 \arguments{
-\item{link}{a character string indicating the link function to be used.}
+\item{link}{a character string indicating the link function to be used: either a name
+recognised by \code{stats::make.link}, or one of the custom links below.}
+}
+\value{
+An object of class \code{"link-glm"}, see \link[stats]{make.link}.
 }
 \description{
-Extension of \code{mgcv::make.link} including additional links.
+Extension of \code{stats::make.link} (used internally by \code{mgcv})
+providing several additional link functions, needed to constrain GAM
+parameters to a bounded interval or half-line. If \code{link} is a name
+recognised by \code{stats::make.link} (e.g. \code{"identity"},
+\code{"log"}, \code{"logit"}, ...) that link is returned as usual;
+otherwise \code{link} is parsed as one of the custom links below, each
+specified as a string \code{"name(params)"}, e.g. \code{"logitab(-1, 2)"}.
+}
+\details{
+The custom links currently available, with \eqn{\mu} the parameter on its
+natural scale and \eqn{\eta} the unconstrained linear predictor scale, are:
+\describe{
+\item{\code{logitab(a, b)}}{Constrains \eqn{\mu \in (a, b)}, via a re-scaled logit:
+\deqn{\eta = \mathrm{logit}\left(\frac{\mu - a}{b - a}\right), \qquad
+              \mu = a + (b - a) \, \mathrm{logit}^{-1}(\eta).}
+Used, e.g., for the shape parameter of the GEV distribution in
+\link{bundle_gev} (\code{"logitab(-1, 0.5)"}).}
+\item{\code{loginva(a)}}{Constrains \eqn{1/\mu \in (a, \infty)}, i.e.
+\eqn{\mu \in (0, 1/a)}:
+\deqn{\eta = \log(1/\mu - a), \qquad \mu = \frac{1}{\exp(\eta) + a}.}
+Used, e.g., for the inverse-scale parameter in \link{bundle_gaussian}
+(\code{"loginva(0.01)"}).}
+\item{\code{logea(a)}}{Constrains \eqn{\exp(\mu) \in (a, \infty)}:
+\deqn{\eta = \log(\exp(\mu) - a), \qquad \mu = \log(\exp(\eta) + a).}
+Used, e.g., for the kurtosis parameter in \link{bundle_shash}
+(\code{"logea(0.01)"}).}
+\item{\code{logea2(loga)}}{The same link as \code{logea(a)}, but parametrised by
+\code{loga = log(a)} instead of \code{a} itself, and evaluated in a
+numerically stable way. Constrains \eqn{\mu \in (loga, \infty)}, via a shifted
+softplus:
+\deqn{\mu = loga + \log(1 + \exp(\eta - loga)), \qquad
+              \eta = loga + \log(\exp(\mu - loga) - 1).}
+Since \eqn{loga + \log(1 + \exp(\eta - loga)) = \log(\exp(loga) + \exp(\eta))
+        = \log(a + \exp(\eta))}, this is mathematically the same link as
+\code{logea(exp(loga))}; the two agree to machine precision wherever both are
+finite (see examples). \code{logea2} exists because it evaluates
+\eqn{\exp(\eta - loga)} instead of \eqn{\exp(\eta)} directly, so unlike
+\code{logea} it does not overflow to \code{Inf} for large \eqn{\eta} or
+\eqn{\mu}. Used by default for the log-dispersion parameters in
+\link{bundle_gammals} and \link{bundle_gumbls} (\code{"logea2(-7)"}, i.e.
+\code{a = exp(-7)}).}
+}
+}
+\examples{
+library(gamFactory)
+
+# logitab: mu constrained to (-1, 2)
+lk <- make_link("logitab(-1, 2)")
+range(lk$linkinv(seq(-50, 50, length.out = 200))) # always within (-1, 2)
+
+# loginva: 1/mu constrained to (2, Inf), i.e. mu in (0, 0.5)
+lk <- make_link("loginva(2)")
+range(lk$linkinv(seq(-50, 50, length.out = 200))) # always within (0, 0.5)
+
+# logea: exp(mu) constrained to (0.01, Inf)
+lk <- make_link("logea(0.01)")
+mu <- lk$linkinv(seq(-50, 50, length.out = 200))
+all(exp(mu) > 0.01)
+
+# logea2: numerically-stable version of logea(exp(loga))
+lk_ea2 <- make_link("logea2(-7)")
+lk_ea  <- make_link(paste0("logea(", exp(-7), ")"))
+eta <- seq(-5, 5, length.out = 100)
+max(abs(lk_ea2$linkinv(eta) - lk_ea$linkinv(eta))) # ~ 0: same link
+lk_ea2$linkinv(1000) # finite
+lk_ea$linkinv(1000)  # overflows to Inf
+
 }

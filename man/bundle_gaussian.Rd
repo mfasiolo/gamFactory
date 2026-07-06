@@ -2,10 +2,13 @@
 % Please edit documentation in R/bundle_gaussian.R
 \name{bundle_gaussian}
 \alias{bundle_gaussian}
-\title{Bundle for Gaussian regression model}
+\title{Bundle for the Gaussian location-scale model}
 \usage{
 bundle_gaussian()
 }
 \description{
-Bundle for Gaussian regression model
+Ported from \code{mgcv::gaulss}. The two linear predictors correspond,
+in order, to the mean \code{mu} and \code{tau = 1 / sigma}, the
+reciprocal of the standard deviation. The default link for \code{tau} is
+\code{"loginva(0.01)"}, constraining \code{sigma > 0.01}.
 }

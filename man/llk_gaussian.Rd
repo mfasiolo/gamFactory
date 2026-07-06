@@ -2,17 +2,26 @@
 % Please edit documentation in R/llk_gaussian.R
 \name{llk_gaussian}
 \alias{llk_gaussian}
-\title{Log-likelhood of a Gaussian model}
+\title{Log-likelihood of a Gaussian model}
 \usage{
 llk_gaussian(y, param, deriv = 0, ...)
 }
 \arguments{
-\item{param}{XXX.}
+\item{y}{a vector of observations.}
 
-\item{deriv}{XXX.}
+\item{param}{a matrix (or list) with 2 columns (elements), containing \code{mu} and
+\code{tau}, in this order.}
+
+\item{deriv}{integer between 0 and 4 indicating the maximum derivative order to
+return: 0 only returns \code{d0} (the log-density itself), while 1-4
+additionally return \code{d1}-\code{d4}.}
 }
 \description{
-XXX.
+Log-likelihood of the Gaussian distribution, and its derivatives with
+respect to \code{param = cbind(mu, tau)}, where \code{mu} is the mean and
+\code{tau = 1 / sigma} is the reciprocal of the standard deviation.
+Returned in the list format used by \code{[gamFactory::llk_gpd]} and
+friends.
 }
 \examples{
 library(gamFactory)
@@ -20,8 +29,8 @@ n <- 10
 y <- rnorm(n)
 param <- c(0.5, 1.5) # mu and 1/sigma
 
-# Derivatives of Gaussian log-lik up to order 3
-llk_gaussian(y = y, param = param, deriv = 3)
+# Derivatives of Gaussian log-lik up to order 4
+llk_gaussian(y = y, param = param, deriv = 4)
 
 # Wrap derivatives for compatibility with gamFactory::checkDeriv
 obj <- list(
@@ -30,15 +39,18 @@ obj <- list(
   },
   "d1" = function(param){
     colSums(do.call("cbind", llk_gaussian(y = y, param = param, deriv = 1)$d1))
-    
+
   },
   "d2" = function(param){
     colSums(do.call("cbind", llk_gaussian(y = y, param = param, deriv = 2)$d2))
-    
+
   },
   "d3" = function(param){
     colSums(do.call("cbind", llk_gaussian(y = y, param = param, deriv = 3)$d3))
+  },
+  "d4" = function(param){
+    colSums(do.call("cbind", llk_gaussian(y = y, param = param, deriv = 4)$d4))
   })
 
-check_deriv(obj = obj, param = param, ord = 1:3)
+check_deriv(obj = obj, param = param, ord = 1:4)
 }

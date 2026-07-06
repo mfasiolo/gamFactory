@@ -2,10 +2,17 @@
 % Please edit documentation in R/bundle_binomial.R
 \name{bundle_binomial}
 \alias{bundle_binomial}
-\title{Bundle for Gaussian regression model}
+\title{Bundle for the Binomial regression model}
 \usage{
 bundle_binomial(n)
 }
+\arguments{
+\item{n}{number of trials, either a single value (recycled for every observation) or
+a vector with one value per observation. Fixed at bundle-creation time
+and stored for later use by \code{residuals}/\code{rd}/
+\code{initialize} in \code{$store$n}.}
+}
 \description{
-Bundle for Gaussian regression model
+Bundle for a Binomial GAM with a single linear predictor for the success
+probability \code{mu} (\code{n} trials fixed in advance, not estimated).
 }

@@ -7,8 +7,14 @@
 fix_family_link(fam)
 }
 \arguments{
-\item{fam}{XXX.}
+\item{fam}{a family, such as the output of \code{fam_gaussian}.}
 }
 \description{
 Extension of \code{mgcv::fix.family.link} including additional links.
+It purpose is to add the necessary link derivatives to a family object,
+if they are not already present.
+}
+\examples{
+fix_family_link(fam_gaussian())$link
+
 }

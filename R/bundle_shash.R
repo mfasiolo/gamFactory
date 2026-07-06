@@ -1,6 +1,11 @@
 #'
-#' Bundle for Sinh-Arsinh (shash) regression model
-#' 
+#' Bundle for the Sinh-Arsinh (shash) location-scale-skewness-kurtosis model
+#'
+#' @description Ported from \code{mgcv::shash}. The four linear predictors correspond,
+#'              in order, to the location \code{mu}, \code{tau = log(sigma)} (the
+#'              log-scale), the skewness \code{eps} and \code{phi = log(delta)} (the
+#'              log-kurtosis). The default link for \code{tau} is \code{"logea(0.01)"},
+#'              constraining \code{sigma > 0.01}.
 #' @name bundle_shash
 #' @rdname bundle_shash
 #' @export
@@ -25,7 +30,7 @@ bundle_shash <- function(){
                 q <- muE + (delE * sigE) * sinh((1/delE) * asinh(qnorm(p, log.p = logp)) + (epsE/delE))
                 return(q)
               },
-              initialize = function(y, nobs, E, x, family, offset, jj, unscaled){
+              initialize = function(y, nobs, E, x, family, offset, jj, unscaled, weights){
                 start <- NULL
                 pen.reg <- penreg
                 eval(shash()$initialize)
