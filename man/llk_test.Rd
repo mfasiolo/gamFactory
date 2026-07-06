@@ -7,10 +7,25 @@
 llk_test(param, deriv)
 }
 \arguments{
-\item{param}{XXX.}
+\item{param}{a matrix (or list) with one column (element) per dimension.}
 
-\item{deriv}{XXX.}
+\item{deriv}{integer between 0 and 3 indicating the maximum derivative order to
+return: 0 only returns \code{d0}, while 1-3 additionally return
+\code{d1}-\code{d3}.}
 }
 \description{
-XXX.
+A synthetic function (not a real log-likelihood) whose derivatives can be
+derived by hand, used to test derivative machinery such as
+\code{\link{check_deriv}}. Returns
+\code{d0(param) = prod_i f_i(param[, i])}, where \code{f_i = cos} if
+\code{i} is odd and \code{f_i = sin} if \code{i} is even, together with
+its derivatives up to order 3, in the list format used by
+\code{\link{llk_gaussian}} and friends.
+}
+\examples{
+library(gamFactory)
+p <- 3
+param <- matrix(rnorm(p), nrow = 1)
+llk_test(param = param, deriv = 3)
+
 }

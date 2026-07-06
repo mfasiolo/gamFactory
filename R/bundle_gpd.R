@@ -12,7 +12,7 @@
 #' @export bundle_gpd
 bundle_gpd <- function(){
   out <- list(np = 2,
-              available_deriv = 3,
+              available_deriv = 4,
               llk = gamFactory::llk_gpd,
               links = list(c("log", "sqrt"), "logitab(0.001, 0.5)"), 
               nam = "gpd", 

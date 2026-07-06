@@ -10,7 +10,7 @@ fam_multinomial(K, link = NULL)
 \item{K}{number of linear predictors, i.e. number of categories minus one.}
 }
 \description{
-Ported from \link[mgcv:multinom]{mgcv::multinom}, see the corresponding documentation for details.
+Ported from \code{\link[mgcv:multinom]{mgcv::multinom}}, see the corresponding documentation for details.
 }
 \examples{
 library(gamFactory)

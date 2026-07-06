@@ -1,7 +1,7 @@
 #'
 #' Bundle for multinomial logistic regression model
 #'
-#' @description Ported from [mgcv::multinom]. There are \code{K} linear predictors, one
+#' @description Ported from [`mgcv::multinom`]. There are \code{K} linear predictors, one
 #'              per non-reference category, each giving the log-odds relative to
 #'              category \code{0} (the reference category, which has no linear predictor
 #'              of its own).

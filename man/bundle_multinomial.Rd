@@ -10,7 +10,7 @@ bundle_multinomial(K)
 \item{K}{number of linear predictors, i.e. number of categories minus one.}
 }
 \description{
-Ported from \link[mgcv:multinom]{mgcv::multinom}. There are \code{K} linear predictors, one
+Ported from \code{\link[mgcv:multinom]{mgcv::multinom}}. There are \code{K} linear predictors, one
 per non-reference category, each giving the log-odds relative to
 category \code{0} (the reference category, which has no linear predictor
 of its own).

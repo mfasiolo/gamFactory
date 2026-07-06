@@ -1,7 +1,7 @@
 #'
 #' The multinomial family
 #'
-#' @description Ported from [mgcv::multinom], see the corresponding documentation for details.
+#' @description Ported from [`mgcv::multinom`], see the corresponding documentation for details.
 #' @param K number of linear predictors, i.e. number of categories minus one.
 #' @name fam_multinomial
 #' @rdname fam_multinomial

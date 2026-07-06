@@ -6,7 +6,7 @@
 #'              \code{obj$d0}, 2nd order against \code{obj$d1}, and so on up to
 #'              \code{obj$d\{max(ord)\}} against \code{obj$d\{max(ord) - 1\}}), as long as
 #'              \code{obj} provides the corresponding \code{d0, ..., d\{max(ord)\}} entries,
-#'              each following the \code{[gamFactory::llk_gaussian]}-style convention of
+#'              each following the [`gamFactory::llk_gaussian`]-style convention of
 #'              returning a list whose elements are ordered by non-decreasing parameter
 #'              index tuples (e.g. \code{d2} ordered as (1,1), (1,2), ..., (1,d), (2,2), ...).
 #' @param obj the function to be differentiated.
