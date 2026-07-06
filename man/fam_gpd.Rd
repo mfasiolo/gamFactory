@@ -2,12 +2,15 @@
 % Please edit documentation in R/fam_gpd.R
 \name{fam_gpd}
 \alias{fam_gpd}
-\title{The GPD family}
+\title{The Generalized Pareto Distribution (GPD) family}
 \usage{
 fam_gpd(link = NULL)
 }
 \description{
-The GPD family
+\code{gam}/\code{gam_nl} should be called with a list of 2 formulae: the
+first specifies the response and the linear predictor for \code{phi}, a
+reparametrisation of the scale (\code{sigma = phi / (1 + xi)}); the
+second (one sided) specifies the linear predictor for the shape \code{xi}.
 }
 \examples{
 library(gamFactory)

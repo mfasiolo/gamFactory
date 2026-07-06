@@ -25,7 +25,7 @@ distribution, and its derivatives with respect to
 \code{param = cbind(mu, tau, eps, phi)}, where \code{mu} is the location,
 \code{tau = log(sigma)} is the log-scale, \code{eps} is the skewness and
 \code{phi = log(delta)} is the log-kurtosis. Returned in the list format
-used by \code{[gamFactory::llk_gaussian]} and friends.
+used by \code{\link{llk_gaussian}} and friends.
 }
 \examples{
 

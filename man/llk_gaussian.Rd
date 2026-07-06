@@ -20,7 +20,7 @@ additionally return \code{d1}-\code{d4}.}
 Log-likelihood of the Gaussian distribution, and its derivatives with
 respect to \code{param = cbind(mu, tau)}, where \code{mu} is the mean and
 \code{tau = 1 / sigma} is the reciprocal of the standard deviation.
-Returned in the list format used by \code{[gamFactory::llk_gpd]} and
+Returned in the list format used by \code{\link{llk_gpd}} and
 friends.
 }
 \examples{

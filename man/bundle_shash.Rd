@@ -2,10 +2,14 @@
 % Please edit documentation in R/bundle_shash.R
 \name{bundle_shash}
 \alias{bundle_shash}
-\title{Bundle for Sinh-Arsinh (shash) regression model}
+\title{Bundle for the Sinh-Arsinh (shash) location-scale-skewness-kurtosis model}
 \usage{
 bundle_shash()
 }
 \description{
-Bundle for Sinh-Arsinh (shash) regression model
+Ported from \code{mgcv::shash}. The four linear predictors correspond,
+in order, to the location \code{mu}, \code{tau = log(sigma)} (the
+log-scale), the skewness \code{eps} and \code{phi = log(delta)} (the
+log-kurtosis). The default link for \code{tau} is \code{"logea(0.01)"},
+constraining \code{sigma > 0.01}.
 }

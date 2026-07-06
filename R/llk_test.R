@@ -1,12 +1,25 @@
 ##################
 #'
 #' Fake log-likelihood useful for testing
-#' 
-#' @description XXX.
-#' @param param XXX.
-#' @param deriv XXX.
+#'
+#' @description A synthetic function (not a real log-likelihood) whose derivatives can be
+#'              derived by hand, used to test derivative machinery such as
+#'              [`gamFactory::check_deriv`]. Returns
+#'              \code{d0(param) = prod_i f_i(param[, i])}, where \code{f_i = cos} if
+#'              \code{i} is odd and \code{f_i = sin} if \code{i} is even, together with
+#'              its derivatives up to order 3, in the list format used by
+#'              [`gamFactory::llk_gaussian`] and friends.
+#' @param param a matrix (or list) with one column (element) per dimension.
+#' @param deriv integer between 0 and 3 indicating the maximum derivative order to
+#'              return: 0 only returns \code{d0}, while 1-3 additionally return
+#'              \code{d1}-\code{d3}.
 #' @rdname llk_test
 #' @export llk_test
+#' @examples
+#' library(gamFactory)
+#' p <- 3
+#' param <- matrix(rnorm(p), nrow = 1)
+#' llk_test(param = param, deriv = 3)
 #'
 llk_test <- function(param, deriv){
   

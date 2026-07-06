@@ -5,7 +5,7 @@
 #'
 #' @description Log-likelihood of the Poisson distribution, and its derivatives with
 #'              respect to \code{param = mu}, the rate. Returned in the list format used
-#'              by \code{[gamFactory::llk_gaussian]} and friends.
+#'              by [`gamFactory::llk_gaussian`] and friends.
 #' @param y a vector of observed counts.
 #' @param param a matrix (or list) with 1 column (element), the rate \code{mu}.
 #' @param deriv integer between 0 and 4 indicating the maximum derivative order to

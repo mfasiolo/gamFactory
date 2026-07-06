@@ -23,7 +23,7 @@ additionally return \code{d1}-\code{d4}.}
 Log-likelihood of the Binomial distribution, and its derivatives with
 respect to \code{param = mu}, the success probability (\code{y} counts
 successes out of \code{n} trials, both on the response, natural scale).
-Returned in the list format used by \code{[gamFactory::llk_gaussian]}
+Returned in the list format used by \code{\link{llk_gaussian}}
 and friends.
 }
 \examples{

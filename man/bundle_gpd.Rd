@@ -2,10 +2,15 @@
 % Please edit documentation in R/bundle_gpd.R
 \name{bundle_gpd}
 \alias{bundle_gpd}
-\title{Ingredients for Generalized Pareto family}
+\title{Bundle for the Generalized Pareto Distribution (GPD) model}
 \usage{
 bundle_gpd()
 }
 \description{
-XXX.
+Self-contained implementation (\code{mgcv} has no built-in GPD family).
+The two linear predictors correspond, in order, to \code{phi}, a
+reparametrisation of the scale (\code{sigma = phi / (1 + xi)}, chosen so
+that the parameters are close to orthogonal), and the shape \code{xi}.
+The default link for \code{xi} is \code{"logitab(0.001, 0.5)"}, bounding
+the shape in \code{(0.001, 0.5)} (positive, finite-variance tail).
 }

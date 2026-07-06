@@ -18,7 +18,7 @@ additionally return \code{d1}-\code{d4}.}
 \description{
 Log-likelihood of the Poisson distribution, and its derivatives with
 respect to \code{param = mu}, the rate. Returned in the list format used
-by \code{[gamFactory::llk_gaussian]} and friends.
+by \code{\link{llk_gaussian}} and friends.
 }
 \examples{
 library(gamFactory)
