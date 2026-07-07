@@ -5,7 +5,8 @@
 #' @rdname build_family_nl
 #' @export build_family_nl
 #' 
-build_family_nl <- function(bundle, info, link, lamVar = 1e5, lamRidge = 1e-5){
+build_family_nl <- function(bundle, info, link, lamVar = 1e5, lamRidge = 1e-5,
+                             n_init = 1000, n_eigen = 10, oversample = 10){
   
   available_deriv <- min(bundle$available_deriv, 3)
   cdf <- bundle$cdf
@@ -25,48 +26,21 @@ build_family_nl <- function(bundle, info, link, lamVar = 1e5, lamRidge = 1e-5){
   if( is.null(check_extra) ){ check_extra <- function(.ex) NULL }
   
   initialize_bundle <- bundle$initialize
+  predict <- bundle$predict
 
-  initialize_internal <- function(y, nobs, E, x, family, offset){
-    
-    p <- ncol( x )
-    unscaled <- attr(E,"use.unscaled")
-    lpi <- attr(x, "lpi")
-    
-    si <- which( sapply(info$type, paste0, collapse = '') != "stand" )
-    nsi <- length( si )
+  initialize_internal <- function(y, nobs, E, x, family, offset, weights){
 
-    nkk <- 1:ncol(x)
-    start <- numeric( ncol(x) )
-    if( nsi ){ # If there are nested effects we: 
-      # a) Identify coefficients of inner vector (alpha)
-      iec <- info$iec[si]
-      dsi <- sapply(info$extra[si], function(.x) length(.x$si$alpha))
-      kk <- do.call("c", lapply(1:nsi, function(.ii) iec[[.ii]][1:dsi[.ii]]))
-      # b) set the corresponding elements of start to the values contained in info$extra
-      alpha <- do.call("c", lapply(info$extra[si], function(.x) .x$si$alpha))
-      start[ kk ] <- alpha
-      # c) modify lpi so that family$initialize_bundle will initialize only the remaining coefficients
-      #    (excluding the columns of x and E related to the inner coefficients alpha)
-      lpi <- lapply(lpi, function(.x) .x[ !(.x %in% kk) ])
-      lpi <- lapply(lpi, function(.x) sapply(.x, function(.x1) .x1 - sum(kk < .x1)))
-      E <- E[ , -kk, drop = FALSE]
-      x <- x[ , -kk, drop = FALSE]
-      attr(x, "lpi") <- lpi
-      nkk <- nkk[ -kk ]
-    }
-    
-    start[nkk] <- family$initialize_bundle(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset, 
-                                            jj = lpi, unscaled = unscaled)
-    
-    return( start )
-    
+    .backfit_si_initialize(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset,
+                            weights = weights, info = info, n_init = n_init, n_eigen = n_eigen,
+                            oversample = oversample)
+
   }
-  
+
   initialize <- expression({
-    if ( is.null(start) ) { 
-      start <- family$initialize_internal(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset) 
+    if ( is.null(start) ) {
+      start <- family$initialize_internal(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset, weights = weights)
     }
-  }) 
+  })
   
   if(is.null(link)){
     Links <- lapply(oklinks, "[[", 1) # Default link function(s)
@@ -183,26 +157,9 @@ build_family_nl <- function(bundle, info, link, lamVar = 1e5, lamRidge = 1e-5){
       
       return( ret )
       
-    } ## end ll 
-    
-    # predict <- function(family,se=FALSE,eta=NULL,y=NULL,
-    #                     X=NULL,beta=NULL,off=NULL,Vb=NULL) {
-    # 
-    #   effType <- info$type
-    #   ne <- length( effType )
-    #   
-    #   # Build list of effect and penalties
-    #   tmp <- .buildEffects(X = X, coef = beta, info = info, d1b = NULL, deriv = 0, outer = FALSE)
-    #   eff <- tmp$eff
-    # 
-    #   # Build linear predictors and evaluate them
-    #   olp <- linpreds(eff = eff, iel = info$iel, iec = info$iec)
-    #   olp <- olp$eval(param = coef, deriv = derLev)
-    #   
-    #   if (se) return(list(fit=s,se.fit=sef)) else return(list(fit=olp$f))
-    # } ## predict
-    
-    structure(list(family = nam, 
+    } ## end ll
+
+    structure(list(family = nam,
                    bundle_nam = bundle_nam,
                    ll = ll, 
                    link = paste(link), 
@@ -212,10 +169,10 @@ build_family_nl <- function(bundle, info, link, lamVar = 1e5, lamRidge = 1e-5){
                    initialize = initialize, 
                    initialize_bundle = initialize_bundle, 
                    initialize_internal = initialize_internal,
-                   postproc = postproc, 
+                   postproc = postproc,
                    residuals = residuals,
                    store = store,
-                   #predict = predict,
+                   predict = predict,
                    qf = qf,
                    linfo = stats,
                    rd = rd, 

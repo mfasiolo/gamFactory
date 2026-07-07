@@ -59,6 +59,7 @@
 # -------------------------------------------------------------------------
 # 3D plot (AI generated)
 # -------------------------------------------------------------------------
+# library(plotly)
 # .plot_projective_q_3d <- function(Q, show_antipodes = TRUE, show_lines = TRUE) {
 #   stopifnot(ncol(Q) == 3)
 #   

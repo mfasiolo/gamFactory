@@ -4,7 +4,16 @@
 \alias{gam_nl}
 \title{Fit GAM models with nested effects}
 \usage{
-gam_nl(formula, family = fam_gaussian(), data = list(), fit = TRUE, ...)
+gam_nl(
+  formula,
+  family = fam_gaussian(),
+  data = list(),
+  fit = TRUE,
+  n_init = 1000,
+  n_eigen = 10,
+  oversample = 10,
+  ...
+)
 }
 \arguments{
 \item{formula}{A GAM formula, or a list of formulae. See ?mgcv::gam details.}
@@ -20,6 +29,17 @@ For the structure required by the \link{s_nest} effects, refer to \link{trans_li
 \item{fit}{Same argument as in \link[mgcv:gam]{mgcv::gam}. If this argument is \code{TRUE} then \code{gam_nl} sets up the
 model and fits it, but if it is \code{FALSE} then the model is set up and an object containing what would be
 required to fit is returned.}
+
+\item{n_init}{number of candidate directions tried when initialising each true
+single-index (\code{trans_linear}) nested effect. See
+\code{\link{build_family_nl}}.}
+
+\item{n_eigen}{number of eigenvector-based candidate directions (out of \code{n_init})
+used when initialising each single-index nested effect. See
+\code{\link{build_family_nl}}.}
+
+\item{oversample}{oversampling factor used to spread the remaining candidate
+directions over the sphere. See \code{\link{build_family_nl}}.}
 
 \item{...}{further arguments to be passed to \link[mgcv:gam]{mgcv::gam}.}
 }
@@ -45,13 +65,48 @@ dat <- data.frame(y = y, x1 = x1)
 dat$X <- X # single-index predictors
 
 # Fit the model
-fit <- gam_nl(list(y~s_nest(X, trans = trans_linear()) + s(x1), ~1), 
-              data = dat, family = fam_gaussian(), control=list(trace=TRUE))
+fit <- gam_nl(list(y~s_nest(X, trans = trans_linear()) + s(x1), ~1),
+              data = dat, family = fam_gaussian())
 
-# Plot the fit
+# Plot the smooth and single index vector
 fit <- getViz(fit)
 print(plot(fit), pages = 1) # plot smooth effects
 print(plot(fit, inner = TRUE), pages = 1) # plot inner components
 
+# Plot the fit to data vs the true projected data
+Xb <- dat$X \%*\% b
+tmp_dat <- dat
+tmp_dat$x1 <- 0
+plot(Xb, dat$y)
+lines(sort(Xb), predict(fit, newdata = tmp_dat)[order(Xb), 1], col = 2, lwd = 2)
+lines(sort(Xb), 2 * sin(sort(Xb)), col = 4, lwd = 2)
+
+#####
+# Single index example (II)
+# Same as before but X elements now follow a normal distribution, hence 
+# projected data is more spread out and we need more basis functions.
+
+X <- matrix(rnorm(p * n), ncol = p)
+x1 <- rnorm(n)
+y <- 2 * sin(X \%*\% b) + x1^2 + rnorm(n)
+dat <- data.frame(y = y, x1 = x1)
+dat$X <- X # single-index predictors
+
+# Fit the model, note k = 20
+fit <- gam_nl(list(y ~ s_nest(X, k = 20, trans = trans_linear()) + s(x1), ~1),
+              data = dat, family = fam_gaussian())
+
+# Plot the fit
+fit <- getViz(fit)
+print(plot(fit), pages = 1)
+print(plot(fit, inner = TRUE), pages = 1)
+
+# Plot the fit to data vs the true projected data
+Xb <- dat$X \%*\% b
+tmp_dat <- dat
+tmp_dat$x1 <- 0
+plot(Xb, dat$y)
+lines(sort(Xb), predict(fit, newdata = tmp_dat)[order(Xb), 1], col = 2, lwd = 2)
+lines(sort(Xb), 2 * sin(sort(Xb)), col = 4, lwd = 2)
 
 }
