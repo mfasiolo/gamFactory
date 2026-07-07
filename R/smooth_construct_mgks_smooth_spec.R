@@ -70,7 +70,7 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
     Dist[[kk]] <- Xi[ , idx, drop = FALSE]
     kk <- kk + 1
   }
-  d <- kk
+  d <- length(Dist)
   
   si$x <- y0
   si$dist <- Dist
@@ -93,7 +93,19 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   # Center and scale the initialized inner linear preditor
   data[[object$term]] <- exp(si$alpha[1]) * (g - mean(g))
   
-  out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
+  # Work out extreme knot range
+  .my_obj <- function(.a){
+    .g <- mgks(y = si$x, dist = Dist, beta = .a)$d0
+    .g <- (.g - mean(.g)) / sd_n(.g)
+    .o <- range(.g)
+    return( .o )
+  }
+  mult_grid <- do.call("expand.grid", lapply(1:d, function(dd) seq(1e-4, 4, length.out = 5)))
+  tmp <- -log(t(t(mult_grid) * sapply(si$dist, sd)))
+  kex <- range( apply(tmp, 1, function(.a) .my_obj(.a)) )
+  out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si, 
+                                     kex = kex)
+  
   
   class(out) <- c("mgks", "nested")
   return( out )

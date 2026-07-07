@@ -65,7 +65,18 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   si$x <- x
   si$times <- times
   
-  out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
+  # Work out maximal transformed data range
+  tmp <- matrix(1, nrow = nrow(si$X))
+  .my_obj <- function(.a, .M){
+    .g <- expsmooth(y = x, Xi = tmp, beta = .a, times = times)$d0
+    .g <- (.g - mean(.g)) / sd_n(.g)
+    .o <- ifelse(.M, -max(.g)^2, -min(.g)^2)
+    return( .o )
+  }
+  kex <- c(-sqrt(-optimize(f = .my_obj, interval = log(c(0.001, 0.999)), .M = FALSE)$objective),
+            sqrt(-optimize(f = .my_obj, interval = log(c(0.001, 0.999)), .M = TRUE)$objective))
+  
+  out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si, kex = kex)
   
   # Add inner penalty matrix: rbind(0, cbind(0, si$S) makes so first element of alpha (inner parameters)
   # is unpenalised (this is the scaling parameter)

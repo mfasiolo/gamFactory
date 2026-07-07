@@ -78,8 +78,13 @@ smooth.construct.si.smooth.spec <- function(object, data, knots){
   
   data[[object$term]] <- ax
   
+  # Work out extreme knot range
+  Sigma_inv <- MASS::ginv( crossprod(si$X) / n )
+  Xb_max <- sqrt(max(rowSums((si$X %*% Sigma_inv) * si$X)))
+  
   # Construct the B-splines corresponding to the outer smooth effect 
-  out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si)
+  out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, 
+                                     si = si, kex = c(-Xb_max, Xb_max))
   
   # Add inner penalty matrix (diagonalised and padded with zeros corresponding to the outer coefficients)
   if( !no_pen ){
