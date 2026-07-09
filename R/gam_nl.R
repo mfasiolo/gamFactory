@@ -126,6 +126,11 @@ gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE,
   }
   
   if( fit ){
+
+    if( is.null(fit_dots$in.out) && is.null(dots$sp) ){
+      fit_dots$in.out <- list("sp" = .nested_initial_sp(out), "scale" = 1)
+    }
+
     out <- do.call("gam", c(list(G = out), fit_dots))
 
     out <- postproc_gam_nl(o = out, info = info)
