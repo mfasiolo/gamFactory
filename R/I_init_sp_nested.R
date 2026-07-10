@@ -2,14 +2,18 @@
 # Code taken from mgcv::estimate.gam from mgcv version 1.9.4 (9th July 2026)
 # Should initialised smoothing parameters as mgcv for standard effects, but for
 # nested effects .my.initial.spg does something different.
-.init.sp.nested <- function(G, start) {
-  
+.init.sp.nested <- function(G, start, method = NULL, nei = NULL) {
+
   if (!is.null(G$family$preinitialize)) {
     stop("gam_nl does not know how to use family$preinitialise")
   }
-  
+
   if( !is.null(G$L) ){
     stop("gam_nl does not know how to handle G$L")
+  }
+
+  if( !is.null(nei) || (!is.null(method) && method %in% c("NCV", "QNCV")) ){
+    stop("gam_nl does not know how to handle method = \"NCV\"/\"QNCV\" or nei")
   }
 
   if (length(G$sp) == 0) return(NULL)
