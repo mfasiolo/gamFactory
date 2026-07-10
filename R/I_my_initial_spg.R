@@ -1,6 +1,8 @@
 #
-# A copy of mgcv:::initial.spg as of mgcv version 1.9.4, 9th of July 2026
-#
+# A modified version of mgcv:::initial.spg as of mgcv version 1.9.4, 9th of July 2026
+# Main difference marked by ### !!! ###
+# Basically, for nested effects, we find lambda such that EDF is 0.5 of penalty rank.
+# Instead for other effects we use mgcv:::initial.spg's cheaper heuristic.
 .my.initial.spg <- function(x,y,weights,family,S,rank,off,nested_idx,offset=NULL,L=NULL,lsp0=NULL,type=1,
                             start=NULL,mustart=NULL,etastart=NULL,E=NULL,...) {
   ## initial smoothing parameter values based on approximate matching 
@@ -28,11 +30,14 @@
           ZHZ <- -t(Z)%*%lbb[ind,ind]%*%Z
           ZSZ <- t(Z)%*%S[[i]]%*%Z
         } else { ZHZ <- -lbb[ind,ind];ZSZ <- S[[i]] }
+        ### !!! START here we differ from mgcv:::initial.spg  
         if(nested_idx[i]){
-          lambda[i] <- .3*sum(diag(solve(ZHZ + ZSZ, ZSZ)))
+          # .initialise_lambda_nested defined below
+          lambda[i] <- .initialise_lambda_nested(H = ZHZ, S = ZSZ, edf = 0.5 * ncol(ZHZ)) 
         } else {
-          lambda[i] <- .3*norm(ZHZ,"M")/norm(ZSZ,"M")
+          lambda[i] <- 0.3*norm(ZHZ,"M")/norm(ZSZ,"M")
         }
+        ### !!! END of modification
       }
     } else { ## original
       ## initially work out the number of times that each coefficient is penalized
@@ -99,6 +104,38 @@
     lambda <- exp(lsp)
   }
   
-  lambda ## initial values
+  return(lambda) ## initial values
   
 } ## initial.spg
+
+
+# Find lambda that such that trace((H+S)^-1 %*% S) matches the desired EDF
+.initialise_lambda_nested <- function(H, S, edf){
+  
+  obj <- function(rho, edf){
+    edf_rho <- sum(diag(solve(H + exp(rho) * S, H)))
+    return(edf_rho - edf)
+  }
+  
+  b <- log(c(10^-3, 10^4))
+  
+  for(ii in 1:10){
+    lok <- obj(b[1], edf) > 0
+    uok <- obj(b[2], edf) < 0
+    if ( lok && uok ){
+      break
+    }
+    if ( !lok ){
+      b[1] <- b[1] + log(1/5)
+    }
+    if ( !uok ){
+      b[2] <- b[2] + log(5)
+    }
+    if(ii == 10){
+      stop("Impossible to initialize smoothing parameters!")
+    }
+  }
+  
+  lambda <- exp( uniroot(obj, b, tol = 0.01, edf = edf)$root )
+  return(lambda)
+}

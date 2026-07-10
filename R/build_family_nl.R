@@ -30,8 +30,22 @@ build_family_nl <- function(bundle, info, link, lamVar = 1e5, lamRidge = 1e-5,
 
   initialize_internal <- function(y, nobs, E, x, family, offset, weights){
 
+    # When initialize_internal is called from within mgcv:::initial.spg() we set n_init to 1. 
+    # That's because gam_nl chooses the smoothing parameters via .my_initial_spg, but 
+    # mgcv:::estimate.gam calls mgcv:::initial.spg() anyway. The latter calls family$initialize, 
+    # hence initialize_internal will also be called, but its output will not be used at all!
+    called_by_initial_spg <- tryCatch({
+      calls <- sys.calls()
+      any(vapply(calls, function(cl) {
+        fn <- cl[[1]]
+        is.symbol(fn) && identical(as.character(fn), "initial.spg")
+      }, logical(1)))
+    }, error = function(e) FALSE)
+    
+    n_init_use <- if ( called_by_initial_spg ) 1 else n_init
+
     .backfit_si_initialize(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset,
-                            weights = weights, info = info, n_init = n_init, n_eigen = n_eigen,
+                            weights = weights, info = info, n_init = n_init_use, n_eigen = n_eigen,
                             oversample = oversample)
 
   }
