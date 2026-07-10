@@ -128,7 +128,7 @@ gam_nl <- function(formula, family = fam_gaussian(), data = list(), fit = TRUE,
   if( fit ){
 
     if( is.null(fit_dots$in.out) && is.null(dots$sp) ){
-      fit_dots$in.out <- list("sp" = .init.sp.nested(out, fit_dots$start), "scale" = 1)
+      fit_dots$in.out <- list("sp" = .init.sp.nested(out, fit_dots$start, method = fit_dots$method, nei = fit_dots$nei), "scale" = 1)
       if(is.null(fit_dots$in.out$sp)){ # No nested effects: let mgcv initialise the smoothing parameters
         fit_dots$in.out <- NULL
       }
