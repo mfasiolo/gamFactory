@@ -81,7 +81,8 @@
     # to rotate the eigenvectors. 
     n_left <- n_init - nrow(cand)
     if(n_left > 0) {
-      vsim <- .grid_on_half_sphere(N = n_left, r = d, oversample = oversample)
+      # Fixed seed (not exposed to the user)
+      vsim <- .grid_on_half_sphere(N = n_left, r = d, oversample = oversample, seed = 1)
       ch <- chol(crossprod(Xi))
       vsim <- t( backsolve(ch, t(vsim)) ) * sqrt(nrow(Xi))
       cand <- rbind(cand, vsim)

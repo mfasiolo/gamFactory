@@ -1,20 +1,40 @@
 ########################
-# Sample "well spaced out" points on the hyper-sphere of radius 1, in r dimension 
+# Sample "well spaced out" points on the hyper-sphere of radius 1, in r dimension
 # (actual sphere for r = 3).
 # SEE ALSO testing code below.
 # NOTE: we are actually sampling half-sphere because we flip the vectors so that
 # the first element (first coordinate) is positive
-# Algorithm: 
-# [1] Sample randomly M points on the sphere 
-# [2] Pick the first point, then one on that is the least correlated with it, 
+# Algorithm:
+# [1] Sample randomly M points on the sphere
+# [2] Pick the first point, then one on that is the least correlated with it,
 #     the one that is the least correlated with both, and so on, until you have
 #     N < M points.
-.grid_on_half_sphere <- function(N, r = 3, oversample = 10) {
-  
+#
+# `seed`: if not NULL, the random pool (step [1]) is generated deterministically from
+# `seed` instead of from R's ambient random stream - the same (N, r, oversample, seed)
+# always gives the same output. This does NOT touch R's own random state as seen by the
+# caller: the current .Random.seed is saved before, and restored (or removed again, if it
+# did not exist yet) after, so calling this with a fixed seed has no side effect on any
+# other random draws happening before or after it in the same session.
+.grid_on_half_sphere <- function(N, r = 3, oversample = 10, seed = NULL) {
+
   M <- oversample * N
-  
+
   stopifnot(oversample >= 1)
-  
+
+  if( !is.null(seed) ){
+    had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    if( had_seed ){ old_seed <- get(".Random.seed", envir = .GlobalEnv) }
+    on.exit({
+      if( had_seed ){
+        assign(".Random.seed", old_seed, envir = .GlobalEnv)
+      } else if( exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE) ){
+        rm(".Random.seed", envir = .GlobalEnv)
+      }
+    })
+    set.seed(seed)
+  }
+
   Q <- matrix(rnorm(M * r), M, r)
   Q <- Q / sqrt(rowSums(Q^2))
   
