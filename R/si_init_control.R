@@ -20,7 +20,7 @@
 #' @rdname si_init_control
 #' @export si_init_control
 #'
-si_init_control <- function(n_init = 1000, n_eigen = 10, oversample = 10, seed = 1){
+si_init_control <- function(n_init = 1, n_eigen = 10, oversample = 10, seed = 1){
 
   out <- list("n_init" = n_init, "n_eigen" = n_eigen, "oversample" = oversample, "seed" = seed)
 
