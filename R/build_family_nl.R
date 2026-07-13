@@ -1,12 +1,20 @@
-#' 
+#'
 #' Function for building GAM families containing non-standard effects
-#' 
+#'
+#' @param bundle A family bundle, as returned by a \code{fam_*} constructor's \code{bundle_nam} function.
+#' @param info Effect/penalty information for the model, as returned by \code{\link{prep_info}}.
+#' @param link Link function(s) to use. If \code{NULL}, the bundle's default link(s) are used.
+#' @param lamVar Multiplier applied to the effect-specific penalties (see [s_nest]).
+#' @param lamRidge Multiplier applied to the ridge penalties used to stabilise nested effects.
+#' @param si_init settings controlling the multi-start search used to initialise single-index
+#'                (\code{trans_linear}) nested effects, as produced by \code{\link{si_init_control}}.
+#'                Ignored if the model has no such effects.
 #' @name build_family_nl
 #' @rdname build_family_nl
 #' @export build_family_nl
-#' 
+#'
 build_family_nl <- function(bundle, info, link, lamVar = 1e5, lamRidge = 1e-5,
-                             n_init = 1000, n_eigen = 10, oversample = 10){
+                             si_init = si_init_control()){
   
   available_deriv <- min(bundle$available_deriv, 3)
   cdf <- bundle$cdf
@@ -42,11 +50,11 @@ build_family_nl <- function(bundle, info, link, lamVar = 1e5, lamRidge = 1e-5,
       }, logical(1)))
     }, error = function(e) FALSE)
     
-    n_init_use <- if ( called_by_initial_spg ) 1 else n_init
+    n_init_use <- if ( called_by_initial_spg ) 1 else si_init$n_init
 
     .backfit_si_initialize(y = y, nobs = nobs, E = E, x = x, family = family, offset = offset,
-                            weights = weights, info = info, n_init = n_init_use, n_eigen = n_eigen,
-                            oversample = oversample)
+                            weights = weights, info = info, n_init = n_init_use, n_eigen = si_init$n_eigen,
+                            oversample = si_init$oversample, seed = si_init$seed)
 
   }
 

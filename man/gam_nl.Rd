@@ -9,9 +9,7 @@ gam_nl(
   family = fam_gaussian(),
   data = list(),
   fit = TRUE,
-  n_init = 1000,
-  n_eigen = 10,
-  oversample = 10,
+  si_init = si_init_control(),
   ...
 )
 }
@@ -30,16 +28,9 @@ For the structure required by the \link{s_nest} effects, refer to \link{trans_li
 model and fits it, but if it is \code{FALSE} then the model is set up and an object containing what would be
 required to fit is returned.}
 
-\item{n_init}{number of candidate directions tried when initialising each true
-single-index (\code{trans_linear}) nested effect. See
-\code{\link{build_family_nl}}.}
-
-\item{n_eigen}{number of eigenvector-based candidate directions (out of \code{n_init})
-used when initialising each single-index nested effect. See
-\code{\link{build_family_nl}}.}
-
-\item{oversample}{oversampling factor used to spread the remaining candidate
-directions over the sphere. See \code{\link{build_family_nl}}.}
+\item{si_init}{settings controlling the multi-start search used to initialise single-index
+(\code{trans_linear}) nested effects, as produced by \code{\link{si_init_control}}.
+See \code{\link{build_family_nl}}.}
 
 \item{...}{further arguments to be passed to \link[mgcv:gam]{mgcv::gam}.}
 }

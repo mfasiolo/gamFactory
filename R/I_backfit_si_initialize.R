@@ -47,7 +47,7 @@
 # 
 # range(apply(v, 1, function(x) sd(Xi %*% x) * sqrt(999/1000)))
 #
-.si_search_candidates <- function(Xi, alpha, n_init = 1000, n_eigen = min(ncol(Xi), 10), oversample = 10) {
+.si_search_candidates <- function(Xi, alpha, n_init = 1000, n_eigen = min(ncol(Xi), 10), oversample = 10, seed = 1) {
 
   d <- ncol(Xi)
   
@@ -81,8 +81,7 @@
     # to rotate the eigenvectors. 
     n_left <- n_init - nrow(cand)
     if(n_left > 0) {
-      # Fixed seed (not exposed to the user)
-      vsim <- .grid_on_half_sphere(N = n_left, r = d, oversample = oversample, seed = 1)
+      vsim <- .grid_on_half_sphere(N = n_left, r = d, oversample = oversample, seed = seed)
       ch <- chol(crossprod(Xi))
       vsim <- t( backsolve(ch, t(vsim)) ) * sqrt(nrow(Xi))
       cand <- rbind(cand, vsim)
@@ -186,7 +185,7 @@
 #       The helper function .si_a0() returns a0 = 0 for mgks/nexpsm/positive_si effects, so the returned start vector has 
 #       alpha = alpha* for those effect types.
 .backfit_si_initialize <- function(y, nobs, E, x, family, offset, weights, info,
-                                    n_init = 1000, n_eigen = 10, oversample = 10) {
+                                    n_init = 1000, n_eigen = 10, oversample = 10, seed = 1) {
 
   lpi <- attr(x, "lpi")
   unscaled <- attr(E, "use.unscaled")
@@ -215,7 +214,7 @@
     Xi <- info$extra[[idx]]$si$X
     a0 <- info$extra[[idx]]$si$a0
     alpha <- info$extra[[idx]]$si$alpha
-    cands <- .si_search_candidates(Xi = Xi, alpha = alpha + a0, n_init = n_init, n_eigen = n_eigen, oversample = oversample)
+    cands <- .si_search_candidates(Xi = Xi, alpha = alpha + a0, n_init = n_init, n_eigen = n_eigen, oversample = oversample, seed = seed)
 
     best_score <- -Inf
     best_v <- cands[1, ]

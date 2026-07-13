@@ -10,10 +10,23 @@ build_family_nl(
   link,
   lamVar = 1e+05,
   lamRidge = 1e-05,
-  n_init = 1000,
-  n_eigen = 10,
-  oversample = 10
+  si_init = si_init_control()
 )
+}
+\arguments{
+\item{bundle}{A family bundle, as returned by a \code{fam_*} constructor's \code{bundle_nam} function.}
+
+\item{info}{Effect/penalty information for the model, as returned by \code{\link{prep_info}}.}
+
+\item{link}{Link function(s) to use. If \code{NULL}, the bundle's default link(s) are used.}
+
+\item{lamVar}{Multiplier applied to the effect-specific penalties (see \link{s_nest}).}
+
+\item{lamRidge}{Multiplier applied to the ridge penalties used to stabilise nested effects.}
+
+\item{si_init}{settings controlling the multi-start search used to initialise single-index
+(\code{trans_linear}) nested effects, as produced by \code{\link{si_init_control}}.
+Ignored if the model has no such effects.}
 }
 \description{
 Function for building GAM families containing non-standard effects
