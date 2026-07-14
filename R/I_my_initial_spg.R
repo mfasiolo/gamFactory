@@ -33,6 +33,7 @@
         ### !!! START here we differ from mgcv:::initial.spg  
         if(nested_idx[i]){
           # .initialise_lambda_nested defined below
+          ZHZ <- .my_eigenfix(ZHZ, tol = 1e-6)
           lambda[i] <- .initialise_lambda_nested(H = ZHZ, S = ZSZ, edf = 0.5 * ncol(ZHZ)) 
         } else {
           lambda[i] <- 0.3*norm(ZHZ,"M")/norm(ZSZ,"M")
