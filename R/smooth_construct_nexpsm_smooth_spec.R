@@ -73,8 +73,8 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
     .o <- ifelse(.M, -max(.g)^2, -min(.g)^2)
     return( .o )
   }
-  kex <- c(-sqrt(-optimize(f = .my_obj, interval = log(c(0.001, 0.999)), .M = FALSE)$objective),
-            sqrt(-optimize(f = .my_obj, interval = log(c(0.001, 0.999)), .M = TRUE)$objective))
+  kex <- 1.1 * c(-sqrt(-optimize(f = .my_obj, interval = qlogis(c(1e-4, 1-1e-4)), .M = FALSE)$objective),
+                  sqrt(-optimize(f = .my_obj, interval = qlogis(c(1e-4, 1-1e-4)), .M = TRUE)$objective))
   
   out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si, kex = kex)
   
