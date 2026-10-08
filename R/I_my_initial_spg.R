@@ -109,34 +109,51 @@
   
 } ## initial.spg
 
-
-# Find lambda that such that trace((H+S)^-1 %*% S) matches the desired EDF
-.initialise_lambda_nested <- function(H, S, edf){
+.initialise_lambda_nested <- function(H, S, edf) {
   
-  obj <- function(rho, edf){
-    edf_rho <- sum(diag(solve(H + exp(rho) * S, H)))
-    return(edf_rho - edf)
+  p <- nrow(H)
+  
+  ## compute cholesky decomposition of S = R'R
+  ## EDF(lambda) = tr[(H + lambda*S)^{-1} H] = tr[R^-1(B + lambda*I)^{-1}R^-T H]      B= R^-T H R^-1
+  ##            = tr[(B + lambda*I)^{-1} B] = sum_i d_i / (d_i + lambda)
+  ## with d_i eigenvalues of B 
+  cs <- chol(S); Rinv <- backsolve(cs, diag(p))
+  B <- crossprod(Rinv, H) %*% Rinv 
+  B <- (B + t(B)) / 2 
+  
+  # if p is large, approximate it's spectrum using mgcv:::eigen.approx
+  d <- if(p<=100) eigen(B, symmetric = TRUE, only.values = TRUE)$values else mgcv:::eigen.approx(B)
+  d <- pmax(d, 0)   # clip tiny negatives from floating-point noise in H
+  
+  ## f(rho) = sum d_i/(d_i + exp(rho)) - edf is monotone decreasing.
+  ## Initial interval centred on the log of the median eigenvalue.
+  obj  <- function(lam) sum(d / (d + exp(lam)))- edf
+  
+  rho_lo <- log(median(d)) - 8
+  rho_hi <- log(median(d)) + 8
+  
+  lo_ok <- obj(rho_lo) > 0
+  hi_ok <- obj(rho_hi) < 0
+  
+  for (i in seq_len(40L)) {
+    if (lo_ok && hi_ok) break
+    if (!lo_ok) {
+      rho_lo <- rho_lo - log(5)
+      lo_ok  <- obj(rho_lo) > 0
+    }
+    if (!hi_ok) {
+      rho_hi <- rho_hi + log(5)
+      hi_ok  <- obj(rho_hi) < 0
+    }
   }
   
-  b <- log(c(10^-3, 10^4))
-  
-  for(ii in 1:10){
-    lok <- obj(b[1], edf) > 0
-    uok <- obj(b[2], edf) < 0
-    if ( lok && uok ){
-      break
-    }
-    if ( !lok ){
-      b[1] <- b[1] + log(1/5)
-    }
-    if ( !uok ){
-      b[2] <- b[2] + log(5)
-    }
-    if(ii == 10){
-      stop("Impossible to initialize smoothing parameters!")
-    }
+  if (!lo_ok || !hi_ok) {
+    warning(".initialise_lambda_nested: could not identify a root for lambda; ",
+            "falling back to heuristic lambda.")
+    return(0.3 * norm(H, "M") / max(norm(S, "M"), .Machine$double.eps))
   }
   
-  lambda <- exp( uniroot(obj, b, tol = 0.01, edf = edf)$root )
-  return(lambda)
+  result <- exp(uniroot(obj, c(rho_lo, rho_hi), tol = 0.01)$root)
+  
+  return(result)
 }
