@@ -1,7 +1,7 @@
 ---
 title: "gamFactory: tools for extending the mgcv R package"
 author: "Matteo Fasiolo, Claudia Collarin, Christian Capezza, Yannig Goude and Simon N. Wood"
-date: "2025-04-02"
+date: "2026-10-08"
 header-includes:
   - \usepackage{bbm}
 output: 
@@ -76,9 +76,7 @@ where $\boldsymbol a$ are the coefficients of the linear combination.
 
   - `trans = trans_nexpsm()` specifies an **(adaptive) exponential smoothing** transformation. For example, suppose that ${\boldsymbol x} = (x_1, x_2, \dots, x_t, \dots, x_T)$ is time-ordered. Then this specifies a nested effect of the form $$s(\tilde{s}({x}_t)) = s(\omega\tilde{s}(x_{t-1}) + (1-\omega)x_{t}),$$
 with $\omega \in (0, 1)$. Adaptive smoothing is achieved by modelling the exponential smoothing coefficient via
-$$
-\omega_t = \phi(  {\boldsymbol a}^T {\boldsymbol z}_t ),
-$$
+$$\omega_t = \phi(  {\boldsymbol a}^T {\boldsymbol z}_t ),$$
 where $\phi(\cdot)$ is the standard logistic function, ${\boldsymbol z}_t$ is a vector of covariates and ${\boldsymbol a}$ is a vector of unknown parameters.
 
    - `trans = trans_mgks()` specifies an **multivariate kernel smoothing** transformation. For example, suppose that response variable $y_i$ (e.g., ozone concentration) corresponds to location $\boldsymbol z_i^0$ and that we think that it depends on air temperature. We have temperature measurements $\text{temp}_1, \dots, \text{temp}_L$ at locations $\boldsymbol z_1, \dots, \boldsymbol z_L$, but none corresponds to $\boldsymbol z_i^0$. Then we can use `trans_mgks()` to build an estimate of the temperature at $\boldsymbol z_i^0$ via kernel smoothing, that is
@@ -123,7 +121,9 @@ plot(Xb, y, col = "grey")
 lines(sort(Xb), f_true[order(X %*% b)], col = "red", lwd = 2)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-5-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-5-1} \end{center}
 Then we fit a Gaussian model with a single index effect and a standard effect:
 
 
@@ -150,19 +150,19 @@ summary(fit)
 ## 
 ## Parametric coefficients:
 ##               Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)    0.44690    0.05862   7.624 2.46e-14 ***
-## (Intercept).1 -0.02906    0.02260  -1.286    0.199    
+## (Intercept)    0.45149    0.06950   6.496 8.24e-11 ***
+## (Intercept).1 -0.02943    0.02261  -1.302    0.193    
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## Approximate significance of smooth terms:
-##             edf Ref.df Chi.sq p-value    
-## s_nest(X) 8.269  8.783   1897  <2e-16 ***
+##            edf Ref.df   Chi.sq p-value    
+## s_nest(X) 9.75  10.88 14485516  <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## 
-## -REML = 1426.2  Scale est. = 1         n = 1000
+## -REML = 1427.5  Scale est. = 1         n = 1000
 ```
 
 ```r
@@ -170,7 +170,7 @@ AIC(fit)
 ```
 
 ```
-## [1] 2821.816
+## [1] 2825.263
 ```
 We can also produce predictions:
 
@@ -180,7 +180,9 @@ plot(f_true, f_hat, xlab = "True mean", ylab = "Estimated mean")
 abline(0, 1, col = 2)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-9-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-9-1} \end{center}
 which look roughly correct here.
 
 The standard plotting methods of `mgcv` can be used on the model, but the nested effects are not plotted by default. To plot them, we can use the methods provided by `mgcViz` (development version, see the top of this document):
@@ -193,14 +195,18 @@ fit <- getViz(fit)
 print(plot(fit), pages = 1)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-10-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-10-1} \end{center}
 On the left, the overall effect of the linear combination of the columns of `X` is being plotted. To plot the coefficients of the linear combination, we must do:
 
 ```r
 print(plot(fit, inner = TRUE), pages = 1)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-11-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-11-1} \end{center}
 
 ## Example: Chicago air pollution data
 
@@ -279,14 +285,14 @@ summary(fit_si)
 ## 
 ## Parametric coefficients:
 ##             Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)  4.73813    0.00215    2203   <2e-16 ***
+## (Intercept) 4.738161   0.002074    2285   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## Approximate significance of smooth terms:
-##               edf Ref.df   Chi.sq p-value    
-## s(time)   128.984 154.42 3072.704  <2e-16 ***
-## s_nest(X)   6.747   7.68    1.873  <2e-16 ***
+##               edf  Ref.df    Chi.sq  p-value    
+## s(time)   128.982 154.426 3.082e+03  < 2e-16 ***
+## s_nest(X)   6.432   7.113 1.584e+10 9.98e-07 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
@@ -301,14 +307,18 @@ fit_si <- getViz(fit_si)
 print(plot(fit_si), pages = 1)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-17-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-17-1} \end{center}
 where the effect of time is using a lot of degress of freedom, while the effects of the linear combination of pollutants is fairly smooth. The coefficients of the linear combination are plotted by:
 
 ```r
 plot(fit_si, select = 2, inner = TRUE)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-18-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-18-1} \end{center}
 which suggests that the first two pollutants (`pm10` and `o3`) are important, while the third (`so.2`) is not. The coefficients are positive for `pm10` and `o3` which, considering that the effect of `proj(X)` is increasing, suggests that higher values of these pollutants are associated with higher mortality.
 
 Some standard model checks can be performed by:
@@ -320,10 +330,10 @@ check(fit_si)
 ```
 ## 
 ## Method: REML   Optimizer: outer newton
-## full convergence after 11 iterations.
-## Gradient range [-0.005414762,0.004639622]
-## (score 19010.84 & scale 1).
-## Hessian positive definite, eigenvalue range [1.09415,25.2387].
+## full convergence after 4 iterations.
+## Gradient range [-0.001670198,0.001854901]
+## (score 19010.63 & scale 1).
+## Hessian positive definite, eigenvalue range [0.8861663,25.29678].
 ## Model rank =  213 / 213 
 ## 
 ## Basis dimension (k) checking results. Low p-value (k-index<1) may
@@ -331,16 +341,20 @@ check(fit_si)
 ## 
 ##             k'    edf k-index p-value    
 ## s(time) 199.00 128.98    0.91  <2e-16 ***
-## s(X)     13.00   6.75      NA      NA    
+## s(X)     13.00   6.43      NA      NA    
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
 ```
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+## Ignoring unknown labels:
+## * xlab : "Residuals"
+## `stat_bin()` using `bins = 30`. Pick better value `binwidth`.
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-19-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-19-1} \end{center}
 which show some large positive outliers (we do not examine this issue further here).
 
 ### Adding effects of exponentially smoothed `pm10` and `o3`
@@ -405,7 +419,9 @@ fit_exp <- getViz(fit_exp)
 print(plot(fit_exp), pages = 1)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-23-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-23-1} \end{center}
 The effect of (exponential smoothed) `pm10` does not seem significant, while that of `o3` is positive at high pollutant levels.
 We can look at the raw (grey points) and smoothed (lines) pollutants:
 
@@ -419,7 +435,9 @@ pl2 <- plot(sm(fit_exp, 4), inner = TRUE) +
 gridPrint(pl1, pl2)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-24-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-24-1} \end{center}
 Note that the exponential smooth of `pm10` should not be over-interpreted, because the overall effect is not significant (hence
 the amount of exponential smoothing is somewhat arbitrary).
 
@@ -441,10 +459,13 @@ colnames(dat$pm_10_lag_2)
 ```
 
 ```
-##   [1] "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y" 
-##  [26] "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y" 
-##  [51] "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
-##  [76] "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
+##   [1] "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y" 
+##  [16] "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y" 
+##  [31] "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y"  "y" 
+##  [46] "y"  "y"  "y"  "y"  "y"  "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
+##  [61] "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
+##  [76] "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
+##  [91] "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1" "d1"
 ```
 Here `dat$pm_10_lag_2` is a matrix, where each row contains 50 lagged values of `pm10` followed by 50 distances between the target day and the day corresponding to the lagged pollutant values. For example, this plot
 
@@ -452,7 +473,9 @@ Here `dat$pm_10_lag_2` is a matrix, where each row contains 50 lagged values of 
 plot(dat$pm_10_lag_2[1, 51:100])
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-26-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-26-1} \end{center}
 shows that first observed death count in the data set will be modelled using the 50 lagged values of `pm10` with time-distances (time-lags in days) ranging from around 60 to 1 day. The matrix `dat$o3_lag_2` has a similar structure.
 
 We can fit a model containing the effects of kernel smoothed `pm10` and `o3` as follows:
@@ -479,10 +502,13 @@ fit_mgks <- getViz(fit_mgks)
 print(plot(getViz(fit_mgks)), pages = 1)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-28-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-28-1} \end{center}
 which shows that the overall effects are roughly similar to those obtained via exponential smoothing.
 We can then compare the nested exponential and kernel smooths of pm10 and O3 (code not shown):
-<img src="gamFactory_files/figure-html/gamFactory-29-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-29-1} \end{center}
 The smoothed O3 is quite similar across the two type of smooths, but the smoothed pm10 is quite different. This looks odd, but note that the overall effect of pm10 is not significant in both the exponential and the kernel smoothing model. Hence, the smoothed pm10 has a very weak effect on the Poisson rate of mortality, and the amount of exponential or kernel smoothing is somewhat arbitrary (i.e. is does not affect the overall fit).
 
 
@@ -501,13 +527,20 @@ head(UKload)
 ```
 
 ```
-##     NetDemand       wM   wM_s95       Posan      Dow      Trend NetDemand.48 Holy Year                Date
-## 25      38353 6.046364 5.558800 0.001369941   samedi 1293879600        38353    1 2011 2011-01-01 12:00:00
-## 73      41192 2.803969 3.230582 0.004109824 dimanche 1293966000        38353    0 2011 2011-01-02 12:00:00
-## 121     43442 2.097259 1.858198 0.006849706    lundi 1294052400        41192    0 2011 2011-01-03 12:00:00
-## 169     50736 3.444187 2.310408 0.009589588    mardi 1294138800        43442    0 2011 2011-01-04 12:00:00
-## 217     50438 5.958674 4.724961 0.012329471 mercredi 1294225200        50736    0 2011 2011-01-05 12:00:00
-## 265     50064 4.124248 4.589470 0.015069353    jeudi 1294311600        50438    0 2011 2011-01-06 12:00:00
+##     NetDemand       wM   wM_s95       Posan      Dow      Trend NetDemand.48
+## 25      38353 6.046364 5.558800 0.001369941   samedi 1293879600        38353
+## 73      41192 2.803969 3.230582 0.004109824 dimanche 1293966000        38353
+## 121     43442 2.097259 1.858198 0.006849706    lundi 1294052400        41192
+## 169     50736 3.444187 2.310408 0.009589588    mardi 1294138800        43442
+## 217     50438 5.958674 4.724961 0.012329471 mercredi 1294225200        50736
+## 265     50064 4.124248 4.589470 0.015069353    jeudi 1294311600        50438
+##     Holy Year                Date
+## 25     1 2011 2011-01-01 12:00:00
+## 73     0 2011 2011-01-02 12:00:00
+## 121    0 2011 2011-01-03 12:00:00
+## 169    0 2011 2011-01-04 12:00:00
+## 217    0 2011 2011-01-05 12:00:00
+## 265    0 2011 2011-01-06 12:00:00
 ```
 Here `NetDemand` is the aggregate electricity demand, `wM` is the external temperature, `Dow` is the day of the week (in French) and `Posan` is the time of year (0 on Jan 1st, 1 on Dec 31st). See `?UKload` for a description of the other variables.
 
@@ -556,7 +589,9 @@ The following plot:
 plot(fitStack)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-36-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-36-1} \end{center}
 shows that the weight of the summer model is higher during the summer than during the winter, as one would expect. See Capezza et al. (2020) for more details on the particular parametrization used by the stacking family.
 
 Let's see whether the stacking model is any better than the initial basic model. First, we extract the predicted experts' weights on the test set:
@@ -567,7 +602,9 @@ plot(dTest$Posan, W[ , 1], type = 'l', ylab = "Weights") # Winter
 lines(dTest$Posan, W[ , 2], col = 2)   # Summer
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-37-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-37-1} \end{center}
 The weights must sum to one at each observation. Now we evaluate the log-density of each model on the test set:
 
 ```r
@@ -590,7 +627,9 @@ plot(dTest$Posan, denMix_t, type = 'l') # Stacking
 lines(dTest$Posan, denBasic_t, col = 2) # Basic
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-40-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-40-1} \end{center}
 The higher the better, hence stacking seems to be doing sligthly better than the basic GAM. Obviously this is a fairly dumb example, whose only purpose is to illustrate how additive stacking works. For example, we have not excluded holidays and both models do badly on those days. In particular, on the plot we see very negative likelihood values on Jan 1st, around Easter and around the 1st May bank holiday.
 
 Note that the `fam_stackProb` family can be used to create mixtures of more than two experts. For example, we could get the log-density of the basic model on the stacking set:
@@ -619,14 +658,18 @@ fitStack2 <- getViz(fitStack2)
 print(plot(fitStack2, allTerms = TRUE), pages = 1)
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-44-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-44-1} \end{center}
 As explained in Capezza et al. (2020), the accumulated local effect (ALE) plot of Apley and Zhu (2016) often provide a better way to visualise the effect of covariate on the experts weights:
 
 ```r
 plot(ALE(fitStack2, x = "wM", oind = 3, type = "response"))
 ```
 
-<img src="gamFactory_files/figure-html/gamFactory-45-1.png" style="display:block; margin: auto" style="display: block; margin: auto;" />
+
+
+\begin{center}\includegraphics{gamFactory_files/figure-latex/gamFactory-45-1} \end{center}
 The ALE plot shows how the weight of the third model in the mixture (`fitBasic`) changes with the temperature.
 
 

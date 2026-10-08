@@ -26,7 +26,12 @@ text-align: justify}
 
 ```{r setup, include=FALSE}
 library(knitr)
-opts_chunk$set(out.extra='style="display:block; margin: auto"', fig.align="center", tidy=FALSE)
+#opts_chunk$set(out.extra='style="display:block; margin: auto"', fig.align="center", tidy=FALSE)
+opts_chunk$set(
+  fig.align = "center",
+  tidy = FALSE,
+  out.extra = if (knitr::is_html_output()) 'style="display:block; margin: auto;"' else NULL
+)
 # library(namer) # Run this to name all the chunks
 # namer::name_dir_chunks("../vignettes") 
 ```
