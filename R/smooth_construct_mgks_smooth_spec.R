@@ -103,6 +103,7 @@ smooth.construct.mgks.smooth.spec <- function(object, data, knots)
   mult_grid <- do.call("expand.grid", lapply(1:d, function(dd) seq(1e-4, 4, length.out = 5)))
   tmp <- -log(t(t(mult_grid) * sapply(si$dist, sd)))
   kex <- 1.1 * range( apply(tmp, 1, function(.a) .my_obj(.a)) )
+  kex <- pmax(pmin(kex, 6), -6) 
   
   out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si, 
                                      kex = kex)

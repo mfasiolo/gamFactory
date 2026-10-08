@@ -75,6 +75,7 @@ smooth.construct.nexpsm.smooth.spec <- function(object, data, knots)
   }
   kex <- 1.1 * c(-sqrt(-optimize(f = .my_obj, interval = qlogis(c(1e-4, 1-1e-4)), .M = FALSE)$objective),
                   sqrt(-optimize(f = .my_obj, interval = qlogis(c(1e-4, 1-1e-4)), .M = TRUE)$objective))
+  kex <- pmax(pmin(kex, 6), -6)
   
   out <- .build_nested_bspline_basis(object = object, data = data, knots = knots, si = si, kex = kex)
   
